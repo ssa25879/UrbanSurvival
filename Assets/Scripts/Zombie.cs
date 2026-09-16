@@ -39,6 +39,13 @@ public class Zombie : LivingEntity
 
     private void Awake() {
         // 초기화
+        // 컴포넌트
+        navMeshAgent = GetComponent<NavMeshAgent>();
+        zombieAnimator = GetComponent<Animator>();
+        zombieAudioPlayer = GetComponent<AudioSource>();
+        
+        // 자식 오브젝트에서 렌더러 컴포넌트 가져오기
+        zombieRenderer = GetComponentInChildren<Renderer>();
     }
 
     // 좀비 AI의 초기 스펙을 결정하는 셋업 메서드
