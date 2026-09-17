@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 // 좀비 게임 오브젝트를 주기적으로 생성
 public class ZombieSpawner : MonoBehaviour {
