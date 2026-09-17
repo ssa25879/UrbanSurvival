@@ -5,6 +5,8 @@ public class PlayerMovement : MonoBehaviour {
     public float moveSpeed = 5f; // 앞뒤 움직임의 속도
     public float rotateSpeed = 180f; // 좌우 회전 속도
 
+    [SerializeField] private string param;
+
 
     private PlayerInput playerInput; // 플레이어 입력을 알려주는 컴포넌트
     private Rigidbody playerRigidbody; // 플레이어 캐릭터의 리지드바디
@@ -15,6 +17,8 @@ public class PlayerMovement : MonoBehaviour {
         playerInput = GetComponent<PlayerInput>();
         playerRigidbody = GetComponent<Rigidbody>();
         playerAnimator = GetComponent<Animator>();
+
+        param = playerAnimator.parameters[0].name;
     }
 
     // FixedUpdate는 물리 갱신 주기에 맞춰 실행됨
@@ -26,7 +30,7 @@ public class PlayerMovement : MonoBehaviour {
         Move();
         
         // 입력값에 따라 애니메이터 move 파라미터 변경
-        playerAnimator.SetFloat("Move", playerInput.move);
+        playerAnimator.SetFloat(param, Mathf.Abs(playerInput.move));
     }
 
     // 입력값에 따라 캐릭터를 앞뒤로 움직임
