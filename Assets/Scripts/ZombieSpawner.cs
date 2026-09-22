@@ -10,6 +10,13 @@ public class ZombieSpawner : MonoBehaviour {
     public ZombieData[] zombieDatas; // 사용할 좀비 셋업 데이터들
     public Transform[] spawnPoints; // 좀비 AI를 소환할 위치들
 
+    [Header("처치 드랍 프리팹 (소총10%/SMG15%/산탄총15%/탄약20%/회복20%/꽝20%)")]
+    public GameObject riflePickupPrefab;
+    public GameObject smgPickupPrefab;
+    public GameObject shotgunPickupPrefab;
+    public GameObject ammoPackPrefab;
+    public GameObject healthPackPrefab;
+
     private List<Zombie> zombies = new List<Zombie>(); // 생성된 좀비들을 담는 리스트
     private int wave; // 현재 웨이브
 
@@ -68,9 +75,28 @@ public class ZombieSpawner : MonoBehaviour {
         zombie.Setup(zombieData);
         zombies.Add(zombie);
         
-        // onDeath 이벤트에 메서드 등록 - 리스트에서 제거, 화면에서 제거, 점수 증가
+        // onDeath 이벤트에 메서드 등록 - 리스트에서 제거, 화면에서 제거, 점수 증가, 드랍 판정
         zombie.onDeath += () => zombies.Remove(zombie);
         zombie.onDeath += () => Destroy(zombie.gameObject, despawnTime);
         zombie.onDeath += () => GameManager.instance.AddScore(zombieScore);
+        zombie.onDeath += () => DropLoot(zombie.transform.position);
+    }
+
+    // 처치 시 드랍 테이블 판정: 소총10% / SMG15% / 산탄총15% / 탄약20% / 회복상자20% / 꽝(드랍없음)20%
+    private void DropLoot(Vector3 position) {
+        float roll = Random.Range(0f, 100f);
+        GameObject dropPrefab = null;
+
+        if (roll < 10f) dropPrefab = riflePickupPrefab;
+        else if (roll < 25f) dropPrefab = smgPickupPrefab;
+        else if (roll < 40f) dropPrefab = shotgunPickupPrefab;
+        else if (roll < 60f) dropPrefab = ammoPackPrefab;
+        else if (roll < 80f) dropPrefab = healthPackPrefab;
+        // 80 이상(20%): 꽝, 드랍 없음
+
+        if (dropPrefab != null)
+        {
+            Instantiate(dropPrefab, position + Vector3.up * 0.5f, Quaternion.identity);
+        }
     }
 }
