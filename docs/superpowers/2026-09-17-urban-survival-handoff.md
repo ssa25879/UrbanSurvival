@@ -29,7 +29,7 @@
 - `Assets/SideProjectAssets/Toon Shooter Game Kit - Dec 2022/`
 - 해당 폴더는 조회 당시 파일3,422개(.meta 포함). 수량은 진행 중인 반입에 따라 변할 수 있다.
 - 새 에셋의 모델·리그·재질·애니메이션·라이선스와 게임 연결은 아직 감사하지 않았다.
-- 기획의 Downtown City MegaKit / Universal Base Characters / Ultimate Guns Pack을 대체하는지 확인되지 않았다. 대체 승인으로 간주하지 않는다.
+- 최신 에셋 결정: 캐릭터·무기는 Toon Shooter Game Kit, UI는 kenney_ui-pack을 사용한다. 2026-09-22 사용자 지시에 따라 도시 환경도 Toon Shooter Game Kit의 Environment를 사용하며, Downtown City MegaKit 및 Apocalyptic_World 사용 전제를 대체한다. 씬의 실제 환경 교체는 후속 작업이다.
 - `docs/`는 이번에 작성한 미추적 문서다. AGENTS.md의 제외 규칙이 docs까지 제외하지는 않는다.
 
 ## 확인된 핵심 차이

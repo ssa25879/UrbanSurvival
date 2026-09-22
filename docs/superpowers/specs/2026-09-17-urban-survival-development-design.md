@@ -6,6 +6,8 @@
 
 ## 1. 목표와 기준
 
+에셋 기준 갱신(2026-09-22): 도시 환경은 `Assets/SideProjectAssets/Toon Shooter Game Kit - Dec 2022/Environment`, 캐릭터·무기는 같은 Toon Shooter Game Kit, UI는 kenney_ui-pack을 사용한다. 사용자 확정에 따라 원문 및 과거 계획의 Downtown City MegaKit/Apocalyptic_World 환경 사용 전제를 대체한다. 아래 초기 현황 관측은 작성 당시 기록이며, 에셋 선택은 이 갱신 사항을 우선한다. 씬의 실제 환경 교체는 아직 수행하지 않았다.
+
 기존 Unity 프로젝트를 재사용하여 캐릭터·무기 선택부터 5웨이브 전투, 승리 또는 사망, 결과, 재시작까지 연결한다. 첫 검증 목표는 캐릭터 A·소총·일반 적·1웨이브다.
 
 - 기준 기획서: [Urban_Survival_상세_게임_기획서.docx](https://drive.google.com/file/d/1kO05l81sW9YmN9GSSZSXgzv20eKSZzSU/view)
@@ -228,11 +230,11 @@
 
 통과: F15/F16, I03/I05/I07, 2캐릭터×3무기의 선택부터 결과·재시작까지 기능 연결. 승리/패배 각각 확인한다.
 
-### P7. 도시 에셋·외형·애니메이션·메뉴 완성
+### P7. Toon Environment 도시 전장·외형·애니메이션·메뉴 완성
 
 대상: 신규 Assets/Game 전용 씬/프리팹/재질/UI/오디오와 기존 입력·진행 컴포넌트의 필요한 연결.
 
-- [ ] 3종 팩 실제 구성·사용 조건을 확인한 후 반입한다. 외부 원본과 프로젝트 변형본을 분리한다.
+- [ ] Toon Shooter Game Kit의 Environment로 도시 전장을 구성한다. 캐릭터·무기는 같은 팩, UI는 kenney_ui-pack을 사용한다. 실제 구성·사용 조건을 확인하고 외부 원본과 프로젝트 변형본을 분리한다.
 - [ ] 평지50×50m, 폭4m 이상 통로, 외곽 스폰8곳·내부 보급3곳, 플레이 공간 우회 경로2개 이상을 구성한다.
 - [ ] URP 재질·Collider·NavMesh와 총구 높이·벽 가림을 검사한다. 새 모델의 손 소켓·Animator/IK 소유권을 함께 맞춘다.
 - [ ] Esc 메뉴, 선택 복귀 확인, 포커스 상실 자동 정지/복귀 시 수동 재개, 소리 정지를 완성한다.

@@ -1,5 +1,7 @@
 # Apocalyptic World 미사용 에셋 분리 설계
 
+> 2026-09-22 기준 변경: 이 문서는 과거 Apocalyptic_World 정리 작업의 기록이다. 이후 환경 제작에는 Toon Shooter Game Kit의 Environment를 사용한다. 아래 정리 범위를 현재 환경 에셋 선택이나 추가 삭제 승인으로 해석하지 않는다.
+
 ## 목적
 
 `Assets/SideProjectAssets/Apocalyptic_World` 묶음에서 `Assets/Scenes/Main.unity`가 실제로 사용하는 에셋과 그 재귀 의존성만 Unity 프로젝트에 남긴다. 사용하지 않는 에셋은 Git에 올리지 않고 `D:\2026 윤우상\TopViewSurvivalAsset\미사용`으로 이동해 보관한다.

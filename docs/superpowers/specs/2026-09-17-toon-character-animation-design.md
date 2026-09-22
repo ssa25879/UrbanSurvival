@@ -7,7 +7,7 @@
 - `Assets/SideProjectAssets/Toon Shooter Game Kit - Dec 2022`는 게임의 무기·캐릭터 에셋으로 사용한다.
 - `Assets/SideProjectAssets/kenney_ui-pack`은 UI 에셋으로 사용한다.
 - 이 결정은 이전 계획의 Universal Base Characters/Ultimate Guns Pack 사용 전제 및 대체 여부 미확인 기록보다 우선한다.
-- 도시 맵 에셋 변경은 요청되지 않았으므로 별도로 바꾸지 않는다.
+- 2026-09-22 사용자 결정: 도시 환경은 `Assets/SideProjectAssets/Toon Shooter Game Kit - Dec 2022/Environment`를 사용한다. 기존 Downtown City MegaKit 및 Apocalyptic_World 사용 전제를 대체한다. 이번 변경은 기획 기준 변경이며 씬 교체 완료를 의미하지 않는다.
 - 현재 씬에 올린 테스트 캐릭터의 Animator와 Animator Controller를 먼저 준비한다. 이 작업을 기존 P0/P1 앞부분의 첫 시각 검증 단위로 배치한다.
 - SideProject만 사용한다. 기존 파일 수정 전 백업 여부 확인 규칙은 유지한다.
 
