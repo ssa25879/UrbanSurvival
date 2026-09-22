@@ -4,6 +4,7 @@
 public class PlayerMovement : MonoBehaviour {
     public float moveSpeed = 5f; // 평면 이동 속도
     public float rotateSpeed = 180f; // 기존 직렬화 값을 보존하기 위한 회전 속도
+    public float playAreaHalfExtent = 65f; // 플레이어 이동 제한 범위(맵은 150x150이지만 플레이어는 130x130 안에서만 이동)
 
     [SerializeField] private string param;
 
@@ -63,7 +64,13 @@ public class PlayerMovement : MonoBehaviour {
 
     private void Move(Vector3 moveDirection) {
         Vector3 moveDistance = moveDirection * moveSpeed * Time.fixedDeltaTime;
-        playerRigidbody.MovePosition(playerRigidbody.position + moveDistance);
+        Vector3 targetPosition = playerRigidbody.position + moveDistance;
+
+        // 플레이어만 130x130 범위로 이동을 제한한다(적은 150x150 맵 전체를 사용).
+        targetPosition.x = Mathf.Clamp(targetPosition.x, -playAreaHalfExtent, playAreaHalfExtent);
+        targetPosition.z = Mathf.Clamp(targetPosition.z, -playAreaHalfExtent, playAreaHalfExtent);
+
+        playerRigidbody.MovePosition(targetPosition);
     }
 
     // 마우스 스크린 좌표를 총구 높이의 수평 평면에 투영해 조준 방향을 계산한다.
