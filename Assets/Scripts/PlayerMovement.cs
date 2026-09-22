@@ -13,6 +13,8 @@ public class PlayerMovement : MonoBehaviour {
     private Animator playerAnimator; // 플레이어 캐릭터의 애니메이터
     private Transform movementCamera; // 이동 방향의 기준 카메라
 
+    private Vector3 lastAimDirection; // 마우스 조준이 평면과 만나지 않을 때 유지할 마지막 유효 방향
+
     private void Start() {
         // 사용할 컴포넌트들의 참조를 가져오기
         playerInput = GetComponent<PlayerInput>();
@@ -21,14 +23,19 @@ public class PlayerMovement : MonoBehaviour {
         movementCamera = Camera.main != null ? Camera.main.transform : null;
 
         param = playerAnimator.parameters[0].name;
+        lastAimDirection = transform.forward;
     }
 
     // FixedUpdate는 물리 갱신 주기에 맞춰 실행됨
     private void FixedUpdate() {
-        // 카메라 기준 평면 이동만 처리하며 캐릭터 회전은 변경하지 않는다.
+        // 카메라 기준 평면 이동 처리
         Vector3 moveDirection = GetMoveDirection();
         Move(moveDirection);
-        
+
+        // 이동과 독립적으로 마우스 조준 방향에 맞춰 캐릭터를 회전시킨다.
+        Vector3 aimDirection = GetAimDirection();
+        Rotate(aimDirection);
+
         // 좌우 및 대각선 이동도 Locomotion에 반영한다.
         playerAnimator.SetFloat(param, moveDirection.magnitude);
     }
@@ -57,5 +64,45 @@ public class PlayerMovement : MonoBehaviour {
     private void Move(Vector3 moveDirection) {
         Vector3 moveDistance = moveDirection * moveSpeed * Time.fixedDeltaTime;
         playerRigidbody.MovePosition(playerRigidbody.position + moveDistance);
+    }
+
+    // 마우스 스크린 좌표를 총구 높이의 수평 평면에 투영해 조준 방향을 계산한다.
+    // 평면과 만나지 않는 무효 방향에서는 마지막 유효 방향을 유지한다.
+    private Vector3 GetAimDirection()
+    {
+        Camera cam = Camera.main;
+        if (cam == null)
+        {
+            return lastAimDirection;
+        }
+
+        Plane aimPlane = new Plane(Vector3.up, transform.position);
+        Ray ray = cam.ScreenPointToRay(playerInput.aimPosition);
+
+        if (aimPlane.Raycast(ray, out float distance) && distance >= 0f)
+        {
+            Vector3 hitPoint = ray.GetPoint(distance);
+            Vector3 direction = hitPoint - transform.position;
+            direction.y = 0f;
+
+            if (direction.sqrMagnitude > 0.0001f)
+            {
+                lastAimDirection = direction.normalized;
+            }
+        }
+
+        return lastAimDirection;
+    }
+
+    // 캐릭터를 조준 방향으로 회전시킨다. 이동 입력과 무관하게 동작한다.
+    private void Rotate(Vector3 aimDirection)
+    {
+        if (aimDirection.sqrMagnitude < 0.0001f)
+        {
+            return;
+        }
+
+        Quaternion targetRotation = Quaternion.LookRotation(aimDirection, Vector3.up);
+        playerRigidbody.MoveRotation(targetRotation);
     }
 }

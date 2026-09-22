@@ -13,6 +13,7 @@ public class PlayerInput : MonoBehaviour {
     public float rotate { get; private set; } // 감지된 회전 입력값
     public bool fire { get; private set; } // 감지된 발사 입력값
     public bool reload { get; private set; } // 감지된 재장전 입력값
+    public Vector2 aimPosition { get; private set; } // 감지된 마우스 조준 화면 좌표
 
     // 매프레임 사용자 입력을 감지
     private void Update() {
@@ -34,5 +35,7 @@ public class PlayerInput : MonoBehaviour {
         fire = Input.GetButton(fireButtonName);
         // reload에 관한 입력 감지
         reload = Input.GetButtonDown(reloadButtonName);
+        // 마우스 조준 위치 감지(이동과 독립적으로 처리)
+        aimPosition = Input.mousePosition;
     }
 }

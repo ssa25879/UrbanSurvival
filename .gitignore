@@ -49,3 +49,7 @@ Desktop.ini
 
 # Local work notes
 /WorkNotes/
+
+# Editor-captured debug screenshots
+/Assets/Screenshots/
+/Assets/Screenshots.meta

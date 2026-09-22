@@ -161,11 +161,11 @@ MonoBehaviour:
   m_Follow: {fileID: 5472522231699498629}
   m_Lens:
     FieldOfView: 20
-    OrthographicSize: 5
+    OrthographicSize: 12
     NearClipPlane: 0.3
     FarClipPlane: 1000
     Dutch: 0
-    ModeOverride: 0
+    ModeOverride: 1
     GateFit: 2
     m_SensorSize: {x: 1, y: 1}
     LensShift: {x: 0, y: 0}
@@ -199,8 +199,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 211680394}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.4185249, y: 0.34116483, z: -0.17335875, w: 0.82364446}
-  m_LocalPosition: {x: -8, y: 16, z: -8}
+  m_LocalRotation: {x: 0.4205051, y: 0.3407467, z: -0.17417893, w: 0.8226353}
+  m_LocalPosition: {x: -8, y: 16.15765, z: -8}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -337,8 +337,8 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 20
-  orthographic: 0
-  orthographic size: 5
+  orthographic: 1
+  orthographic size: 12
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -362,8 +362,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 961739749}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.41852477, y: 0.34116474, z: -0.17335863, w: 0.82364464}
-  m_LocalPosition: {x: -8, y: 16, z: -8}
+  m_LocalRotation: {x: 0.4205051, y: 0.3407467, z: -0.17417893, w: 0.8226353}
+  m_LocalPosition: {x: -8, y: 16.15765, z: -8}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -389,7 +389,7 @@ MonoBehaviour:
   UpdateMethod: 2
   BlendUpdateMethod: 1
   LensModeOverride:
-    Enabled: 0
+    Enabled: 1
     DefaultMode: 2
   DefaultBlend:
     Style: 1
@@ -802,7 +802,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Cinemachine::Cinemachine.CinemachineTransposer
   m_BindingMode: 4
-  m_FollowOffset: {x: -8, y: 16, z: -8}
+  m_FollowOffset: {x: -8, y: 16.15765, z: -8}
   m_XDamping: 0.1
   m_YDamping: 0.1
   m_ZDamping: 0.1
