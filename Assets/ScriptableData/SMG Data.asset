@@ -10,17 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6cb3864f76dc458fbe03c34ce5b1f352, type: 3}
-  m_Name: Gun Data
+  m_Name: SMG Data
   m_EditorClassIdentifier: Assembly-CSharp::GunData
-  shotClip: {fileID: 8300000, guid: b82a66dab749415458d1f6600c997095, type: 3}
-  reloadClip: {fileID: 8300000, guid: 9eca29ee7f8209e419470fcd586aec21, type: 3}
-  damage: 20
-  startAmmoRemain: 150
-  reserveAmmoCap: 240
-  magCapacity: 30
-  timeBetFire: 0.15
-  reloadTime: 2.3
+  shotClip: {fileID: 0}
+  reloadClip: {fileID: 0}
+  damage: 12
+  startAmmoRemain: 200
+  reserveAmmoCap: 320
+  magCapacity: 40
+  timeBetFire: 0.09
+  reloadTime: 2.1
   fireMode: 1
-  range: 30
-  spreadHalfAngle: 3
+  range: 20
+  spreadHalfAngle: 5
   pelletsPerShot: 1
