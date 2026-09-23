@@ -24,6 +24,12 @@ public class GameManager : MonoBehaviour {
     private int score = 0; // 현재 게임 점수
     public bool isGameover { get; private set; } // 게임 오버 상태
 
+    // 생존 경과 시간(분). 신규 생성 적의 시간비례 난이도 배율 계산에 사용(씬 로드 시점 기준, 재시작 시 자동 초기화)
+    public float elapsedMinutes => Time.timeSinceLevelLoad / 60f;
+
+    // 누적 점수 1,000점당 기본 피해량 +1% 영구 가산, 상한 없음(초기 제안값)
+    public float damageMultiplier => 1f + Mathf.Floor(score / 1000f) * 0.01f;
+
     private void Awake() {
         // 씬에 싱글톤 오브젝트가 된 다른 GameManager 오브젝트가 있다면
         if (instance != this)

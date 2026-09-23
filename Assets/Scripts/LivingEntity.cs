@@ -19,11 +19,17 @@ public class LivingEntity : MonoBehaviour, IDamageable {
 
     // 데미지를 입는 기능
     public virtual void OnDamage(float damage, Vector3 hitPoint, Vector3 hitNormal) {
-        // 데미지만큼 체력 감소
-        health -= damage;
+        // 이미 사망한 경우 중복 데미지 처리 방지
+        if (dead)
+        {
+            return;
+        }
 
-        // 체력이 0 이하 && 아직 죽지 않았다면 사망 처리 실행
-        if (health <= 0 && !dead)
+        // 데미지만큼 체력 감소, 하한 0으로 고정
+        health = Mathf.Max(0f, health - damage);
+
+        // 체력이 0 이하라면 사망 처리 실행
+        if (health <= 0)
         {
             Die();
         }
@@ -37,19 +43,23 @@ public class LivingEntity : MonoBehaviour, IDamageable {
             return;
         }
 
-        // 체력 추가
-        health += newHealth;
+        // 체력 추가, 상한을 시작 체력으로 고정
+        health = Mathf.Min(startingHealth, health + newHealth);
     }
 
     // 사망 처리
     public virtual void Die() {
+        // 이미 사망 처리된 경우 중복 실행 방지(사망 상태를 가장 먼저 표시)
+        if (dead)
+        {
+            return;
+        }
+        dead = true;
+
         // onDeath 이벤트에 등록된 메서드가 있다면 실행
         if (onDeath != null)
         {
             onDeath();
         }
-
-        // 사망 상태를 참으로 변경
-        dead = true;
     }
 }

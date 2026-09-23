@@ -41,7 +41,8 @@ public class Zombie : LivingEntity
         // 초기화
         // 컴포넌트
         navMeshAgent = GetComponent<NavMeshAgent>();
-        zombieAnimator = GetComponent<Animator>();
+        // 애니메이터는 좀비 비주얼 모델(자식 오브젝트)에 붙어있음
+        zombieAnimator = GetComponentInChildren<Animator>();
         zombieAudioPlayer = GetComponent<AudioSource>();
         
         // 자식 오브젝트에서 렌더러 컴포넌트 가져오기
@@ -50,16 +51,21 @@ public class Zombie : LivingEntity
 
     // 좀비 AI의 초기 스펙을 결정하는 셋업 메서드
     public void Setup(ZombieData zombieData) {
+        Setup(zombieData, 1f);
+    }
+
+    // 시간비례 난이도 배율을 적용하는 셋업 메서드(신규 생성분에만 적용, ZombieData 원본은 변경하지 않음)
+    public void Setup(ZombieData zombieData, float statMultiplier) {
         // 기본 체력 설정
-        startingHealth = zombieData.health;
+        startingHealth = zombieData.health * statMultiplier;
         health = startingHealth;
-        
+
         // 기초 공격력 설정
-        damage = zombieData.damage;
-        
-        // NavMeshAgent 이동속도 설정
+        damage = zombieData.damage * statMultiplier;
+
+        // NavMeshAgent 이동속도 설정(시간비례 배율 미적용)
         navMeshAgent.speed = zombieData.speed;
-        
+
         // 렌더러에 적용된 마테리얼 색 변경 -> 외형 변경
         zombieRenderer.material.color = zombieData.skinColor;
     }
@@ -137,9 +143,15 @@ public class Zombie : LivingEntity
 
     // 사망 처리
     public override void Die() {
+        // 이미 사망 처리된 경우 중복 실행 방지
+        if (dead)
+        {
+            return;
+        }
+
         // LivingEntity의 Die()를 실행하여 기본 사망 처리 실행
         base.Die();
-        
+
         // Collider 비활성화
         Collider[] colliders = GetComponents<Collider>();
         for (int i = 0; i < colliders.Length; i++)
