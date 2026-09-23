@@ -10,7 +10,7 @@ public class ZombieSpawner : MonoBehaviour {
     public ZombieData[] zombieDatas; // 사용할 좀비 셋업 데이터들
     public Transform[] spawnPoints; // 좀비 AI를 소환할 위치들
 
-    [Header("처치 드랍 프리팹 (소총10%/SMG15%/산탄총15%/탄약20%/회복20%/꽝20%)")]
+    [Header("DropTable Prefabs")]
     public GameObject riflePickupPrefab;
     public GameObject smgPickupPrefab;
     public GameObject shotgunPickupPrefab;
@@ -22,6 +22,8 @@ public class ZombieSpawner : MonoBehaviour {
 
     private readonly int zombieScore = 100;
     private readonly float despawnTime = 10.0f;
+    private readonly float lootDespawnTime = 30.0f; // 드랍 아이템 미수거 시 자동 소멸 시간(초). 무한 모드에서 미수거 드랍이 끝없이 누적되는 것을 방지
+    private readonly float lootScatterRadius = 0.5f; // 같은 위치에서 연속으로 드랍될 때 겹치지 않도록 흩뿌리는 반경
 
     private void Update() {
         // 게임 오버 상태일때는 생성하지 않음
@@ -96,7 +98,13 @@ public class ZombieSpawner : MonoBehaviour {
 
         if (dropPrefab != null)
         {
-            Instantiate(dropPrefab, position + Vector3.up * 0.5f, Quaternion.identity);
+            // 같은 지점에서 연속으로 처치될 경우 드랍이 완전히 겹쳐 하나의 덩어리로 보이는 것을 방지
+            Vector2 scatter = Random.insideUnitCircle * lootScatterRadius;
+            Vector3 dropPosition = position + Vector3.up * 0.5f + new Vector3(scatter.x, 0f, scatter.y);
+
+            GameObject drop = Instantiate(dropPrefab, dropPosition, Quaternion.identity);
+            // 플레이어가 회수하지 않고 방치해도 무한 모드에서 드랍이 끝없이 쌓이지 않도록 일정 시간 후 자동 소멸
+            Destroy(drop, lootDespawnTime);
         }
     }
 }

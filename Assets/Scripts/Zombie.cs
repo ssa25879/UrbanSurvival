@@ -93,7 +93,7 @@ public class Zombie : LivingEntity
                 navMeshAgent.isStopped = true;
                 
                 // 가상의 구를 그려 범위 내에 겹치는 whatIsTarget 레이어를 가진 콜라이더만 가져오도록 필터링
-                Collider[] colliders = Physics.OverlapSphere(transform.position, 20f, whatIsTarget);
+                Collider[] colliders = Physics.OverlapSphere(transform.position, 500f, whatIsTarget);
                 
                 // 콜라이더 순회하며 dead상태가 아닌 LivingEntity를 검색
                 for (int i = 0; i < colliders.Length; i++)
