@@ -79,7 +79,8 @@ public class Gun : MonoBehaviour {
     }
 
     // 발사 시도. 실제로 총알이 나갔으면 true
-    public bool Fire() {
+    // characterForward: 발사 방향 기준(총구 자체의 forward가 아니라 캐릭터가 조준 중인 정면 방향을 사용)
+    public bool Fire(Vector3 characterForward) {
         // 발사 가능 상태 && 마지막 발사 시점으로부터 gunData.timeBetFire 이상의 시간이 지남
         if (state != State.Ready || gunData == null)
         {
@@ -92,7 +93,7 @@ public class Gun : MonoBehaviour {
         }
 
         // 벽에 총구가 막혀 있으면 발사를 거부하고 탄약을 소비하지 않는다
-        if (IsMuzzleObstructed())
+        if (IsMuzzleObstructed(characterForward))
         {
             return false;
         }
@@ -100,7 +101,7 @@ public class Gun : MonoBehaviour {
         // 마지막 발사 시점 갱신
         lastFireTime = Time.time;
         // 발사 처리 실행
-        Shot();
+        Shot(characterForward);
         return true;
     }
 
@@ -108,25 +109,27 @@ public class Gun : MonoBehaviour {
     // 총구 지점 자체를 구체 검사하면 서 있는 자세에서 총구 높이가 낮을 때 바닥(Environment 레이어)에
     // 항상 걸리는 오검출이 발생하므로, 총몸 쪽 지점에서 총구까지의 짧은 구간을 스윕해 그 사이를
     // 가로막는 벽이 있는지만 검사한다(바닥은 이 구간의 아래쪽에 있어 걸리지 않음)
-    private bool IsMuzzleObstructed() {
+    private bool IsMuzzleObstructed(Vector3 characterForward) {
         if (muzzleObstructionMask == 0)
         {
             return false;
         }
 
-        Vector3 origin = fireTransform.position - fireTransform.forward * muzzleCheckBackOffset;
+        Vector3 origin = fireTransform.position - characterForward * muzzleCheckBackOffset;
         RaycastHit hit;
-        return Physics.SphereCast(origin, muzzleCheckRadius, fireTransform.forward, out hit, muzzleCheckBackOffset, muzzleObstructionMask, QueryTriggerInteraction.Ignore);
+        return Physics.SphereCast(origin, muzzleCheckRadius, characterForward, out hit, muzzleCheckBackOffset, muzzleObstructionMask, QueryTriggerInteraction.Ignore);
     }
 
     // 실제 발사 처리
-    private void Shot() {
+    // 발사 방향은 손에 든 총 모델(팔 IK 영향으로 방향이 부정확) 대신 캐릭터의 조준 정면(characterForward)을 사용,
+    // 발사 시작 위치(fireTransform.position)는 그대로 총구 지점을 사용한다
+    private void Shot(Vector3 characterForward) {
         int pelletCount = Mathf.Max(1, gunData.pelletsPerShot);
-        Vector3 lastHitPosition = fireTransform.position + fireTransform.forward * gunData.range;
+        Vector3 lastHitPosition = fireTransform.position + characterForward * gunData.range;
 
         for (int i = 0; i < pelletCount; i++)
         {
-            Vector3 shotDirection = ApplySpread(fireTransform.forward, gunData.spreadHalfAngle);
+            Vector3 shotDirection = ApplySpread(characterForward, gunData.spreadHalfAngle);
 
             // 레이캐스트 저장용 컨테이너
             RaycastHit hit;
@@ -140,8 +143,11 @@ public class Gun : MonoBehaviour {
 
                 if (target != null)
                 {
+                    // 누적 점수 기반 영구 피해량 배율 적용(GameManager 미존재 시 1배)
+                    float damageMultiplier = GameManager.instance != null ? GameManager.instance.damageMultiplier : 1f;
+
                     // 상대방 OnDamage 함수 실행(산탄총은 펠릿마다 개별 판정)
-                    target.OnDamage(gunData.damage, hit.point, hit.normal);
+                    target.OnDamage(gunData.damage * damageMultiplier, hit.point, hit.normal);
                 }
 
                 // 충돌한 위치 저장(마지막 펠릿 기준으로 궤적 표시)
@@ -155,7 +161,7 @@ public class Gun : MonoBehaviour {
         }
 
         // 발사 이펙트 코루틴으로 재생(마지막 펠릿의 궤적만 표시)
-        StartCoroutine(ShotEffect(lastHitPosition));
+        StartCoroutine(ShotEffect(lastHitPosition, characterForward));
 
         // 남은 탄약 -1(펠릿 수와 무관하게 1회 발사당 탄창 1발 소모)
         magAmmo--;
@@ -179,7 +185,13 @@ public class Gun : MonoBehaviour {
     }
 
     // 발사 이펙트와 소리를 재생하고 탄알 궤적을 그림
-    private IEnumerator ShotEffect(Vector3 hitPosition) {
+    // characterForward: 총구화염/탄피배출 이펙트도 총 모델 자체 방향이 아니라 캐릭터 정면을 바라보도록 재생 전 정렬
+    private IEnumerator ShotEffect(Vector3 hitPosition, Vector3 characterForward) {
+        // 이펙트를 캐릭터 조준 정면 방향으로 정렬 후 재생
+        Quaternion aimRotation = Quaternion.LookRotation(characterForward);
+        muzzleFlashEffect.transform.rotation = aimRotation;
+        shellEjectEffect.transform.rotation = aimRotation;
+
         // 총구 화염 재생
         muzzleFlashEffect.Play();
         // 탄피 배출 재생

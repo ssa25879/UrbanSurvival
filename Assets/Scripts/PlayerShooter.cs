@@ -93,7 +93,8 @@ public class PlayerShooter : MonoBehaviour {
 
             if (wantsFire)
             {
-                gun.Fire();
+                // 총구 자체 방향이 아니라 캐릭터가 조준 중인 정면 방향으로 발사(팔 IK 영향 배제)
+                gun.Fire(transform.forward);
             }
             else if (playerInput.reload)
             {
