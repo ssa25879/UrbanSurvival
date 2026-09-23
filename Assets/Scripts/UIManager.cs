@@ -25,9 +25,9 @@ public class UIManager : MonoBehaviour {
     public Text waveText; // 적 웨이브 표시용 텍스트
     public GameObject gameoverUI; // 게임 오버시 활성화할 UI 
 
-    // 탄약 텍스트 갱신
+    // 탄약 텍스트 갱신 (remainAmmo가 음수면 무제한 무기, ∞로 표시)
     public void UpdateAmmoText(int magAmmo, int remainAmmo) {
-        ammoText.text = magAmmo + "/" + remainAmmo;
+        ammoText.text = magAmmo + " / " + (remainAmmo < 0 ? "∞" : remainAmmo.ToString());
     }
 
     // 점수 텍스트 갱신
