@@ -16,3 +16,4 @@ MonoBehaviour:
   damage: 50
   speed: 1
   skinColor: {r: 0, g: 0, b: 0, a: 1}
+  isElite: 1

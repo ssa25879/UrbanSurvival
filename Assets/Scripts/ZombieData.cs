@@ -7,4 +7,5 @@ public class ZombieData : ScriptableObject {
     public float damage = 20f; // 공격력
     public float speed = 2f; // 이동 속도
     public Color skinColor = Color.white; // 피부색
+    public bool isElite = false; // 강화 개체 여부(미니맵 등 UI에서 일반 개체와 구분 표시)
 }

@@ -22,6 +22,8 @@ public class Zombie : LivingEntity
     public float timeBetAttack = 0.5f; // 공격 간격
     private float lastAttackTime; // 마지막 공격 시점
 
+    public ZombieData zombieData { get; private set; } // 이 개체의 셋업 데이터(미니맵 등 UI에서 강화 개체 판별용)
+
     // 추적할 대상이 존재하는지 알려주는 프로퍼티
     private bool hasTarget {
         get
@@ -56,6 +58,8 @@ public class Zombie : LivingEntity
 
     // 시간비례 난이도 배율을 적용하는 셋업 메서드(신규 생성분에만 적용, ZombieData 원본은 변경하지 않음)
     public void Setup(ZombieData zombieData, float statMultiplier) {
+        this.zombieData = zombieData;
+
         // 기본 체력 설정
         startingHealth = zombieData.health * statMultiplier;
         health = startingHealth;
