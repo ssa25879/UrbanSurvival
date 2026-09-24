@@ -172,16 +172,17 @@ public class Gun : MonoBehaviour {
         }
     }
 
-    // 발사 방향에 무기별 산포(원뿔 근사)를 적용
+    // 발사 방향에 무기별 산포를 적용(좌우로만 퍼짐)
+    // 상하(pitch)까지 산포시키면 탑뷰 특성상 총알이 바닥에 박히거나 적 키를 넘어가 버려
+    // 명중이 거의 안 되는 문제가 있었음(사용자 제보) - 좌우(yaw) 회전만 적용
     private Vector3 ApplySpread(Vector3 forward, float spreadHalfAngleDeg) {
         if (spreadHalfAngleDeg <= 0f)
         {
             return forward;
         }
 
-        float pitch = Random.Range(-spreadHalfAngleDeg, spreadHalfAngleDeg);
         float yaw = Random.Range(-spreadHalfAngleDeg, spreadHalfAngleDeg);
-        return Quaternion.Euler(pitch, yaw, 0f) * forward;
+        return Quaternion.Euler(0f, yaw, 0f) * forward;
     }
 
     // 발사 이펙트와 소리를 재생하고 탄알 궤적을 그림
