@@ -58,6 +58,17 @@ public class WeaponIconRig : MonoBehaviour {
             if (shell != null) shell.gameObject.SetActive(false);
 
             SetLayerRecursively(copy, iconLayer);
+
+            // 무기마다 메시 피벗과 실제 형상 중심이 달라(예: 총열이 피벗에서 멀리 떨어진 경우)
+            // stage 원점에 자세만 맞추면 카메라 프레임 안에서 한쪽으로 쏠려 보인다.
+            // 렌더러 바운드의 실제 중심이 stage 원점에 오도록 위치를 보정한다
+            copy.SetActive(true);
+            Renderer rend = copy.GetComponentInChildren<Renderer>();
+            if (rend != null)
+            {
+                Vector3 centerOffsetLocal = stage.InverseTransformPoint(rend.bounds.center);
+                copy.transform.localPosition -= centerOffsetLocal;
+            }
             copy.SetActive(false);
 
             iconInstances[i] = copy;
