@@ -27,6 +27,7 @@ public class WeaponIconRig : MonoBehaviour {
 
         Gun[] guns = playerShooter.guns;
         iconInstances = new GameObject[guns.Length];
+        float[] rawSize = new float[guns.Length]; // 정규화 전 각 무기 사본의 대략적인 크기(바운드 대각선 길이)
 
         for (int i = 0; i < guns.Length; i++)
         {
@@ -59,9 +60,41 @@ public class WeaponIconRig : MonoBehaviour {
 
             SetLayerRecursively(copy, iconLayer);
 
+            copy.SetActive(true);
+            Renderer rend = copy.GetComponentInChildren<Renderer>();
+            rawSize[i] = rend != null ? rend.bounds.size.magnitude : 0f;
+            copy.SetActive(false);
+
+            iconInstances[i] = copy;
+        }
+
+        // 무기마다 실제 크기가 크게 달라(예: AK가 권총보다 훨씬 큼) 같은 배율로 촬영하면
+        // 작은 무기가 거의 안 보인다. 가장 큰 무기(AK) 크기를 기준으로 나머지를 확대해
+        // 아이콘끼리 비슷한 존재감을 갖도록 맞춘다(사용자 요청)
+        float referenceSize = 0f;
+        for (int i = 0; i < rawSize.Length; i++)
+        {
+            if (rawSize[i] > referenceSize) referenceSize = rawSize[i];
+        }
+        // 무기별로 형태(가로로 긴 정도)가 달라 바운드 대각선 길이가 같아도 화면상 가로폭은
+        // 다를 수 있다. 가장 큰 무기 기준 그대로 맞추면 다른 무기가 프레임 밖으로 잘릴 수
+        // 있어 10% 여유를 둔다
+        referenceSize *= 0.85f;
+
+        for (int i = 0; i < iconInstances.Length; i++)
+        {
+            GameObject copy = iconInstances[i];
+            if (copy == null || rawSize[i] <= 0f)
+            {
+                continue;
+            }
+
+            float normalizeScale = referenceSize / rawSize[i];
+            copy.transform.localScale *= normalizeScale;
+
+            // 크기를 바꾸면 바운드 중심도 같이 움직이므로, 확대 이후에 다시 중심을 맞춘다.
             // 무기마다 메시 피벗과 실제 형상 중심이 달라(예: 총열이 피벗에서 멀리 떨어진 경우)
             // stage 원점에 자세만 맞추면 카메라 프레임 안에서 한쪽으로 쏠려 보인다.
-            // 렌더러 바운드의 실제 중심이 stage 원점에 오도록 위치를 보정한다
             copy.SetActive(true);
             Renderer rend = copy.GetComponentInChildren<Renderer>();
             if (rend != null)
@@ -70,8 +103,6 @@ public class WeaponIconRig : MonoBehaviour {
                 copy.transform.localPosition -= centerOffsetLocal;
             }
             copy.SetActive(false);
-
-            iconInstances[i] = copy;
         }
 
         if (targetImage != null)
