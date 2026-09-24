@@ -26,13 +26,11 @@ public class ZombieSpawner : MonoBehaviour {
     private readonly float lootScatterRadius = 0.5f; // 같은 위치에서 연속으로 드랍될 때 겹치지 않도록 흩뿌리는 반경
     private readonly float difficultyRampMinutes = 30f; // 0분 100% -> 30분 200%, 이후도 동일한 분당 증가율로 상한 없이 계속 상승
 
-    // 생존 적 전멸 대기 방식을 폐지하고 20~30초(무작위) 간격으로 순차 생성(초기 제안값)
-    // 원문 기획서의 웨이브 1~5 구성 표(일반/강화 비율, 동시 상한, 생성 간격) 수치는 이 세션에서 확인하지 못해
-    // 기존 "wave * 1.5" 공식을 분당 등장 마릿수의 임시 기준선(baseZombiesPerMinute)으로 유지함 - 원문 확인 후 교체 필요
-    private readonly float minSpawnInterval = 20f;
-    private readonly float maxSpawnInterval = 30f;
-    private readonly float baseZombiesPerMinute = 9f; // wave*1.5 공식의 초반 평균값을 참고한 임시 기준선(미확인, 원문 표로 교체 필요)
-    private readonly float zombiesPerMinuteGrowth = 15f; // 총 등장 마릿수 분당 +15마리 누적 증가(초기 제안값)
+    [Header("웨이브 설정 (2026-09-24 확정, 테스트용 - Inspector에서 조정 가능)")]
+    public float waveInterval = 5f; // 다음 웨이브로 넘어가는 간격(초). 테스트용 값이라 밸런스 확정 전까지 조정 가능
+    public int baseWaveZombieCount = 4; // 1웨이브 스폰 마릿수
+    public int zombieCountIncreasePerWave = 2; // 웨이브가 지날 때마다 증가하는 마릿수(예: 4,6,8,10 ...)
+
     private readonly float clearHealRatio = 1f / 3f; // 적 전멸 순간 회복량 = 회복 상자 효과의 1/3(초기 제안값)
     private float nextSpawnTime; // 다음 스폰 예정 시각(Time.time 기준)
     private PlayerHealth cachedPlayerHealth; // 적 전멸 시 회복시킬 대상(최초 1회 조회 후 캐시)
@@ -44,12 +42,12 @@ public class ZombieSpawner : MonoBehaviour {
             return;
         }
 
-        // 20~30초(무작위) 간격으로 순차 생성(생존 적 전멸 대기 방식 폐지)
+        // waveInterval(초)마다 다음 웨이브로 전환(생존 적 전멸 대기 방식 폐지)
         if (Time.time >= nextSpawnTime)
         {
-            float interval = Random.Range(minSpawnInterval, maxSpawnInterval);
-            SpawnBatch(interval);
-            nextSpawnTime = Time.time + interval;
+            wave++;
+            SpawnWave();
+            nextSpawnTime = Time.time + waveInterval;
         }
 
         // UI 갱신
@@ -62,14 +60,9 @@ public class ZombieSpawner : MonoBehaviour {
         UIManager.instance.UpdateWaveText(wave, zombies.Count);
     }
 
-    // 경과 시간에 비례해 늘어나는 분당 등장 마릿수를 기준으로 이번 간격 동안 생성할 좀비 수를 계산
-    private void SpawnBatch(float intervalSeconds) {
-        // 스폰 회차 카운터 증가(UI 표시용, 더 이상 "전멸 후 다음 웨이브" 의미는 아님)
-        wave++;
-
-        float elapsedMinutes = GameManager.instance != null ? GameManager.instance.elapsedMinutes : 0f;
-        float zombiesPerMinute = baseZombiesPerMinute + zombiesPerMinuteGrowth * elapsedMinutes;
-        int spawnCount = Mathf.Max(1, Mathf.RoundToInt(zombiesPerMinute * (intervalSeconds / 60f)));
+    // 현재 웨이브 번호를 기준으로 이번 웨이브에 생성할 좀비 수를 계산(예: 1,2,3,4웨이브 = 4,6,8,10마리)
+    private void SpawnWave() {
+        int spawnCount = baseWaveZombieCount + zombieCountIncreasePerWave * (wave - 1);
 
         for (int i = 0; i < spawnCount; i++)
         {
