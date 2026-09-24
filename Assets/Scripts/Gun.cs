@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 // 총을 구현
@@ -23,7 +24,8 @@ public class Gun : MonoBehaviour {
 
     private int muzzleObstructionMask; // 총구 장애물 검사 전용 레이어 마스크(Environment만)
 
-    private LineRenderer bulletLineRenderer; // 탄알 궤적을 그리기 위한 렌더러
+    private LineRenderer bulletLineRenderer; // 탄알 궤적을 그리기 위한 렌더러(첫 번째 펠릿용, 기존 컴포넌트)
+    private readonly List<LineRenderer> bulletLineRenderers = new List<LineRenderer>(); // 펠릿별 궤적 렌더러 풀(산탄총처럼 한 번에 여러 발 나가는 무기가 각각 따로 그리도록)
 
     private AudioSource gunAudioPlayer; // 총 소리 재생기
 
@@ -66,9 +68,10 @@ public class Gun : MonoBehaviour {
     public void ConfigureSlot(GunData data, int magAmmoValue, int reserveAmmoValue) {
         // 진행 중이던 재장전 등 코루틴 정리
         StopAllCoroutines();
-        if (bulletLineRenderer != null)
+        // 펠릿별 궤적 렌더러가 켜진 채로 남지 않도록 전부 끔(무기 교체 도중 이펙트가 남는 것 방지)
+        for (int i = 0; i < bulletLineRenderers.Count; i++)
         {
-            bulletLineRenderer.enabled = false;
+            bulletLineRenderers[i].enabled = false;
         }
 
         gunData = data;
@@ -125,7 +128,7 @@ public class Gun : MonoBehaviour {
     // 발사 시작 위치(fireTransform.position)는 그대로 총구 지점을 사용한다
     private void Shot(Vector3 characterForward) {
         int pelletCount = Mathf.Max(1, gunData.pelletsPerShot);
-        Vector3 lastHitPosition = fireTransform.position + characterForward * gunData.range;
+        Vector3[] hitPositions = new Vector3[pelletCount]; // 펠릿마다 궤적을 따로 그리기 위해 전부 기록(산탄총 여러 발 발사 연출)
 
         for (int i = 0; i < pelletCount; i++)
         {
@@ -150,18 +153,17 @@ public class Gun : MonoBehaviour {
                     target.OnDamage(gunData.damage * damageMultiplier, hit.point, hit.normal);
                 }
 
-                // 충돌한 위치 저장(마지막 펠릿 기준으로 궤적 표시)
-                lastHitPosition = hit.point;
+                hitPositions[i] = hit.point;
             }
             else
             {
                 // 레이가 충돌 안함 - 최대 사정거리까지 날아갔을 때 위치를 충돌위치로
-                lastHitPosition = fireTransform.position + shotDirection * gunData.range;
+                hitPositions[i] = fireTransform.position + shotDirection * gunData.range;
             }
         }
 
-        // 발사 이펙트 코루틴으로 재생(마지막 펠릿의 궤적만 표시)
-        StartCoroutine(ShotEffect(lastHitPosition, characterForward));
+        // 발사 이펙트 코루틴으로 재생(펠릿마다 궤적을 하나씩 그려 여러 발이 나가는 느낌을 줌)
+        StartCoroutine(ShotEffect(hitPositions, characterForward));
 
         // 남은 탄약 -1(펠릿 수와 무관하게 1회 발사당 탄창 1발 소모)
         magAmmo--;
@@ -185,9 +187,9 @@ public class Gun : MonoBehaviour {
         return Quaternion.Euler(0f, yaw, 0f) * forward;
     }
 
-    // 발사 이펙트와 소리를 재생하고 탄알 궤적을 그림
+    // 발사 이펙트와 소리를 재생하고 펠릿마다 탄알 궤적을 그림
     // characterForward: 총구화염/탄피배출 이펙트도 총 모델 자체 방향이 아니라 캐릭터 정면을 바라보도록 재생 전 정렬
-    private IEnumerator ShotEffect(Vector3 hitPosition, Vector3 characterForward) {
+    private IEnumerator ShotEffect(Vector3[] hitPositions, Vector3 characterForward) {
         // 이펙트를 캐릭터 조준 정면 방향으로 정렬 후 재생
         Quaternion aimRotation = Quaternion.LookRotation(characterForward);
         muzzleFlashEffect.transform.rotation = aimRotation;
@@ -201,18 +203,66 @@ public class Gun : MonoBehaviour {
         // 총 발사음 재생
         gunAudioPlayer.PlayOneShot(gunData.shotClip);
 
-        // 발사 시작점 지정
-        bulletLineRenderer.SetPosition(0, fireTransform.position);
-        // 판정 끝점은 입력으로 들어온 충돌 위치
-        bulletLineRenderer.SetPosition(1, hitPosition);
-        // 라인 렌더러를 활성화하여 탄알 궤적을 그림
-        bulletLineRenderer.enabled = true;
+        // 펠릿 수만큼 궤적 렌더러를 켬(산탄총은 여러 개가 동시에 켜져 부채꼴로 퍼지는 게 보임)
+        for (int i = 0; i < hitPositions.Length; i++)
+        {
+            LineRenderer lineRenderer = GetLineRenderer(i);
+            lineRenderer.SetPosition(0, fireTransform.position);
+            lineRenderer.SetPosition(1, hitPositions[i]);
+            lineRenderer.enabled = true;
+        }
 
         // 0.03초 동안 잠시 처리를 대기
         yield return new WaitForSeconds(0.03f);
 
-        // 라인 렌더러를 비활성화하여 탄알 궤적을 지움
-        bulletLineRenderer.enabled = false;
+        // 이번에 사용한 궤적 렌더러만 비활성화(다른 무기의 궤적과 겹치지 않게)
+        for (int i = 0; i < hitPositions.Length; i++)
+        {
+            bulletLineRenderers[i].enabled = false;
+        }
+    }
+
+    // 인덱스에 해당하는 궤적 렌더러를 반환, 없으면 새로 만들어 풀에 추가
+    // 인덱스 0은 기존 bulletLineRenderer 컴포넌트를 그대로 사용, 그 이상(산탄총 등)만 동적으로 생성
+    private LineRenderer GetLineRenderer(int index) {
+        while (bulletLineRenderers.Count <= index)
+        {
+            LineRenderer newRenderer;
+            if (bulletLineRenderers.Count == 0)
+            {
+                newRenderer = bulletLineRenderer;
+            }
+            else
+            {
+                GameObject trailObject = new GameObject("BulletTrail " + bulletLineRenderers.Count);
+                trailObject.transform.SetParent(transform, false);
+                newRenderer = trailObject.AddComponent<LineRenderer>();
+                CopyLineRendererSettings(bulletLineRenderer, newRenderer);
+            }
+
+            newRenderer.positionCount = 2;
+            newRenderer.enabled = false;
+            bulletLineRenderers.Add(newRenderer);
+        }
+
+        return bulletLineRenderers[index];
+    }
+
+    // 새로 만든 궤적 렌더러가 기존(총구 기준으로 세팅된) 렌더러와 같은 두께·색·머티리얼을 쓰도록 설정 복사
+    private static void CopyLineRendererSettings(LineRenderer source, LineRenderer target) {
+        target.sharedMaterial = source.sharedMaterial;
+        target.startColor = source.startColor;
+        target.endColor = source.endColor;
+        target.startWidth = source.startWidth;
+        target.endWidth = source.endWidth;
+        target.widthCurve = source.widthCurve;
+        target.numCapVertices = source.numCapVertices;
+        target.numCornerVertices = source.numCornerVertices;
+        target.textureMode = source.textureMode;
+        target.alignment = source.alignment;
+        target.useWorldSpace = source.useWorldSpace;
+        target.sortingLayerID = source.sortingLayerID;
+        target.sortingOrder = source.sortingOrder;
     }
 
     // 재장전 시도
