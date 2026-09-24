@@ -23,6 +23,8 @@ public class GameManager : MonoBehaviour {
 
     private int score = 0; // 현재 게임 점수
     public bool isGameover { get; private set; } // 게임 오버 상태
+    public bool isPaused { get; private set; } // 일시정지 상태
+    public KeyCode pauseKey = KeyCode.Escape; // 일시정지 토글 키
 
     // 생존 경과 시간(분). 신규 생성 적의 시간비례 난이도 배율 계산에 사용(씬 로드 시점 기준, 재시작 시 자동 초기화)
     public float elapsedMinutes => Time.timeSinceLevelLoad / 60f;
@@ -44,6 +46,26 @@ public class GameManager : MonoBehaviour {
         FindObjectOfType<PlayerHealth>().onDeath += EndGame;
     }
 
+    private void Update() {
+        // 게임 오버 상태에서는 일시정지를 걸 수 없음(이미 멈춰있고, 재시작만 가능)
+        if (isGameover)
+        {
+            return;
+        }
+
+        if (Input.GetKeyDown(pauseKey))
+        {
+            TogglePause();
+        }
+    }
+
+    // 일시정지 상태를 토글(Time.timeScale로 이동/물리/발사 쿨타임/좀비 AI 전부 일괄 정지)
+    public void TogglePause() {
+        isPaused = !isPaused;
+        Time.timeScale = isPaused ? 0f : 1f;
+        UIManager.instance.SetActivePauseUI(isPaused);
+    }
+
     // 점수를 추가하고 UI 갱신
     public void AddScore(int newScore) {
         // 게임 오버가 아닌 상태에서만 점수 증가 가능
@@ -60,6 +82,10 @@ public class GameManager : MonoBehaviour {
     public void EndGame() {
         // 게임 오버 상태를 참으로 변경
         isGameover = true;
+        // 혹시 일시정지 중이었다면 시간 배율과 일시정지 UI를 원복(정상적으로는 일시정지 중 사망이 불가능하지만 안전장치로 둠)
+        isPaused = false;
+        Time.timeScale = 1f;
+        UIManager.instance.SetActivePauseUI(false);
         // 게임 오버 UI를 활성화
         UIManager.instance.SetActiveGameoverUI(true);
     }

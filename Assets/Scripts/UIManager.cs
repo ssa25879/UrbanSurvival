@@ -25,6 +25,7 @@ public class UIManager : MonoBehaviour {
     public Text waveText; // 적 웨이브 표시용 텍스트
     public GameObject gameoverUI; // 게임 오버시 활성화할 UI
     public Text resultStatsText; // 게임 오버 화면에 표시할 결과 요약(점수/생존시간/도달 웨이브)
+    public GameObject pauseUI; // 일시정지 중 활성화할 UI
 
     private int lastScore; // 결과 화면 표시용으로 마지막으로 갱신된 점수를 기억
     private int lastWave; // 결과 화면 표시용으로 마지막으로 갱신된 웨이브를 기억
@@ -61,8 +62,15 @@ public class UIManager : MonoBehaviour {
         gameoverUI.SetActive(active);
     }
 
+    // 일시정지 UI 활성화
+    public void SetActivePauseUI(bool active) {
+        pauseUI.SetActive(active);
+    }
+
     // 게임 재시작
     public void GameRestart() {
+        // 일시정지 중 재시작하는 경우가 없도록 시간 배율을 원복(안전장치)
+        Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }
