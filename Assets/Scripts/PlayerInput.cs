@@ -23,8 +23,10 @@ public class PlayerInput : MonoBehaviour {
 
     // 매프레임 사용자 입력을 감지
     private void Update() {
-        // 게임오버 상태에서는 사용자 입력을 감지하지 않는다
-        if (GameManager.instance && GameManager.instance.isGameover)
+        // 게임오버·일시정지 상태에서는 사용자 입력을 감지하지 않는다
+        // (일시정지는 Time.timeScale=0이라 발사 쿨타임 등은 자연히 멈추지만, Update() 자체는 계속 돌기 때문에
+        // 이 가드가 없으면 일시정지 중에도 새로 누른 입력이 그대로 통과해 총이 나가는 문제가 있었음)
+        if (GameManager.instance && (GameManager.instance.isGameover || GameManager.instance.isPaused))
         {
             move = 0;
             rotate = 0;
