@@ -53,7 +53,8 @@ public class GameManager : MonoBehaviour {
             return;
         }
 
-        if (Input.GetKeyDown(pauseKey))
+        // 설정 창이 열려 있으면 ESC는 설정 창 닫기에만 사용(같은 프레임에 일시정지까지 풀리지 않도록)
+        if (Input.GetKeyDown(pauseKey) && !GameSettingsKit.SettingsPanel.BlocksEscapeThisFrame)
         {
             TogglePause();
         }
