@@ -38,6 +38,14 @@ public class Gun : MonoBehaviour {
 
     private float lastFireTime; // 총을 마지막으로 발사한 시점
 
+    private float reloadStartTime; // 현재 재장전을 시작한 시점
+    private float reloadDuration; // 현재 재장전에 걸리는 시간
+
+    // 재장전 진행률(0~1). 재장전 중이 아니면 0(HUD 재장전 표시용)
+    public float reloadProgress => state == State.Reloading && reloadDuration > 0f
+        ? Mathf.Clamp01((Time.time - reloadStartTime) / reloadDuration)
+        : 0f;
+
     private void Awake() {
         // 사용할 컴포넌트의 참조 가져오기
         gunAudioPlayer = GetComponent<AudioSource>();
@@ -83,7 +91,8 @@ public class Gun : MonoBehaviour {
 
     // 발사 시도. 실제로 총알이 나갔으면 true
     // characterForward: 발사 방향 기준(총구 자체의 forward가 아니라 캐릭터가 조준 중인 정면 방향을 사용)
-    public bool Fire(Vector3 characterForward) {
+    // aimOrigin: 명중 판정 레이의 출발점(캐릭터 중심선 위 고정 높이, PlayerShooter.GetAimOrigin)
+    public bool Fire(Vector3 characterForward, Vector3 aimOrigin) {
         // 발사 가능 상태 && 마지막 발사 시점으로부터 gunData.timeBetFire 이상의 시간이 지남
         if (state != State.Ready || gunData == null)
         {
@@ -104,7 +113,7 @@ public class Gun : MonoBehaviour {
         // 마지막 발사 시점 갱신
         lastFireTime = Time.time;
         // 발사 처리 실행
-        Shot(characterForward);
+        Shot(characterForward, aimOrigin);
         return true;
     }
 
@@ -124,11 +133,18 @@ public class Gun : MonoBehaviour {
     }
 
     // 실제 발사 처리
-    // 발사 방향은 손에 든 총 모델(팔 IK 영향으로 방향이 부정확) 대신 캐릭터의 조준 정면(characterForward)을 사용,
-    // 발사 시작 위치(fireTransform.position)는 그대로 총구 지점을 사용한다
-    private void Shot(Vector3 characterForward) {
+    // 발사 방향은 손에 든 총 모델(팔 IK 영향으로 방향이 부정확) 대신 캐릭터의 조준 정면(characterForward)을 사용
+    // 판정 레이는 캐릭터 중심선 위 고정 높이(aimOrigin)에서 수평으로 출발한다(2026-09-27 변경). 총구 지점에서 쏘면
+    // (1) 총구가 중심에서 옆으로 약 0.27m 떨어져 있어 정확히 조준해도 총알이 옆으로 비껴가고
+    // (2) 총구가 몸 앞 약 0.55m에 있어 그보다 가까이 붙은 적은 레이가 적 안쪽/뒤에서 출발해 판정되지 않았고
+    // (3) 총구 높이가 애니메이션에 따라 바뀌어 같은 방향으로 조준해도 판정이 달라졌음.
+    // 벽에 막힌 총구의 발사 거부(IsMuzzleObstructed)는 계속 총구 기준으로 검사하고, 궤적 연출은 총구에서 그린다
+    private void Shot(Vector3 characterForward, Vector3 aimOrigin) {
         int pelletCount = Mathf.Max(1, gunData.pelletsPerShot);
         Vector3[] hitPositions = new Vector3[pelletCount]; // 펠릿마다 궤적을 따로 그리기 위해 전부 기록(산탄총 여러 발 발사 연출)
+        Vector3 rayOrigin = aimOrigin;
+        // 조준 방향도 수평으로 고정(레이 높이가 사거리 내내 일정하게 유지되도록)
+        characterForward = Vector3.ProjectOnPlane(characterForward, Vector3.up).normalized;
 
         for (int i = 0; i < pelletCount; i++)
         {
@@ -138,7 +154,7 @@ public class Gun : MonoBehaviour {
             RaycastHit hit;
 
             // 레이캐스트: 사거리는 무기별 gunData.range, 레이어는 hitLayers, 트리거 콜라이더는 무시
-            if (Physics.Raycast(fireTransform.position, shotDirection, out hit, gunData.range, hitLayers, QueryTriggerInteraction.Ignore))
+            if (Physics.Raycast(rayOrigin, shotDirection, out hit, gunData.range, hitLayers, QueryTriggerInteraction.Ignore))
             {
                 // 레이가 충돌 한 경우
                 // 충돌한 콜라이더 자신 또는 부모에서 IDamageable 탐색(자식 콜라이더에만 붙어 있는 경우 대응)
@@ -158,7 +174,7 @@ public class Gun : MonoBehaviour {
             else
             {
                 // 레이가 충돌 안함 - 최대 사정거리까지 날아갔을 때 위치를 충돌위치로
-                hitPositions[i] = fireTransform.position + shotDirection * gunData.range;
+                hitPositions[i] = rayOrigin + shotDirection * gunData.range;
             }
         }
 
@@ -287,8 +303,10 @@ public class Gun : MonoBehaviour {
         // 재장전 소리 재생
         gunAudioPlayer.PlayOneShot(gunData.reloadClip);
 
-        // 재장전 소요 시간 만큼 처리 쉬기
-        yield return new WaitForSeconds(gunData.reloadTime);
+        // 재장전 소요 시간 만큼 처리 쉬기(진행률 표시용으로 시작 시점과 소요 시간 기록)
+        reloadStartTime = Time.time;
+        reloadDuration = gunData.reloadTime;
+        yield return new WaitForSeconds(reloadDuration);
 
         // 탄약 회복량 계산
         int ammoToFill = gunData.magCapacity - magAmmo;

@@ -6,6 +6,13 @@ public class WeaponHUD : MonoBehaviour {
     public Text weaponNameText;
     public GameObject reloadIndicator; // 재장전 중일 때만 활성화할 표시(텍스트/아이콘)
 
+    [Header("탄약 수치 색 경고(2026-09-27 추가)")]
+    public Text ammoText; // UIManager.ammoText와 같은 텍스트(숫자 갱신은 UIManager, 색만 여기서 변경)
+    public float lowAmmoRatio = 0.25f; // 탄창 용량 대비 이 비율 이하이면 경고색
+    public Color normalAmmoColor = new Color(0.95f, 0.95f, 0.93f, 1f);
+    public Color lowAmmoColor = new Color(0.93f, 0.74f, 0.36f, 1f);
+    public Color emptyAmmoColor = new Color(0.90f, 0.28f, 0.30f, 1f);
+
     private PlayerShooter playerShooter;
 
     private void Start() {
@@ -33,6 +40,22 @@ public class WeaponHUD : MonoBehaviour {
         if (reloadIndicator != null)
         {
             reloadIndicator.SetActive(gun.state == Gun.State.Reloading);
+        }
+
+        if (ammoText != null && gun.gunData != null)
+        {
+            if (gun.magAmmo <= 0)
+            {
+                ammoText.color = emptyAmmoColor;
+            }
+            else if (gun.magAmmo <= Mathf.CeilToInt(gun.gunData.magCapacity * lowAmmoRatio))
+            {
+                ammoText.color = lowAmmoColor;
+            }
+            else
+            {
+                ammoText.color = normalAmmoColor;
+            }
         }
     }
 }

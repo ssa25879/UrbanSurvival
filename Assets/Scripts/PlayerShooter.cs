@@ -21,6 +21,15 @@ public class PlayerShooter : MonoBehaviour {
 
     public Gun gun { get; private set; } // 현재 활성화된 총(읽기 전용, UI/외부 조회용)
 
+    // 명중 판정 레이의 높이(캐릭터 발밑 기준, m). 총구 높이는 애니메이션(팔 흔들림)에 따라 계속 바뀌어
+    // 같은 방향으로 조준해도 맞았다 안 맞았다 했으므로 고정값을 사용. 적 판정 캡슐(0~0.76m)의 몸통 부근
+    public float aimHeight = 0.45f;
+
+    // 명중 판정 레이의 출발점: 캐릭터 중심선 위 고정 높이
+    public Vector3 GetAimOrigin() {
+        return transform.position + Vector3.up * aimHeight;
+    }
+
     private TwoBoneIKConstraint leftHandIK; // 왼손 IK 제약(무기 교체 시 target을 현재 무기의 LeftHandGrip으로 재설정)
 
     private bool[] unlocked = new bool[SlotCount]; // 슬롯 보유 여부(권총은 항상 true)
@@ -94,7 +103,8 @@ public class PlayerShooter : MonoBehaviour {
             if (wantsFire)
             {
                 // 총구 자체 방향이 아니라 캐릭터가 조준 중인 정면 방향으로 발사(팔 IK 영향 배제)
-                gun.Fire(transform.forward);
+                // 판정 레이는 캐릭터 중심선의 고정 높이에서 출발(총구 위치·높이에 따라 조준선과 어긋나던 문제)
+                gun.Fire(transform.forward, GetAimOrigin());
             }
             else if (playerInput.reload)
             {
