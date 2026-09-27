@@ -2,11 +2,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 우측 상단 HUD: 플레이어를 미니맵 중앙에 고정하고, 탐지 반경 안의 좀비를 상대 위치(월드 북쪽 고정)로 표시
+// 우측 상단 HUD: 플레이어를 미니맵 중앙에 고정하고, 탐지 반경 안의 좀비를 상대 위치로 표시
+// 미니맵의 위쪽 = 게임 화면의 위쪽(카메라 기준). 카메라가 Y축 45도로 돌아가 있어 월드 북쪽(+Z) 기준으로 그리면
+// 화면과 미니맵의 방향이 45도 어긋나 적 위치가 다르게 보였음(2026-09-27 수정)
 public class ThreatMinimap : MonoBehaviour {
     public RectTransform enemyMarkerLayer; // 좀비 마커를 담을 부모
     public Image enemyMarkerPrefab; // 좀비 마커로 사용할 아이콘(원형 스프라이트), 비활성 상태로 유지되는 템플릿
-    public Sprite offscreenArrowSprite; // 미니맵 범위 밖 위협을 표시할 방향 화살표 스프라이트(북쪽 기준으로 위를 향하는 아이콘)
+    public Sprite offscreenArrowSprite; // 미니맵 범위 밖 위협을 표시할 방향 화살표 스프라이트(위를 향하는 아이콘)
+    public Transform viewReference; // 미니맵 방향 기준(비우면 Main Camera). 이 오브젝트가 바라보는 방향이 미니맵 위쪽이 됨
 
     public float detectionRadius = 35f; // 미니맵에 점으로 표시할 실제 탐지 반경(m, HUD 준비 문서 9장 초기 제안값)
     public float awarenessRadius = 70f; // 이 범위 안(탐지 반경 밖 포함)의 적은 가장자리 화살표로 존재만 알림
@@ -62,6 +65,16 @@ public class ThreatMinimap : MonoBehaviour {
     private void RefreshMarkers() {
         Zombie[] zombies = FindObjectsByType<Zombie>(FindObjectsSortMode.None);
 
+        // 카메라의 오른쪽/앞쪽을 수평면에 투영해 미니맵 X/Y축으로 사용(카메라가 없으면 월드 축)
+        Vector3 viewRight = Vector3.right;
+        Vector3 viewForward = Vector3.forward;
+        Transform view = viewReference != null ? viewReference : (Camera.main != null ? Camera.main.transform : null);
+        if (view != null)
+        {
+            viewRight = Vector3.ProjectOnPlane(view.right, Vector3.up).normalized;
+            viewForward = Vector3.Cross(viewRight, Vector3.up);
+        }
+
         int usedMarkers = 0;
         for (int i = 0; i < zombies.Length; i++)
         {
@@ -71,7 +84,7 @@ public class ThreatMinimap : MonoBehaviour {
             }
 
             Vector3 offset = zombies[i].transform.position - playerTransform.position;
-            Vector2 flatOffset = new Vector2(offset.x, offset.z);
+            Vector2 flatOffset = new Vector2(Vector3.Dot(offset, viewRight), Vector3.Dot(offset, viewForward));
             float distance = flatOffset.magnitude;
 
             // 인지 범위(awarenessRadius) 밖은 화살표로도 표시하지 않음
@@ -87,7 +100,7 @@ public class ThreatMinimap : MonoBehaviour {
 
             if (distance <= detectionRadius)
             {
-                // 탐지 반경 안: 기존처럼 상대 위치에 점으로 표시(월드 XZ -> 미니맵, 위쪽 = 월드 북쪽)
+                // 탐지 반경 안: 상대 위치에 점으로 표시(카메라 기준 좌우/앞뒤 -> 미니맵 X/Y, 위쪽 = 화면 위쪽)
                 Vector2 mapPos = flatOffset / detectionRadius * minimapPixelRadius;
                 marker.sprite = dotSprite;
                 markerRect.localRotation = Quaternion.identity;
