@@ -65,12 +65,9 @@ namespace GameSettingsKit
         private void Awake()
         {
             SettingsStore.EnsureLoaded();
-            if (audioMixer != null)
-            {
-                SettingsStore.BindMixer(audioMixer, musicVolumeParameter, sfxVolumeParameter);
-            }
 
-            bool hasMixer = SettingsStore.HasMixer;
+            // 믹서 값 적용은 Start에서 한다(AudioMixer.SetFloat는 Awake에서 호출하면 무시됨 — 실측 확인)
+            bool hasMixer = audioMixer != null || SettingsStore.HasMixer;
             if (musicRow != null) musicRow.SetActive(hasMixer);
             if (sfxRow != null) sfxRow.SetActive(hasMixer);
 
@@ -93,6 +90,14 @@ namespace GameSettingsKit
 
             BuildOptions();
             if (window != null) window.SetActive(false);
+        }
+
+        private void Start()
+        {
+            if (audioMixer != null)
+            {
+                SettingsStore.BindMixer(audioMixer, musicVolumeParameter, sfxVolumeParameter);
+            }
         }
 
         private void OnDisable()

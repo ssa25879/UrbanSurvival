@@ -35,6 +35,9 @@ if (Input.GetKeyDown(KeyCode.Escape) && !GameSettingsKit.SettingsPanel.BlocksEsc
 
 `SettingsPanel.audioMixer`에 AudioMixer를 지정하고, 믹서에서 노출(Exposed)한 파라미터 이름을 `musicVolumeParameter`, `sfxVolumeParameter`에 맞춘다(기본 `MusicVolume`, `SfxVolume`). 믹서를 지정하지 않으면 음악·효과음 행은 자동으로 숨겨지고 마스터 볼륨(`AudioListener.volume`)만 쓴다.
 
+- 믹서 값은 `SettingsPanel.Start`에서 적용한다. `AudioMixer.SetFloat`는 `Awake`에서 호출하면 무시되기 때문이다(Unity 6.3에서 실측). 코드에서 `SettingsStore.BindMixer`를 직접 부를 때도 `Start` 이후에 호출한다.
+- 음악을 재생하는 AudioSource는 `Music` 그룹, 효과음 AudioSource는 `SFX` 그룹으로 출력을 지정해야 슬라이더가 적용된다.
+
 ## 동작 규칙
 
 - 값은 바꾸는 즉시 적용되고, 창을 닫을 때 저장된다.
