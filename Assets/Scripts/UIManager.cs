@@ -27,8 +27,13 @@ public class UIManager : MonoBehaviour {
     public Text resultStatsText; // 게임 오버 화면에 표시할 결과 요약(점수/생존시간/도달 웨이브)
     public GameObject pauseUI; // 일시정지 중 활성화할 UI
 
+    public GameObject goalReachedUI; // 1차 목표(30분 생존) 달성 시 잠시 표시할 알림 UI(없으면 표시 생략)
+    public Text goalReachedText; // 알림 UI 안의 문구(없으면 기존 문구 유지)
+    public float goalReachedDisplaySeconds = 5f; // 알림 표시 시간(초)
+
     private int lastScore; // 결과 화면 표시용으로 마지막으로 갱신된 점수를 기억
     private int lastWave; // 결과 화면 표시용으로 마지막으로 갱신된 웨이브를 기억
+    private string primaryGoalSnapshot; // 1차 목표 달성 시점의 결과 스냅샷(기록 후 변경하지 않음)
 
     // 탄약 텍스트 갱신 (remainAmmo가 음수면 무제한 무기, ∞로 표시)
     public void UpdateAmmoText(int magAmmo, int remainAmmo) {
@@ -57,9 +62,43 @@ public class UIManager : MonoBehaviour {
             resultStatsText.text = "SCORE : " + lastScore
                 + "\nSURVIVED : " + minutes + ":" + seconds.ToString("00")
                 + "\nWAVE : " + lastWave;
+
+            // 1차 목표를 달성한 판이면 달성 시점 스냅샷을 작은 강조색 한 줄로 함께 표시(결과 패널 높이 안에 맞춤)
+            if (primaryGoalSnapshot != null)
+            {
+                resultStatsText.text += "\n<size=15><color=#EDBD5C>" + primaryGoalSnapshot + "</color></size>";
+            }
         }
 
         gameoverUI.SetActive(active);
+    }
+
+    // 1차 목표 달성 시점의 점수/시간/웨이브를 한 번만 기록하고 알림을 잠시 표시
+    public void RecordPrimaryGoalSnapshot(int score) {
+        if (primaryGoalSnapshot != null)
+        {
+            return;
+        }
+
+        int totalSeconds = Mathf.FloorToInt(Time.timeSinceLevelLoad);
+        string time = totalSeconds / 60 + ":" + (totalSeconds % 60).ToString("00");
+        primaryGoalSnapshot = "GOAL CLEARED " + time + "  /  SCORE " + score + "  /  WAVE " + lastWave;
+
+        if (goalReachedUI != null)
+        {
+            if (goalReachedText != null)
+            {
+                goalReachedText.text = "SURVIVED " + time + "\nENDLESS MODE";
+            }
+
+            goalReachedUI.SetActive(true);
+            // 일시정지 중에는 알림 시간도 멈추도록 스케일된 시간 기준 Invoke 사용
+            Invoke(nameof(HideGoalReachedUI), goalReachedDisplaySeconds);
+        }
+    }
+
+    private void HideGoalReachedUI() {
+        goalReachedUI.SetActive(false);
     }
 
     // 일시정지 UI 활성화
