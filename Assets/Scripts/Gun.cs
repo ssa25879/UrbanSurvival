@@ -41,6 +41,11 @@ public class Gun : MonoBehaviour {
     private float reloadStartTime; // 현재 재장전을 시작한 시점
     private float reloadDuration; // 현재 재장전에 걸리는 시간
 
+    // 캐릭터 배율(PlayerCharacter가 시작 시 설정, GunData 원본은 수정하지 않음). 실제 간격·시간 = 기본값 / 배율
+    public float attackSpeedMultiplier { get; set; } = 1f;
+    public float reloadSpeedMultiplier { get; set; } = 1f;
+    public float characterDamageMultiplier { get; set; } = 1f;
+
     // 재장전 진행률(0~1). 재장전 중이 아니면 0(HUD 재장전 표시용)
     public float reloadProgress => state == State.Reloading && reloadDuration > 0f
         ? Mathf.Clamp01((Time.time - reloadStartTime) / reloadDuration)
@@ -99,7 +104,7 @@ public class Gun : MonoBehaviour {
             return false;
         }
 
-        if (Time.time < lastFireTime + gunData.timeBetFire)
+        if (Time.time < lastFireTime + gunData.timeBetFire / attackSpeedMultiplier)
         {
             return false;
         }
@@ -165,8 +170,8 @@ public class Gun : MonoBehaviour {
                     // 누적 점수 기반 영구 피해량 배율 적용(GameManager 미존재 시 1배)
                     float damageMultiplier = GameManager.instance != null ? GameManager.instance.damageMultiplier : 1f;
 
-                    // 상대방 OnDamage 함수 실행(산탄총은 펠릿마다 개별 판정)
-                    target.OnDamage(gunData.damage * damageMultiplier, hit.point, hit.normal);
+                    // 상대방 OnDamage 함수 실행(산탄총은 펠릿마다 개별 판정, 캐릭터 공격력 배율 포함)
+                    target.OnDamage(gunData.damage * characterDamageMultiplier * damageMultiplier, hit.point, hit.normal);
                 }
 
                 hitPositions[i] = hit.point;
@@ -305,7 +310,7 @@ public class Gun : MonoBehaviour {
 
         // 재장전 소요 시간 만큼 처리 쉬기(진행률 표시용으로 시작 시점과 소요 시간 기록)
         reloadStartTime = Time.time;
-        reloadDuration = gunData.reloadTime;
+        reloadDuration = gunData.reloadTime / reloadSpeedMultiplier;
         yield return new WaitForSeconds(reloadDuration);
 
         // 탄약 회복량 계산
