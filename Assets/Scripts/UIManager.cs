@@ -57,6 +57,11 @@ public class UIManager : MonoBehaviour {
         waveText.text = "Wave : " + waves + "\nEnemy Left : " + aliveCount + " + " + FormatCount(pendingCount);
     }
 
+    // 준비 시간 안내 텍스트(첫 웨이브가 시작하기 전까지 웨이브 패널에 남은 초를 표시)
+    public void UpdatePrepareText(int secondsLeft) {
+        waveText.text = "Get Ready : " + secondsLeft + "\nEnemy Left : 0 + 0";
+    }
+
     // 후반에 대기 수가 매우 커져 패널 폭을 넘지 않도록 1만부터 k 단위로 줄여 표시
     private static string FormatCount(int count) {
         return count >= 10000 ? (count / 1000) + "k" : count.ToString();

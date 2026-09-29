@@ -32,6 +32,7 @@ public class ZombieSpawner : MonoBehaviour {
     public int baseWaveZombieCount = 4; // 1웨이브 스폰 마릿수
     public int zombieCountIncreasePerWave = 2; // 웨이브가 지날 때마다 증가하는 마릿수(예: 4,6,8,10 ...)
     public int eliteWaveInterval = 10; // 강화 적이 나오는 웨이브 간격(10, 20, 30웨이브 ... 2026-09-29 확정). 그 외 웨이브에는 일반 적(강화가 아닌 데이터)만 나온다
+    public float prepareSeconds = 5f; // 게임 시작 후 첫 웨이브까지의 준비 시간(초, 기획서 5장 "5초 준비"). 준비 중에도 플레이어는 조작할 수 있다
     public float eliteRatio = 0.2f; // 강화 웨이브에서 그 웨이브 소환 마릿수 중 강화 적의 비율(초기 제안값, 최소 1마리)
     public int maxConcurrentZombies = 500; // 씬에 동시에 존재하는 좀비 최대 수(2026-09-29 확정). 시체가 사라지기 전까지는 슬롯을 차지한다
 
@@ -78,6 +79,13 @@ public class ZombieSpawner : MonoBehaviour {
 
         // 시체가 사라져 파괴된 좀비를 제외해 현재 씬에 남은 수를 갱신
         spawnedZombies.RemoveAll(IsDestroyed);
+
+        // 준비 시간: 첫 웨이브 전에는 소환하지 않고 남은 초를 표시(경과 시간은 일시정지 중 흐르지 않는 씬 시작 기준 시간)
+        if (Time.timeSinceLevelLoad < prepareSeconds)
+        {
+            UIManager.instance.UpdatePrepareText(Mathf.CeilToInt(prepareSeconds - Time.timeSinceLevelLoad));
+            return;
+        }
 
         // waveIntervalMin~waveIntervalMax(초) 무작위 간격마다 다음 웨이브로 전환(생존 적 전멸 대기 방식 폐지)
         if (Time.time >= nextSpawnTime)
