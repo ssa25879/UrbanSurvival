@@ -1,4 +1,7 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 // 플레이어 캐릭터를 조작하기 위한 사용자 입력을 감지
 // 감지된 입력값을 다른 컴포넌트들이 사용할 수 있도록 제공
@@ -21,6 +24,43 @@ public class PlayerInput : MonoBehaviour {
     public bool swapToSlot3 { get; private set; } // 3번 슬롯(SMG) 스왑 입력
     public bool swapToSlot4 { get; private set; } // 4번 슬롯(산탄총) 스왑 입력
 
+    // 일시정지·게임오버·창 포커스 변경 직후에는 누르고 있던 발사 버튼이 다시 눌린 것으로 처리되지 않도록,
+    // 발사 버튼을 한 번 뗄 때까지 발사 입력을 막는다(UI 버튼 클릭이나 창 클릭으로 돌아온 클릭이 오발이 되는 것을 방지)
+    private bool suppressFireUntilRelease;
+    private readonly List<RaycastResult> uiRaycastResults = new List<RaycastResult>();
+
+    private void OnApplicationFocus(bool hasFocus) {
+        suppressFireUntilRelease = true;
+    }
+
+    // 마우스 포인터가 게임 화면 밖이거나, 클릭 가능한 UI(버튼 등) 위에 있는지 확인
+    private bool IsPointerBlockedForFire() {
+        Vector3 pointer = Input.mousePosition;
+        if (pointer.x < 0f || pointer.y < 0f || pointer.x > Screen.width || pointer.y > Screen.height)
+        {
+            return true;
+        }
+
+        if (EventSystem.current == null)
+        {
+            return false;
+        }
+
+        // 클릭할 수 없는 HUD 패널 위에서는 사격이 막히지 않도록, 버튼 같은 Selectable UI만 검사한다
+        PointerEventData pointerData = new PointerEventData(EventSystem.current) { position = pointer };
+        uiRaycastResults.Clear();
+        EventSystem.current.RaycastAll(pointerData, uiRaycastResults);
+        for (int i = 0; i < uiRaycastResults.Count; i++)
+        {
+            if (uiRaycastResults[i].gameObject.GetComponentInParent<Selectable>() != null)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     // 매프레임 사용자 입력을 감지
     private void Update() {
         // 게임오버·일시정지 상태에서는 사용자 입력을 감지하지 않는다
@@ -37,6 +77,8 @@ public class PlayerInput : MonoBehaviour {
             swapToSlot2 = false;
             swapToSlot3 = false;
             swapToSlot4 = false;
+            // 정지 중에 누른 버튼(예: 계속하기 클릭)이 재개 직후 발사로 이어지지 않도록 막는다
+            suppressFireUntilRelease = true;
             return;
         }
 
@@ -47,6 +89,27 @@ public class PlayerInput : MonoBehaviour {
         // fire에 관한 입력 감지
         fire = Input.GetButton(fireButtonName);
         fireDown = Input.GetButtonDown(fireButtonName);
+
+        // 발사 차단: 정지·포커스 복귀 직후 누른 채로 남은 버튼, 화면 밖 포인터, 클릭 가능한 UI 위 포인터
+        if (suppressFireUntilRelease)
+        {
+            if (!fire)
+            {
+                suppressFireUntilRelease = false;
+            }
+            else
+            {
+                fire = false;
+                fireDown = false;
+            }
+        }
+
+        if ((fire || fireDown) && IsPointerBlockedForFire())
+        {
+            fire = false;
+            fireDown = false;
+        }
+
         // reload에 관한 입력 감지
         reload = Input.GetButtonDown(reloadButtonName);
         // 마우스 조준 위치 감지(이동과 독립적으로 처리)
