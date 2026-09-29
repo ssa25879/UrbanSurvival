@@ -15,6 +15,7 @@ public class CharacterSelectMenu : MonoBehaviour {
     public Color normalFrameColor = new Color(0.2f, 0.22f, 0.25f, 1f); // 선택 안 된 카드 테두리
 
     private int selectedIndex;
+    private bool selectionRestored; // 이전 확정 캐릭터를 처음 열 때 한 번만 복원하기 위한 가드
 
     // 카드 문구·선택 상태 갱신(패널을 열 때마다 호출. 패널은 씬에서 비활성 상태로 시작)
     private void Refresh() {
@@ -32,9 +33,14 @@ public class CharacterSelectMenu : MonoBehaviour {
             colorSwatches[i].color = data.uniformColor;
         }
 
-        // 재시작 후 인트로로 돌아온 경우 이전 선택을 유지
-        int previous = System.Array.IndexOf(characters, CharacterSelection.selected);
-        Select(previous >= 0 ? previous : 0);
+        // 처음 열 때만 이전에 확정한 캐릭터를 복원하고, 이후에는 고르던 캐릭터를 유지(BACK 후 다시 열어도 선택이 A로 돌아가지 않게 함)
+        if (!selectionRestored)
+        {
+            int previous = System.Array.IndexOf(characters, CharacterSelection.selected);
+            selectedIndex = previous >= 0 ? previous : 0;
+            selectionRestored = true;
+        }
+        Select(selectedIndex);
     }
 
     // 배율 표시: 1보다 크면 초록, 작으면 빨강, 같으면 기본색
