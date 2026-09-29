@@ -11,6 +11,7 @@ public class ReloadIndicator : MonoBehaviour {
     public Image progressFill; // Image.Type = Filled(Horizontal)
 
     public Vector3 worldOffset = new Vector3(0f, 1.1f, 0f); // 플레이어 발밑 기준 표시 높이(m)
+    public Vector2 screenOffset = new Vector2(0f, 56f); // 위 위치에서 화면(캔버스) 기준으로 더 띄우는 거리. 위에서 내려다보는 시점이라 월드 높이만으로는 캐릭터 몸과 겹친다
     public float blinkSpeed = 8f; // 탄창이 비었을 때 깜빡임 속도
 
     public Color emptyColor = new Color(0.90f, 0.28f, 0.30f, 1f); // 빨강(HUD 위험색)
@@ -81,7 +82,7 @@ public class ReloadIndicator : MonoBehaviour {
         Vector2 localPoint;
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle((RectTransform)transform, screenPoint, null, out localPoint))
         {
-            content.anchoredPosition = localPoint;
+            content.anchoredPosition = localPoint + screenOffset;
         }
     }
 }
