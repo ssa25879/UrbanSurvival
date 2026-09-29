@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterData
   displayName: CHARACTER A
   roleLabel: ENDURANCE
-  moveSpeedMultiplier: 0.9
+  moveSpeedMultiplier: 0.8
   attackSpeedMultiplier: 1.1
   maxHealthMultiplier: 1.1
   reloadSpeedMultiplier: 0.95

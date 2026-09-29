@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterData
   displayName: CHARACTER B
   roleLabel: MOBILITY
-  moveSpeedMultiplier: 1.1
+  moveSpeedMultiplier: 1
   attackSpeedMultiplier: 0.9
   maxHealthMultiplier: 0.9
   reloadSpeedMultiplier: 1.05

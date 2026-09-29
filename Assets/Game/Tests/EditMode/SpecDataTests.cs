@@ -25,8 +25,9 @@ public class SpecDataTests {
         return property.intValue;
     }
 
-    [TestCase("Assets/ScriptableData/Character A Data.asset", 0.9f, 1.1f, 1.1f, 0.95f, 1.0f)]
-    [TestCase("Assets/ScriptableData/Character B Data.asset", 1.1f, 0.9f, 0.9f, 1.05f, 1.0f)]
+    // 이동 배율은 2026-09-29에 A 0.8, B 1.0으로 변경(기준 이동속도 5 → A 4, B 5)
+    [TestCase("Assets/ScriptableData/Character A Data.asset", 0.8f, 1.1f, 1.1f, 0.95f, 1.0f)]
+    [TestCase("Assets/ScriptableData/Character B Data.asset", 1.0f, 0.9f, 0.9f, 1.05f, 1.0f)]
     public void CharacterMultipliers_MatchSpec(string path, float move, float attackSpeed, float maxHealth, float reloadSpeed, float damage) {
         SerializedObject data = Load(path);
 
