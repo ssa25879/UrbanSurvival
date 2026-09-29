@@ -25,6 +25,16 @@ public class ReloadIndicator : MonoBehaviour {
         mainCamera = Camera.main;
     }
 
+    // 위치는 카메라(CinemachineBrain, 실행 순서 100)가 그 프레임의 이동을 끝낸 뒤 UI가 그려지기 직전에 계산한다.
+    // LateUpdate(순서 0)에서 계산하면 항상 한 프레임 전 카메라 기준이라, 캐릭터가 움직여 카메라가 따라갈 때 알림이 떨린다
+    private void OnEnable() {
+        Canvas.willRenderCanvases += UpdatePosition;
+    }
+
+    private void OnDisable() {
+        Canvas.willRenderCanvases -= UpdatePosition;
+    }
+
     private void LateUpdate() {
         if (playerShooter == null)
         {
@@ -77,7 +87,15 @@ public class ReloadIndicator : MonoBehaviour {
             progressBar.SetActive(showProgress);
         }
 
-        // 플레이어 머리 위 월드 위치를 화면 좌표로 변환해 따라다니게 함
+    }
+
+    // 플레이어 머리 위 월드 위치를 화면 좌표로 변환해 따라다니게 함(UI가 그려지기 직전, 카메라 이동이 끝난 뒤에 호출)
+    private void UpdatePosition() {
+        if (content == null || !content.gameObject.activeSelf || playerShooter == null || mainCamera == null)
+        {
+            return;
+        }
+
         Vector3 screenPoint = mainCamera.WorldToScreenPoint(playerShooter.transform.position + worldOffset);
         Vector2 localPoint;
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle((RectTransform)transform, screenPoint, null, out localPoint))

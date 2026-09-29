@@ -43,6 +43,15 @@ public class ZombieSpawner : MonoBehaviour {
     public float spawnRetryDelay = 0.5f; // 후보가 모두 실패했을 때 다시 시도하기까지의 대기 시간(초)
     public float spawnFailureLimit = 10f; // 이 시간 동안 계속 실패하면 오류로 기록(초)
 
+    [Header("플레이어 주변 스폰 (2026-09-29): 시작 직후 적이 늦게 도착하던 문제")]
+    public float spawnRingMin = 22f; // 플레이어에서 이 거리 이상, spawnRingMax 이하의 NavMesh 위 지점에서 소환(화면 밖에 가깝게)
+    public float spawnRingMax = 30f; // 0이면 이 방식을 끄고 맵 외곽의 고정 스폰 지점만 사용
+    public int spawnRingPoolSize = 12; // 검증을 통과한 후보를 미리 모아 두는 개수(경로 계산 횟수를 줄이기 위함)
+    public float spawnRingRefreshInterval = 1f; // 후보 목록을 다시 만드는 간격(초). 플레이어가 움직이므로 주기적으로 갱신
+
+    private readonly List<Vector3> spawnRingPool = new List<Vector3>(); // 검증된 주변 스폰 후보
+    private float spawnRingRefreshedAt = -100f; // 마지막으로 후보 목록을 만든 시각
+
     private readonly float spawnPointCheckInterval = 1f; // 스폰 지점 경로 검증 결과를 재사용하는 시간(경로 계산 횟수 절약)
     private float[] spawnPointCheckedAt; // 스폰 지점별 마지막 검증 시각
     private bool[] spawnPointUsable; // 스폰 지점별 검증 결과
@@ -242,9 +251,15 @@ public class ZombieSpawner : MonoBehaviour {
     }
 
     // 스폰 지점 후보를 뽑아 사용할 수 있는 지점을 찾는다(NavMesh 위, 플레이어에서 충분히 멀고, 플레이어까지 경로가 완전)
+    // 먼저 플레이어 주변 링(spawnRingMin~Max)의 검증된 후보를 쓰고(spawnPoint는 null), 없으면 고정 스폰 지점으로 대체한다
     private bool TryGetSpawnPosition(out Transform spawnPoint, out Vector3 spawnPosition) {
         spawnPoint = null;
         spawnPosition = Vector3.zero;
+
+        if (spawnRingMax > 0f && TryGetRingSpawn(out spawnPosition))
+        {
+            return true;
+        }
 
         if (spawnPoints == null || spawnPoints.Length == 0)
         {
@@ -263,6 +278,97 @@ public class ZombieSpawner : MonoBehaviour {
         }
 
         return false;
+    }
+
+    // 플레이어 주변 링의 검증된 후보 하나를 고른다
+    private bool TryGetRingSpawn(out Vector3 position) {
+        position = Vector3.zero;
+
+        if (cachedPlayerHealth == null)
+        {
+            cachedPlayerHealth = FindObjectOfType<PlayerHealth>();
+        }
+        if (cachedPlayerHealth == null || cachedPlayerHealth.dead)
+        {
+            return false;
+        }
+
+        if (spawnRingPool.Count == 0 || Time.time >= spawnRingRefreshedAt + spawnRingRefreshInterval)
+        {
+            RefreshSpawnRingPool();
+        }
+
+        if (spawnRingPool.Count == 0)
+        {
+            return false;
+        }
+
+        position = spawnRingPool[Random.Range(0, spawnRingPool.Count)];
+        return true;
+    }
+
+    // 플레이어 주변 링에서 무작위로 후보를 뽑아, NavMesh 위이고 플레이어까지 경로가 완전한 것만 모은다
+    private void RefreshSpawnRingPool() {
+        spawnRingPool.Clear();
+        spawnRingRefreshedAt = Time.time;
+
+        Vector3 playerPosition = cachedPlayerHealth.transform.position;
+        NavMeshHit playerHit;
+        if (!NavMesh.SamplePosition(playerPosition, out playerHit, spawnPointSampleDistance * 1.5f, NavMesh.AllAreas))
+        {
+            return;
+        }
+
+        float min = Mathf.Max(spawnRingMin, minSpawnDistanceFromPlayer);
+        float max = Mathf.Max(spawnRingMax, min);
+        NavMeshPath path = new NavMeshPath();
+        int attempts = spawnRingPoolSize * 4;
+
+        for (int i = 0; i < attempts && spawnRingPool.Count < spawnRingPoolSize; i++)
+        {
+            float angle = Random.Range(0f, Mathf.PI * 2f);
+            float distance = Random.Range(min, max);
+            Vector3 candidate = playerPosition + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * distance;
+
+            NavMeshHit hit;
+            if (!NavMesh.SamplePosition(candidate, out hit, 3f, NavMesh.AllAreas))
+            {
+                continue;
+            }
+
+            Vector3 flat = hit.position - playerPosition;
+            flat.y = 0f;
+            if (flat.magnitude < minSpawnDistanceFromPlayer)
+            {
+                continue;
+            }
+
+            if (NavMesh.CalculatePath(hit.position, playerHit.position, NavMesh.AllAreas, path)
+                && path.status == NavMeshPathStatus.PathComplete)
+            {
+                spawnRingPool.Add(hit.position);
+            }
+        }
+    }
+
+    // 소환 방향: 고정 스폰 지점이면 그 방향, 주변 링 후보면 플레이어를 바라보게 한다
+    private Quaternion GetSpawnRotation(Transform spawnPoint, Vector3 position) {
+        if (spawnPoint != null)
+        {
+            return spawnPoint.rotation;
+        }
+
+        if (cachedPlayerHealth != null)
+        {
+            Vector3 toPlayer = cachedPlayerHealth.transform.position - position;
+            toPlayer.y = 0f;
+            if (toPlayer.sqrMagnitude > 0.01f)
+            {
+                return Quaternion.LookRotation(toPlayer);
+            }
+        }
+
+        return Quaternion.identity;
     }
 
     // 스폰 지점 하나가 지금 사용 가능한지 검사(결과는 spawnPointCheckInterval 동안 재사용)
@@ -362,7 +468,7 @@ public class ZombieSpawner : MonoBehaviour {
         Vector3 spawnPosition;
         if (TryGetSpawnPosition(out spawnPoint, out spawnPosition))
         {
-            zombie.Relocate(spawnPosition, spawnPoint.rotation);
+            zombie.Relocate(spawnPosition, GetSpawnRotation(spawnPoint, spawnPosition));
             spawnFailureStartTime = -1f;
             spawnFailureLogged = false;
         }
@@ -387,7 +493,7 @@ public class ZombieSpawner : MonoBehaviour {
         ZombieData zombieData = dataOverride != null ? dataOverride : zombieDatas[Random.Range(0, zombieDatas.Length)];
         
         // 프리팹으로 좀비 생성(검증을 통과한 스폰 지점의 NavMesh 위 위치)
-        Zombie zombie = Instantiate(zombiePrefab, spawnPosition, spawnPoint.rotation);
+        Zombie zombie = Instantiate(zombiePrefab, spawnPosition, GetSpawnRotation(spawnPoint, spawnPosition));
         
         // 생성 시점의 생존 경과 시간 기준으로 시간비례 난이도 배율 계산(신규 생성분에만 적용, 이미 생성된 적에는 소급 적용하지 않음)
         float elapsedMinutes = GameManager.instance != null ? GameManager.instance.elapsedMinutes : 0f;
