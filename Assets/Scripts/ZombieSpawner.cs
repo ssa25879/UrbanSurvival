@@ -72,8 +72,8 @@ public class ZombieSpawner : MonoBehaviour {
 
     // 웨이브 정보를 UI로 표시
     private void UpdateUI() {
-        // 현재 웨이브와 남은 적 수 표시
-        UIManager.instance.UpdateWaveText(wave, zombies.Count);
+        // 현재 웨이브, 살아있는 적 수, 소환 대기 수 표시
+        UIManager.instance.UpdateWaveText(wave, zombies.Count, pendingSpawns);
     }
 
     // 현재 웨이브 번호를 기준으로 이번 웨이브에 생성할 좀비 수를 계산(예: 1,2,3,4웨이브 = 4,6,8,10마리)

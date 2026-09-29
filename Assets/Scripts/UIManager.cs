@@ -47,9 +47,15 @@ public class UIManager : MonoBehaviour {
     }
 
     // 적 웨이브 텍스트 갱신
-    public void UpdateWaveText(int waves, int count) {
+    // 남은 적 = 살아있는 적 + 동시 상한 때문에 소환 대기 중인 적("Enemy Left : 살아있는 수 + 대기 수")
+    public void UpdateWaveText(int waves, int aliveCount, int pendingCount) {
         lastWave = waves;
-        waveText.text = "Wave : " + waves + "\nEnemy Left : " + count;
+        waveText.text = "Wave : " + waves + "\nEnemy Left : " + aliveCount + " + " + FormatCount(pendingCount);
+    }
+
+    // 후반에 대기 수가 매우 커져 패널 폭을 넘지 않도록 1만부터 k 단위로 줄여 표시
+    private static string FormatCount(int count) {
+        return count >= 10000 ? (count / 1000) + "k" : count.ToString();
     }
 
     // 게임 오버 UI 활성화(활성화하는 순간의 점수/생존시간/웨이브를 결과 텍스트에 채움)
