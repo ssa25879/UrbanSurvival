@@ -221,6 +221,18 @@ namespace GameSettingsKit.Editor
             Transform template = go.transform.Find("Template");
             template.GetComponent<Image>().color = theme.panelColor;
             Toggle item = template.Find("Viewport/Content/Item").GetComponent<Toggle>();
+
+            // 항목 높이 기본값(20)은 글꼴 줄 높이보다 작아, 레거시 Text의 세로 넘침 자르기 때문에 목록 글자가 통째로 사라진다.
+            // 항목을 드롭다운 본체와 같은 높이로 키우고, 목록은 6개 항목이 보이는 높이로 잡는다
+            const float itemHeight = 34f;
+            const int visibleItems = 6;
+            RectTransform itemRect = (RectTransform)item.transform;
+            itemRect.sizeDelta = new Vector2(itemRect.sizeDelta.x, itemHeight);
+            RectTransform contentRect = (RectTransform)template.Find("Viewport/Content");
+            contentRect.sizeDelta = new Vector2(contentRect.sizeDelta.x, itemHeight);
+            RectTransform templateRect = (RectTransform)template;
+            templateRect.sizeDelta = new Vector2(templateRect.sizeDelta.x, itemHeight * visibleItems + 8f);
+            item.transform.Find("Item Label").GetComponent<Text>().verticalOverflow = VerticalWrapMode.Overflow;
             item.transform.Find("Item Background").GetComponent<Image>().color = theme.controlColor;
             item.transform.Find("Item Checkmark").GetComponent<Image>().color = theme.accentColor;
             ColorBlock colors = item.colors;
