@@ -16,3 +16,8 @@ MonoBehaviour:
   damage: 20
   speed: 2
   skinColor: {r: 1, g: 1, b: 1, a: 1}
+  isElite: 0
+  isBoss: 0
+  displayName: 
+  modelScale: 1
+  score: 100

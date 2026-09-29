@@ -78,7 +78,15 @@ public class Zombie : LivingEntity
         // 재질 원래 색(약간 어두운 회색)에 곱해서, 흰색인 일반 좀비는 지금 외형을 그대로 유지한다
         foreach (SkinnedMeshRenderer bodyRenderer in GetComponentsInChildren<SkinnedMeshRenderer>())
         {
-            bodyRenderer.material.color = bodyRenderer.material.color * zombieData.skinColor;
+            Material bodyMaterial = bodyRenderer.material;
+            bodyMaterial.color = bodyMaterial.color * zombieData.skinColor;
+
+            // 곱하기만으로는 초록 몸에 붉은 기운을 더할 수 없어, 발광색을 더해 색을 입힌다
+            if (zombieData.glowColor.maxColorComponent > 0.001f)
+            {
+                bodyMaterial.EnableKeyword("_EMISSION");
+                bodyMaterial.SetColor("_EmissionColor", zombieData.glowColor);
+            }
         }
 
         // 보스는 크게 표시하고 체력 UI(머리 위 바) 대상으로 등록

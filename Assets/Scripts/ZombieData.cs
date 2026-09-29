@@ -6,7 +6,8 @@ public class ZombieData : ScriptableObject {
     public float health = 100f; // 체력
     public float damage = 20f; // 공격력
     public float speed = 2f; // 이동 속도
-    public Color skinColor = Color.white; // 피부색
+    public Color skinColor = Color.white; // 피부색(몸 재질의 원래 색에 곱함, 흰색이면 원래 외형 유지, 어둡게 만들 때 사용)
+    public Color glowColor = Color.black; // 몸에 더하는 발광색(붉은 기운 등, 검정이면 없음)
     public bool isElite = false; // 강화 개체 여부(미니맵 등 UI에서 일반 개체와 구분 표시)
 
     [Header("보스 (2026-09-29 확정, 수치는 초기 제안값)")]

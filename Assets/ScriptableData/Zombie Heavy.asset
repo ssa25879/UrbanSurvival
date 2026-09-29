@@ -15,5 +15,10 @@ MonoBehaviour:
   health: 54
   damage: 50
   speed: 1
-  skinColor: {r: 0, g: 0, b: 0, a: 1}
+  skinColor: {r: 0.42, g: 0.42, b: 0.45, a: 1}
+  glowColor: {r: 0, g: 0, b: 0, a: 1}
   isElite: 1
+  isBoss: 0
+  displayName: 
+  modelScale: 1
+  score: 100
