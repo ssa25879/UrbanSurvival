@@ -8,4 +8,10 @@ public class ZombieData : ScriptableObject {
     public float speed = 2f; // 이동 속도
     public Color skinColor = Color.white; // 피부색
     public bool isElite = false; // 강화 개체 여부(미니맵 등 UI에서 일반 개체와 구분 표시)
+
+    [Header("보스 (2026-09-29 확정, 수치는 초기 제안값)")]
+    public bool isBoss = false; // 보스 여부(체력 UI 표시 대상)
+    public string displayName = ""; // 보스 체력바에 표시할 이름
+    public float modelScale = 1f; // 외형·판정 크기 배율(보스를 크게 표시)
+    public int score = 100; // 처치 점수
 }

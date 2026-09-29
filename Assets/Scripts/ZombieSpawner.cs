@@ -21,7 +21,6 @@ public class ZombieSpawner : MonoBehaviour {
     private List<Zombie> zombies = new List<Zombie>(); // 생성된 좀비들을 담는 리스트
     private int wave; // 현재 웨이브
 
-    private readonly int zombieScore = 100;
     private readonly float despawnTime = 10.0f;
     private readonly float lootDespawnTime = 30.0f; // 드랍 아이템 미수거 시 자동 소멸 시간(초). 무한 모드에서 미수거 드랍이 끝없이 누적되는 것을 방지
     private readonly float lootScatterRadius = 0.5f; // 같은 위치에서 연속으로 드랍될 때 겹치지 않도록 흩뿌리는 반경
@@ -50,6 +49,14 @@ public class ZombieSpawner : MonoBehaviour {
     private bool spawnFailureLogged; // 연속 실패 오류를 이미 기록했는지
     private float lastRelocateFailureLogTime = -100f; // 재배치 실패 로그 도배 방지
 
+    [Header("보스 (2026-09-29 확정: 10분마다 1마리, 30분 보스 처치 시 1차 목표 달성)")]
+    public ZombieData bossData; // 30분 이전(10분·20분) 보스
+    public ZombieData finalBossData; // 30분 이후 보스(30분 보스와 이후 10분마다 등장하는 보스)
+    public float bossIntervalMinutes = 10f; // 보스 등장 간격(분)
+
+    private int bossesScheduled; // 지금까지 등장 시각이 지난 보스 수
+    private readonly Queue<int> pendingBossMinutes = new Queue<int>(); // 소환 지점을 찾지 못해 대기 중인 보스(등장 분)
+
     private readonly List<Zombie> spawnedZombies = new List<Zombie>(); // 살아있는 좀비와 아직 사라지지 않은 시체(동시 상한 계산용)
     private int pendingSpawns; // 상한 때문에 아직 소환하지 못하고 대기 중인 좀비 수
 
@@ -75,6 +82,10 @@ public class ZombieSpawner : MonoBehaviour {
             nextSpawnTime = Time.time + Random.Range(waveIntervalMin, waveIntervalMax);
         }
 
+        // 보스 등장 시각(10분 간격)이 지났으면 소환 대기열에 추가하고, 소환 지점이 확보되는 대로 소환
+        ScheduleBosses();
+        SpawnPendingBosses();
+
         // 상한 때문에 밀린 좀비를 빈 슬롯이 생기는 대로 이어서 소환
         SpawnPending();
 
@@ -99,6 +110,54 @@ public class ZombieSpawner : MonoBehaviour {
 
         // 바로 소환하지 않고 대기열에 넣어 두면 SpawnPending이 동시 상한 안에서 소환한다
         pendingSpawns += spawnCount;
+    }
+
+    // 경과 시간이 보스 등장 시각(bossIntervalMinutes의 배수)에 도달했는지 확인해 대기열에 추가
+    private void ScheduleBosses() {
+        if (GameManager.instance == null || bossIntervalMinutes <= 0f)
+        {
+            return;
+        }
+
+        while (GameManager.instance.elapsedMinutes >= bossIntervalMinutes * (bossesScheduled + 1))
+        {
+            bossesScheduled++;
+            pendingBossMinutes.Enqueue(Mathf.RoundToInt(bossIntervalMinutes * bossesScheduled));
+        }
+    }
+
+    // 대기 중인 보스를 소환(보스는 동시 상한에 막히지 않는다)
+    private void SpawnPendingBosses() {
+        while (pendingBossMinutes.Count > 0)
+        {
+            if (Time.time < spawnRetryTime)
+            {
+                return;
+            }
+
+            Transform spawnPoint;
+            Vector3 spawnPosition;
+            if (!TryGetSpawnPosition(out spawnPoint, out spawnPosition))
+            {
+                OnSpawnFailed();
+                return;
+            }
+
+            spawnFailureStartTime = -1f;
+            spawnFailureLogged = false;
+
+            int minute = pendingBossMinutes.Dequeue();
+            bool isGoalBoss = GameManager.instance != null && minute == Mathf.RoundToInt(GameManager.instance.primaryGoalMinutes);
+            ZombieData data = minute < GameManager.instance.primaryGoalMinutes ? bossData : finalBossData;
+            if (data == null)
+            {
+                // 보스 데이터가 연결되지 않았으면 일반 좀비로 대체하지 않고 건너뜀
+                Debug.LogWarning("[ZombieSpawner] " + minute + "분 보스 데이터(bossData/finalBossData)가 연결되지 않아 보스를 소환하지 않습니다.");
+                continue;
+            }
+
+            CreateZombie(spawnPoint, spawnPosition, data, isGoalBoss);
+        }
     }
 
     // 동시 상한(maxConcurrentZombies)에 여유가 있는 만큼 대기 중인 좀비를 소환
@@ -250,9 +309,11 @@ public class ZombieSpawner : MonoBehaviour {
     }
 
     // 좀비를 생성하고 생성한 좀비에게 추적할 대상을 할당
-    private void CreateZombie(Transform spawnPoint, Vector3 spawnPosition) {
-        // 사용할 좀비 데이터를 랜덤으로 결정
-        ZombieData zombieData = zombieDatas[Random.Range(0, zombieDatas.Length)];
+    // dataOverride가 있으면(보스) 그 데이터를 쓰고, 없으면 일반 좀비 데이터를 무작위로 고른다
+    // isGoalBoss가 참인 보스를 처치하면 1차 목표를 달성한다
+    private void CreateZombie(Transform spawnPoint, Vector3 spawnPosition, ZombieData dataOverride = null, bool isGoalBoss = false) {
+        // 사용할 좀비 데이터를 결정
+        ZombieData zombieData = dataOverride != null ? dataOverride : zombieDatas[Random.Range(0, zombieDatas.Length)];
         
         // 프리팹으로 좀비 생성(검증을 통과한 스폰 지점의 NavMesh 위 위치)
         Zombie zombie = Instantiate(zombiePrefab, spawnPosition, spawnPoint.rotation);
@@ -270,9 +331,16 @@ public class ZombieSpawner : MonoBehaviour {
         // (zombies.Remove가 먼저 실행되어야 아래 전멸 판정이 갱신된 카운트를 보고 판단할 수 있음)
         zombie.onDeath += () => zombies.Remove(zombie);
         zombie.onDeath += () => Destroy(zombie.gameObject, despawnTime);
-        zombie.onDeath += () => GameManager.instance.AddScore(zombieScore);
+        int score = zombieData.score;
+        zombie.onDeath += () => GameManager.instance.AddScore(score);
         zombie.onDeath += () => DropLoot(zombie.transform.position);
         zombie.onDeath += HealPlayerIfAllCleared;
+
+        // 1차 목표 보스(30분 보스)를 처치하면 목표 달성 처리(무한 모드 진입)
+        if (isGoalBoss)
+        {
+            zombie.onDeath += () => GameManager.instance.ReachPrimaryGoal();
+        }
 
         // 경로가 막혀 5초 이상 플레이어에게 접근하지 못하면 다른 스폰 지점으로 옮김
         zombie.onPathBlocked += RelocateZombie;

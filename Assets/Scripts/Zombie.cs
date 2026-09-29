@@ -24,6 +24,9 @@ public class Zombie : LivingEntity
 
     public ZombieData zombieData { get; private set; } // 이 개체의 셋업 데이터(미니맵 등 UI에서 강화 개체 판별용)
 
+    public static readonly System.Collections.Generic.List<Zombie> bosses = new System.Collections.Generic.List<Zombie>(); // 살아있는 보스 목록(보스 체력 UI가 참조)
+    public bool isBoss { get { return zombieData != null && zombieData.isBoss; } }
+
     public float noPathRelocateSeconds = 5f; // 플레이어까지 유효한 경로가 이 시간 동안 없으면 재배치를 요청(기획서 10장 "길 막힘")
     private float noPathElapsed; // 유효한 경로가 없는 상태로 지난 시간
     public event System.Action<Zombie> onPathBlocked; // 재배치 요청 이벤트(스폰 지점 선택은 ZombieSpawner가 담당)
@@ -76,6 +79,29 @@ public class Zombie : LivingEntity
 
         // 렌더러에 적용된 마테리얼 색 변경 -> 외형 변경
         zombieRenderer.material.color = zombieData.skinColor;
+
+        // 보스는 크게 표시하고 체력 UI(머리 위 바) 대상으로 등록
+        if (!Mathf.Approximately(zombieData.modelScale, 1f))
+        {
+            transform.localScale *= zombieData.modelScale;
+        }
+
+        if (zombieData.isBoss)
+        {
+            // 기존 zombieRenderer는 자식 순서상 핏방울 파티클 렌더러라 몸에는 색이 적용되지 않으므로, 보스는 몸(SkinnedMeshRenderer)에 직접 적용
+            // (기존 일반·강화 좀비의 외형은 바꾸지 않는다)
+            foreach (SkinnedMeshRenderer bodyRenderer in GetComponentsInChildren<SkinnedMeshRenderer>())
+            {
+                bodyRenderer.material.color = zombieData.skinColor;
+            }
+
+            bosses.Add(this);
+            BossHeadBar.Attach(this);
+        }
+    }
+
+    private void OnDestroy() {
+        bosses.Remove(this);
     }
 
     private void Start() {

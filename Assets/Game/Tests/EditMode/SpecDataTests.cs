@@ -58,6 +58,17 @@ public class SpecDataTests {
         Assert.AreEqual(fireMode, data.FindProperty("fireMode").enumValueIndex, "입력 모드");
     }
 
+    // 보스 체력 기준값(2026-09-29 확정): 10분·20분 보스 300, 30분 이후 보스 600. 이동속도·공격력·크기·점수는 초기 제안값이라 검사하지 않는다
+    [TestCase("Assets/ScriptableData/Zombie Boss.asset", 300f)]
+    [TestCase("Assets/ScriptableData/Zombie Final Boss.asset", 600f)]
+    public void BossHealth_MatchesSpec(string path, float health) {
+        SerializedObject data = Load(path);
+
+        Assert.AreEqual(health, Float(data, "health"), Tolerance, "보스 체력");
+        Assert.IsTrue(data.FindProperty("isBoss").boolValue, "isBoss");
+        Assert.IsTrue(data.FindProperty("isElite").boolValue, "보스는 미니맵에서 강화 개체로 표시");
+    }
+
     // 산탄총은 산탄당 10 x 6개로 근접 전부 명중 시 총 피해 60(기획서 F15)
     [Test]
     public void Shotgun_TotalPelletDamage_Is60() {

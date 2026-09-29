@@ -32,8 +32,20 @@ public class GameManager : MonoBehaviour {
     // 누적 점수 1,000점당 기본 피해량 +1% 영구 가산, 상한 없음(초기 제안값)
     public float damageMultiplier => 1f + Mathf.Floor(score / 1000f) * 0.01f;
 
-    public float primaryGoalMinutes = 30f; // 1차 목표 생존 시간(분). 달성 후에는 무한 모드로 계속 진행
+    public float primaryGoalMinutes = 30f; // 1차 목표 보스가 등장하는 시각(분). 이 시각에 등장하는 보스를 처치하면 목표 달성
     public bool primaryGoalReached { get; private set; } // 1차 목표 달성 여부(한 판에 한 번만 참이 됨)
+
+    // 1차 목표 보스(30분 보스)를 처치했을 때 호출: 결과 스냅샷을 한 번 기록하고 무한 모드로 계속 진행
+    // 게임 오버 이후에는 처리하지 않아 플레이어 사망과 같은 프레임이면 패배가 우선된다
+    public void ReachPrimaryGoal() {
+        if (isGameover || primaryGoalReached)
+        {
+            return;
+        }
+
+        primaryGoalReached = true;
+        UIManager.instance.RecordPrimaryGoalSnapshot(score);
+    }
 
     private void Awake() {
         // 씬에 싱글톤 오브젝트가 된 다른 GameManager 오브젝트가 있다면
@@ -54,14 +66,6 @@ public class GameManager : MonoBehaviour {
         if (isGameover)
         {
             return;
-        }
-
-        // 생존 시간이 1차 목표에 도달하면 결과 스냅샷을 한 번 기록하고 무한 모드로 계속 진행
-        // (일시정지 중에는 Time.timeSinceLevelLoad가 흐르지 않으므로 별도 확인 불필요)
-        if (!primaryGoalReached && elapsedMinutes >= primaryGoalMinutes)
-        {
-            primaryGoalReached = true;
-            UIManager.instance.RecordPrimaryGoalSnapshot(score);
         }
 
         // 설정 창이 열려 있으면 ESC는 설정 창 닫기에만 사용(같은 프레임에 일시정지까지 풀리지 않도록)

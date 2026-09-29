@@ -70,7 +70,7 @@ public class UIManager : MonoBehaviour {
                 + "\nWAVE : " + lastWave;
 
             // 1차 목표를 달성한 판이면 달성 시점 스냅샷을 작은 강조색 한 줄로 함께 표시(결과 패널 높이 안에 맞춤)
-            if (primaryGoalSnapshot != null)
+            if (!string.IsNullOrEmpty(primaryGoalSnapshot))
             {
                 resultStatsText.text += "\n<size=15><color=#EDBD5C>" + primaryGoalSnapshot + "</color></size>";
             }
@@ -81,7 +81,8 @@ public class UIManager : MonoBehaviour {
 
     // 1차 목표 달성 시점의 점수/시간/웨이브를 한 번만 기록하고 알림을 잠시 표시
     public void RecordPrimaryGoalSnapshot(int score) {
-        if (primaryGoalSnapshot != null)
+        // 에디터가 비어 있는 문자열로 복원하는 경우도 "아직 기록 안 됨"으로 취급
+        if (!string.IsNullOrEmpty(primaryGoalSnapshot))
         {
             return;
         }
@@ -94,7 +95,7 @@ public class UIManager : MonoBehaviour {
         {
             if (goalReachedText != null)
             {
-                goalReachedText.text = "SURVIVED " + time + "\nENDLESS MODE";
+                goalReachedText.text = "BOSS DEFEATED " + time + "\nENDLESS MODE";
             }
 
             goalReachedUI.SetActive(true);
