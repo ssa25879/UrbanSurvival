@@ -14,5 +14,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Main.unity
     guid: 99989cc8447a14929ae49c903ae9cb61
+  - enabled: 1
+    path: Assets/Game/Scenes/UrbanSurvival_ResultTest.unity
+    guid: ec2fee1ac06e3734d9adf69573a945ec
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
