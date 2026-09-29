@@ -26,15 +26,6 @@ public class IntroMenu : MonoBehaviour {
         SceneManager.LoadScene(gameSceneName);
     }
 
-    // [임시] 결과 화면 테스트 씬으로 이동(게임 시작 30초 후 결과 화면 확인용).
-    // 확인이 끝나면 이 메서드, resultTestSceneName, 인트로 씬의 TEST 버튼, 빌드 목록의 테스트 씬을 함께 지운다
-    public string resultTestSceneName = "UrbanSurvival_ResultTest";
-
-    public void StartResultTest() {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(resultTestSceneName);
-    }
-
     // 게임 종료(에디터에서는 Play Mode 종료)
     public void QuitGame() {
 #if UNITY_EDITOR
