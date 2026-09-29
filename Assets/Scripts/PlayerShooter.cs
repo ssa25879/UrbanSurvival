@@ -100,16 +100,15 @@ public class PlayerShooter : MonoBehaviour {
         {
             bool wantsFire = !blockFireUntilRelease && GetFireInput();
 
-            if (wantsFire)
+            // 재장전과 발사가 동시에 들어오면 재장전이 우선(2026-09-29 확정). 재장전할 수 없는 상태
+            // (탄창이 가득 참, 예비탄 없음)이면 재장전 입력은 무시하고 발사한다
+            bool reloadStarted = playerInput.reload && TryReload();
+
+            if (wantsFire && !reloadStarted)
             {
                 // 총구 자체 방향이 아니라 캐릭터가 조준 중인 정면 방향으로 발사(팔 IK 영향 배제)
                 // 판정 레이는 캐릭터 중심선의 고정 높이에서 출발(총구 위치·높이에 따라 조준선과 어긋나던 문제)
                 gun.Fire(transform.forward, GetAimOrigin());
-            }
-            else if (playerInput.reload)
-            {
-                // 발사와 재장전이 동시에 들어오면 발사가 우선(위 if에서 이미 처리됨)
-                TryReload();
             }
         }
 
@@ -127,13 +126,17 @@ public class PlayerShooter : MonoBehaviour {
         return gun.gunData.fireMode == GunData.FireMode.Automatic ? playerInput.fire : playerInput.fireDown;
     }
 
-    private void TryReload() {
+    // 재장전을 시작했으면 true
+    private bool TryReload() {
         if (gun.Reload())
         {
             // 재장전 입력 감지 후 재장전 성공 시 애니메이션 재생
             playerAnimator.SetTrigger("Reload");
             blockFireUntilRelease = true;
+            return true;
         }
+
+        return false;
     }
 
     // 1~4번 키 입력에 따라 무기 슬롯 교체

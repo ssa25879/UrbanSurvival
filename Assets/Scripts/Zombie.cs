@@ -16,7 +16,6 @@ public class Zombie : LivingEntity
 
     private Animator zombieAnimator; // 애니메이터 컴포넌트
     private AudioSource zombieAudioPlayer; // 오디오 소스 컴포넌트
-    private Renderer zombieRenderer; // 렌더러 컴포넌트
 
     public float damage = 20f; // 공격력
     public float timeBetAttack = 0.5f; // 공격 간격
@@ -53,9 +52,6 @@ public class Zombie : LivingEntity
         // 애니메이터는 좀비 비주얼 모델(자식 오브젝트)에 붙어있음
         zombieAnimator = GetComponentInChildren<Animator>();
         zombieAudioPlayer = GetComponent<AudioSource>();
-        
-        // 자식 오브젝트에서 렌더러 컴포넌트 가져오기
-        zombieRenderer = GetComponentInChildren<Renderer>();
     }
 
     // 좀비 AI의 초기 스펙을 결정하는 셋업 메서드
@@ -77,8 +73,13 @@ public class Zombie : LivingEntity
         // NavMeshAgent 이동속도 설정(시간비례 배율 미적용)
         navMeshAgent.speed = zombieData.speed;
 
-        // 렌더러에 적용된 마테리얼 색 변경 -> 외형 변경
-        zombieRenderer.material.color = zombieData.skinColor;
+        // 몸(SkinnedMeshRenderer)의 마테리얼 색을 바꿔 외형을 구분한다.
+        // 예전에는 자식 순서상 처음 찾은 렌더러(핏방울 파티클)에 색을 적용해 몸 색이 바뀌지 않았다(2026-09-29 수정)
+        // 재질 원래 색(약간 어두운 회색)에 곱해서, 흰색인 일반 좀비는 지금 외형을 그대로 유지한다
+        foreach (SkinnedMeshRenderer bodyRenderer in GetComponentsInChildren<SkinnedMeshRenderer>())
+        {
+            bodyRenderer.material.color = bodyRenderer.material.color * zombieData.skinColor;
+        }
 
         // 보스는 크게 표시하고 체력 UI(머리 위 바) 대상으로 등록
         if (!Mathf.Approximately(zombieData.modelScale, 1f))
@@ -88,13 +89,6 @@ public class Zombie : LivingEntity
 
         if (zombieData.isBoss)
         {
-            // 기존 zombieRenderer는 자식 순서상 핏방울 파티클 렌더러라 몸에는 색이 적용되지 않으므로, 보스는 몸(SkinnedMeshRenderer)에 직접 적용
-            // (기존 일반·강화 좀비의 외형은 바꾸지 않는다)
-            foreach (SkinnedMeshRenderer bodyRenderer in GetComponentsInChildren<SkinnedMeshRenderer>())
-            {
-                bodyRenderer.material.color = zombieData.skinColor;
-            }
-
             bosses.Add(this);
             BossHeadBar.Attach(this);
         }
