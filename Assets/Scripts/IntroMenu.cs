@@ -5,6 +5,19 @@ using UnityEngine.SceneManagement; // 씬 관리자 관련 코드
 // (설정 버튼은 씬에서 GameSettingsKit.SettingsPanel.Open에 직접 연결)
 public class IntroMenu : MonoBehaviour {
     public string gameSceneName = "UrbanSurvival"; // START로 불러올 인게임 씬 이름
+    public CharacterSelectMenu characterSelect; // 인게임에서 선택 화면으로 돌아왔을 때 바로 열 캐릭터 선택 패널
+
+    private void Start() {
+        // 인게임의 "선택 화면으로 돌아가기"로 온 경우 메인 메뉴를 거치지 않고 캐릭터 선택 패널을 연다
+        if (CharacterSelection.openSelectOnIntro)
+        {
+            CharacterSelection.openSelectOnIntro = false;
+            if (characterSelect != null)
+            {
+                characterSelect.Open();
+            }
+        }
+    }
 
     // 게임 시작
     public void StartGame() {

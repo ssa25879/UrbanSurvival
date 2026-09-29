@@ -3298,6 +3298,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IntroMenu
   gameSceneName: UrbanSurvival
+  characterSelect: {fileID: 2051105961}
 --- !u!4 &677583605
 Transform:
   m_ObjectHideFlags: 0

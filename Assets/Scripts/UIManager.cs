@@ -26,6 +26,8 @@ public class UIManager : MonoBehaviour {
     public GameObject gameoverUI; // 게임 오버시 활성화할 UI
     public Text resultStatsText; // 게임 오버 화면에 표시할 결과 요약(점수/생존시간/도달 웨이브)
     public GameObject pauseUI; // 일시정지 중 활성화할 UI
+    public GameObject leaveConfirmUI; // "선택 화면으로 돌아가기" 확인 패널(현재 판이 종료됨을 알림)
+    public string introSceneName = "Intro"; // 선택 화면(캐릭터 선택 패널)이 있는 인트로 씬 이름
     public GameObject progressErrorUI; // 진행 불가 오류 시 활성화할 UI(재시작 버튼 포함)
     public Text progressErrorText; // 오류 UI의 안내 문구
 
@@ -130,6 +132,30 @@ public class UIManager : MonoBehaviour {
     // 일시정지 UI 활성화
     public void SetActivePauseUI(bool active) {
         pauseUI.SetActive(active);
+
+        // 일시정지가 풀리면(ESC 등) 열려 있던 확인 패널도 함께 닫는다
+        if (!active && leaveConfirmUI != null)
+        {
+            leaveConfirmUI.SetActive(false);
+        }
+    }
+
+    // 일시정지 메뉴의 "선택 화면" 버튼: 진행 중인 판이 종료됨을 확인하는 패널을 연다
+    public void ShowLeaveConfirm() {
+        leaveConfirmUI.SetActive(true);
+    }
+
+    // 확인 패널의 취소 버튼
+    public void HideLeaveConfirm() {
+        leaveConfirmUI.SetActive(false);
+    }
+
+    // 인트로의 캐릭터 선택 패널로 돌아간다(현재 판은 종료됨)
+    public void ReturnToCharacterSelect() {
+        // 일시정지 중에 이동하는 경우가 없도록 시간 배율을 원복
+        Time.timeScale = 1f;
+        CharacterSelection.openSelectOnIntro = true;
+        SceneManager.LoadScene(introSceneName);
     }
 
     // 게임 재시작
