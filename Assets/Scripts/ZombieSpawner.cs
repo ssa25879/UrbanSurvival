@@ -31,6 +31,8 @@ public class ZombieSpawner : MonoBehaviour {
     public float waveIntervalMax = 8f; // 다음 웨이브까지 최대 간격(초)
     public int baseWaveZombieCount = 4; // 1웨이브 스폰 마릿수
     public int zombieCountIncreasePerWave = 2; // 웨이브가 지날 때마다 증가하는 마릿수(예: 4,6,8,10 ...)
+    public int eliteWaveInterval = 10; // 강화 적이 나오는 웨이브 간격(10, 20, 30웨이브 ... 2026-09-29 확정). 그 외 웨이브에는 일반 적(강화가 아닌 데이터)만 나온다
+    public float eliteRatio = 0.2f; // 강화 웨이브에서 그 웨이브 소환 마릿수 중 강화 적의 비율(초기 제안값, 최소 1마리)
     public int maxConcurrentZombies = 500; // 씬에 동시에 존재하는 좀비 최대 수(2026-09-29 확정). 시체가 사라지기 전까지는 슬롯을 차지한다
 
     [Header("스폰 위치 검증 (기획서 10·11장)")]
@@ -58,7 +60,10 @@ public class ZombieSpawner : MonoBehaviour {
     private readonly Queue<int> pendingBossMinutes = new Queue<int>(); // 소환 지점을 찾지 못해 대기 중인 보스(등장 분)
 
     private readonly List<Zombie> spawnedZombies = new List<Zombie>(); // 살아있는 좀비와 아직 사라지지 않은 시체(동시 상한 계산용)
-    private int pendingSpawns; // 상한 때문에 아직 소환하지 못하고 대기 중인 좀비 수
+    private int pendingSpawns; // 상한 때문에 아직 소환하지 못하고 대기 중인 일반 좀비 수
+    private int pendingEliteSpawns; // 상한 때문에 아직 소환하지 못하고 대기 중인 강화 적 수(일반 좀비보다 먼저 소환)
+    private ZombieData[] normalDatas; // zombieDatas 중 강화가 아닌 데이터
+    private ZombieData[] eliteDatas; // zombieDatas 중 강화 데이터
 
     private readonly float clearHealRatio = 1f / 3f; // 적 전멸 순간 회복량 = 회복 상자 효과의 1/3(초기 제안값)
     private float nextSpawnTime; // 다음 스폰 예정 시각(Time.time 기준)
@@ -101,15 +106,47 @@ public class ZombieSpawner : MonoBehaviour {
     // 웨이브 정보를 UI로 표시
     private void UpdateUI() {
         // 현재 웨이브, 살아있는 적 수, 소환 대기 수 표시
-        UIManager.instance.UpdateWaveText(wave, zombies.Count, pendingSpawns);
+        UIManager.instance.UpdateWaveText(wave, zombies.Count, pendingSpawns + pendingEliteSpawns);
     }
 
     // 현재 웨이브 번호를 기준으로 이번 웨이브에 생성할 좀비 수를 계산(예: 1,2,3,4웨이브 = 4,6,8,10마리)
     private void SpawnWave() {
         int spawnCount = baseWaveZombieCount + zombieCountIncreasePerWave * (wave - 1);
 
+        // 강화 웨이브(eliteWaveInterval의 배수)에는 소환 마릿수의 일부를 강화 적으로 바꾼다
+        int eliteCount = 0;
+        if (eliteWaveInterval > 0 && wave % eliteWaveInterval == 0 && GetEliteDatas().Length > 0)
+        {
+            eliteCount = Mathf.Clamp(Mathf.RoundToInt(spawnCount * eliteRatio), 1, spawnCount);
+        }
+
         // 바로 소환하지 않고 대기열에 넣어 두면 SpawnPending이 동시 상한 안에서 소환한다
-        pendingSpawns += spawnCount;
+        pendingSpawns += spawnCount - eliteCount;
+        pendingEliteSpawns += eliteCount;
+    }
+
+    // 강화가 아닌(일반) 좀비 데이터 목록(강화 데이터만 있으면 전체를 사용)
+    private ZombieData[] GetNormalDatas() {
+        if (normalDatas == null)
+        {
+            normalDatas = System.Array.FindAll(zombieDatas, d => !d.isElite);
+            if (normalDatas.Length == 0)
+            {
+                normalDatas = zombieDatas;
+            }
+        }
+
+        return normalDatas;
+    }
+
+    // 강화 좀비 데이터 목록(없으면 빈 배열)
+    private ZombieData[] GetEliteDatas() {
+        if (eliteDatas == null)
+        {
+            eliteDatas = System.Array.FindAll(zombieDatas, d => d.isElite);
+        }
+
+        return eliteDatas;
     }
 
     // 경과 시간이 보스 등장 시각(bossIntervalMinutes의 배수)에 도달했는지 확인해 대기열에 추가
@@ -162,7 +199,7 @@ public class ZombieSpawner : MonoBehaviour {
 
     // 동시 상한(maxConcurrentZombies)에 여유가 있는 만큼 대기 중인 좀비를 소환
     private void SpawnPending() {
-        while (pendingSpawns > 0 && spawnedZombies.Count < maxConcurrentZombies)
+        while ((pendingSpawns > 0 || pendingEliteSpawns > 0) && spawnedZombies.Count < maxConcurrentZombies)
         {
             // 후보가 모두 실패한 직후에는 spawnRetryDelay 동안 기다렸다가 다시 시도
             if (Time.time < spawnRetryTime)
@@ -180,8 +217,19 @@ public class ZombieSpawner : MonoBehaviour {
 
             spawnFailureStartTime = -1f;
             spawnFailureLogged = false;
-            CreateZombie(spawnPoint, spawnPosition);
-            pendingSpawns--;
+            // 강화 적이 대기 중이면 먼저 소환(대기열이 길어도 강화 웨이브의 강화 적이 뒤로 밀리지 않게 함)
+            if (pendingEliteSpawns > 0)
+            {
+                ZombieData[] elites = GetEliteDatas();
+                CreateZombie(spawnPoint, spawnPosition, elites[Random.Range(0, elites.Length)]);
+                pendingEliteSpawns--;
+            }
+            else
+            {
+                ZombieData[] normals = GetNormalDatas();
+                CreateZombie(spawnPoint, spawnPosition, normals[Random.Range(0, normals.Length)]);
+                pendingSpawns--;
+            }
         }
     }
 
@@ -284,7 +332,7 @@ public class ZombieSpawner : MonoBehaviour {
         else if (!spawnFailureLogged && Time.time - spawnFailureStartTime >= spawnFailureLimit)
         {
             spawnFailureLogged = true;
-            string message = spawnFailureLimit + "초 동안 사용 가능한 스폰 지점을 찾지 못했습니다. 소환 대기: " + pendingSpawns;
+            string message = spawnFailureLimit + "초 동안 사용 가능한 스폰 지점을 찾지 못했습니다. 소환 대기: " + (pendingSpawns + pendingEliteSpawns);
             Debug.LogError("[ZombieSpawner] " + message);
 
             // 기획서 10장: 재배치·스폰이 모두 불가능하면 진행 오류 UI를 표시하고 재시작을 제공
