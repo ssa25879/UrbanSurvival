@@ -22,6 +22,8 @@ public class UIManager : MonoBehaviour {
 
     public Text ammoText; // 탄약 표시용 텍스트
     public Text scoreText; // 점수 표시용 텍스트
+    public Text timeText; // 진행 시간 표시용 텍스트(m:ss, 일시정지 중에는 흐르지 않는 게임 시간)
+    private int lastShownSeconds = -1; // 마지막으로 표시한 초(같은 초에는 문자열을 다시 만들지 않기 위함)
     public Text waveText; // 적 웨이브 표시용 텍스트
     public GameObject gameoverUI; // 게임 오버시 활성화할 UI
     public Text resultStatsText; // 게임 오버 화면에 표시할 결과 요약(점수/생존시간/도달 웨이브)
@@ -48,6 +50,17 @@ public class UIManager : MonoBehaviour {
     // 탄약 텍스트 갱신 (remainAmmo가 음수면 무제한 무기, ∞로 표시)
     public void UpdateAmmoText(int magAmmo, int remainAmmo) {
         ammoText.text = magAmmo + " / " + (remainAmmo < 0 ? "∞" : remainAmmo.ToString());
+    }
+
+    // 진행 시간 텍스트 갱신(초가 바뀔 때만 문자열을 만든다)
+    public void UpdateTimeText(int totalSeconds) {
+        if (timeText == null || totalSeconds == lastShownSeconds)
+        {
+            return;
+        }
+
+        lastShownSeconds = totalSeconds;
+        timeText.text = totalSeconds / 60 + ":" + (totalSeconds % 60).ToString("00");
     }
 
     // 점수 텍스트 갱신

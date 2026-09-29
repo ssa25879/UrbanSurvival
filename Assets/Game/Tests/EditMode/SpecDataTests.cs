@@ -70,6 +70,16 @@ public class SpecDataTests {
         Assert.IsTrue(data.FindProperty("isElite").boolValue, "보스는 미니맵에서 강화 개체로 표시");
     }
 
+    // 처치 점수(2026-09-29 확정): 일반 100, 강화(Heavy) 250, 보스 500 / 1000
+    [TestCase("Assets/ScriptableData/Zombie Default.asset", 100)]
+    [TestCase("Assets/ScriptableData/Zombie Fast.asset", 100)]
+    [TestCase("Assets/ScriptableData/Zombie Heavy.asset", 250)]
+    [TestCase("Assets/ScriptableData/Zombie Boss.asset", 500)]
+    [TestCase("Assets/ScriptableData/Zombie Final Boss.asset", 1000)]
+    public void KillScore_MatchesSpec(string path, int score) {
+        Assert.AreEqual(score, Int(Load(path), "score"), "처치 점수");
+    }
+
     // 산탄총은 산탄당 10 x 6개로 근접 전부 명중 시 총 피해 60(기획서 F15)
     [Test]
     public void Shotgun_TotalPelletDamage_Is60() {

@@ -21,4 +21,4 @@ MonoBehaviour:
   isBoss: 0
   displayName: 
   modelScale: 1
-  score: 100
+  score: 250

@@ -404,7 +404,8 @@ public class ZombieSpawner : MonoBehaviour {
         zombie.onDeath += () => Destroy(zombie.gameObject, despawnTime);
         int score = zombieData.score;
         zombie.onDeath += () => GameManager.instance.AddScore(score);
-        zombie.onDeath += () => DropLoot(zombie.transform.position);
+        // 보스는 일반 드랍 확률 대신 무기 1종·탄약·회복을 항상 드랍
+        zombie.onDeath += () => { if (zombieData.isBoss) DropBossLoot(zombie.transform.position); else DropLoot(zombie.transform.position); };
         zombie.onDeath += HealPlayerIfAllCleared;
 
         // 1차 목표 보스(30분 보스)를 처치하면 목표 달성 처리(무한 모드 진입)
@@ -455,13 +456,30 @@ public class ZombieSpawner : MonoBehaviour {
 
         if (dropPrefab != null)
         {
-            // 같은 지점에서 연속으로 처치될 경우 드랍이 완전히 겹쳐 하나의 덩어리로 보이는 것을 방지
-            Vector2 scatter = Random.insideUnitCircle * lootScatterRadius;
-            Vector3 dropPosition = position + Vector3.up * 0.5f + new Vector3(scatter.x, 0f, scatter.y);
-
-            GameObject drop = Instantiate(dropPrefab, dropPosition, Quaternion.identity);
-            // 플레이어가 회수하지 않고 방치해도 무한 모드에서 드랍이 끝없이 쌓이지 않도록 일정 시간 후 자동 소멸
-            Destroy(drop, lootDespawnTime);
+            SpawnDrop(dropPrefab, position, lootScatterRadius);
         }
+    }
+
+    // 보스 처치 드랍(2026-09-29 확정): 무기 1종(소총·SMG·산탄총 중 무작위) + 탄약 + 회복 상자를 모두 떨어뜨린다
+    private void DropBossLoot(Vector3 position) {
+        GameObject[] weapons = { riflePickupPrefab, smgPickupPrefab, shotgunPickupPrefab };
+        GameObject weapon = weapons[Random.Range(0, weapons.Length)];
+
+        // 세 개가 겹치지 않도록 일반 드랍보다 넓게 흩뿌린다
+        float radius = lootScatterRadius * 3f;
+        if (weapon != null) SpawnDrop(weapon, position, radius);
+        if (ammoPackPrefab != null) SpawnDrop(ammoPackPrefab, position, radius);
+        if (healthPackPrefab != null) SpawnDrop(healthPackPrefab, position, radius);
+    }
+
+    // 드랍 아이템 하나를 사망 위치 주변에 생성하고 일정 시간 후 자동 소멸시킨다
+    private void SpawnDrop(GameObject dropPrefab, Vector3 position, float scatterRadius) {
+        // 같은 지점에서 연속으로 처치될 경우 드랍이 완전히 겹쳐 하나의 덩어리로 보이는 것을 방지
+        Vector2 scatter = Random.insideUnitCircle * scatterRadius;
+        Vector3 dropPosition = position + Vector3.up * 0.5f + new Vector3(scatter.x, 0f, scatter.y);
+
+        GameObject drop = Instantiate(dropPrefab, dropPosition, Quaternion.identity);
+        // 플레이어가 회수하지 않고 방치해도 무한 모드에서 드랍이 끝없이 쌓이지 않도록 일정 시간 후 자동 소멸
+        Destroy(drop, lootDespawnTime);
     }
 }

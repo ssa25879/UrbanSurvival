@@ -109,6 +109,9 @@ public class GameManager : MonoBehaviour {
             return;
         }
 
+        // HUD 진행 시간 표시(게임 시간 기준이라 일시정지 중에는 멈춘다)
+        UIManager.instance.UpdateTimeText(Mathf.FloorToInt(Time.timeSinceLevelLoad));
+
         // 테스트 모드: 지정한 시간이 지나면 목표 달성으로 처리(결과 화면 확인용)
         if (testGoalAfterSeconds > 0f && !primaryGoalReached && Time.timeSinceLevelLoad >= testGoalAfterSeconds)
         {
