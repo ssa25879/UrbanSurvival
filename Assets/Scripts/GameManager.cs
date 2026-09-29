@@ -35,6 +35,11 @@ public class GameManager : MonoBehaviour {
     public float primaryGoalMinutes = 30f; // 1차 목표 보스가 등장하는 시각(분). 이 시각에 등장하는 보스를 처치하면 목표 달성
     public bool primaryGoalReached { get; private set; } // 1차 목표 달성 여부(한 판에 한 번만 참이 됨)
 
+    [Header("결과 테스트 모드 (결과 테스트 씬에서만 켠다)")]
+    public bool showGoalResultChoice = false; // 목표 달성 시 결과 화면을 띄우고 무한 모드 진입 여부를 묻는다(끄면 기존처럼 자동으로 무한 모드 진행)
+    public float testGoalAfterSeconds = 0f; // 0보다 크면 게임 시작 후 이 시간(초)이 지날 때 보스를 처치하지 않아도 목표 달성으로 처리(테스트용)
+    public bool awaitingGoalChoice { get; private set; } // 결과 화면에서 무한 모드 진입 여부를 고르는 중
+
     // 1차 목표 보스(30분 보스)를 처치했을 때 호출: 결과 스냅샷을 한 번 기록하고 무한 모드로 계속 진행
     // 게임 오버 이후에는 처리하지 않아 플레이어 사망과 같은 프레임이면 패배가 우선된다
     public void ReachPrimaryGoal() {
@@ -45,6 +50,42 @@ public class GameManager : MonoBehaviour {
 
         primaryGoalReached = true;
         UIManager.instance.RecordPrimaryGoalSnapshot(score);
+
+        // 결과 테스트 모드: 게임을 멈추고 결과 화면에서 무한 모드 진입 여부를 묻는다
+        if (showGoalResultChoice)
+        {
+            awaitingGoalChoice = true;
+            isPaused = true;
+            Time.timeScale = 0f;
+            UIManager.instance.ShowGoalResult(score);
+        }
+    }
+
+    // 결과 화면의 "무한 모드 진입": 게임을 다시 진행한다
+    public void ContinueEndless() {
+        if (!awaitingGoalChoice)
+        {
+            return;
+        }
+
+        awaitingGoalChoice = false;
+        isPaused = false;
+        Time.timeScale = 1f;
+        UIManager.instance.HideGoalResult();
+    }
+
+    // 결과 화면의 "종료": 무한 모드에 들어가지 않고 이 판을 끝낸다(시간 정지, 다시 시작 또는 선택 화면으로 이동)
+    public void FinishAtGoal() {
+        if (!awaitingGoalChoice)
+        {
+            return;
+        }
+
+        awaitingGoalChoice = false;
+        isGameover = true;
+        isPaused = false;
+        Time.timeScale = 0f;
+        UIManager.instance.ShowGoalFinished();
     }
 
     private void Awake() {
@@ -64,6 +105,18 @@ public class GameManager : MonoBehaviour {
     private void Update() {
         // 게임 오버 상태에서는 일시정지를 걸 수 없음(이미 멈춰있고, 재시작만 가능)
         if (isGameover)
+        {
+            return;
+        }
+
+        // 테스트 모드: 지정한 시간이 지나면 목표 달성으로 처리(결과 화면 확인용)
+        if (testGoalAfterSeconds > 0f && !primaryGoalReached && Time.timeSinceLevelLoad >= testGoalAfterSeconds)
+        {
+            ReachPrimaryGoal();
+        }
+
+        // 결과 화면에서 선택하는 동안에는 ESC 일시정지를 받지 않는다
+        if (awaitingGoalChoice)
         {
             return;
         }

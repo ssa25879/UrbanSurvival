@@ -28,6 +28,12 @@ public class UIManager : MonoBehaviour {
     public GameObject pauseUI; // 일시정지 중 활성화할 UI
     public GameObject leaveConfirmUI; // "선택 화면으로 돌아가기" 확인 패널(현재 판이 종료됨을 알림)
     public string introSceneName = "Intro"; // 선택 화면(캐릭터 선택 패널)이 있는 인트로 씬 이름
+    public GameObject goalResultUI; // 1차 목표 달성 결과 화면(결과 테스트 모드에서만 사용, 무한 모드 진입 여부를 묻는다)
+    public Text goalResultTitle; // 결과 화면 제목
+    public Text goalResultStats; // 결과 화면의 점수·생존시간·웨이브
+    public Text goalResultQuestion; // 결과 화면의 안내 문구("ENTER ENDLESS MODE?")
+    public GameObject[] goalChoiceObjects; // 진입 여부를 고르는 동안 보이는 버튼(ENDLESS / FINISH)
+    public GameObject[] goalFinishObjects; // 종료를 고른 뒤 보이는 버튼(RESTART / SELECT)
     public GameObject progressErrorUI; // 진행 불가 오류 시 활성화할 UI(재시작 버튼 포함)
     public Text progressErrorText; // 오류 UI의 안내 문구
 
@@ -115,6 +121,67 @@ public class UIManager : MonoBehaviour {
 
     private void HideGoalReachedUI() {
         goalReachedUI.SetActive(false);
+    }
+
+    // 1차 목표 달성 결과 화면 표시: 점수·생존 시간·웨이브와 "무한 모드에 들어갈지" 묻는 안내
+    public void ShowGoalResult(int score) {
+        if (goalResultUI == null)
+        {
+            return;
+        }
+
+        // 잠깐 뜨는 달성 배너는 결과 화면과 겹치지 않도록 숨긴다
+        CancelInvoke(nameof(HideGoalReachedUI));
+        if (goalReachedUI != null)
+        {
+            goalReachedUI.SetActive(false);
+        }
+
+        int totalSeconds = Mathf.FloorToInt(Time.timeSinceLevelLoad);
+        goalResultTitle.text = "GOAL CLEARED";
+        goalResultStats.text = "SCORE : " + score
+            + "\nSURVIVED : " + totalSeconds / 60 + ":" + (totalSeconds % 60).ToString("00")
+            + "\nWAVE : " + lastWave;
+        goalResultQuestion.text = "ENTER ENDLESS MODE?";
+        SetObjectsActive(goalChoiceObjects, true);
+        SetObjectsActive(goalFinishObjects, false);
+        goalResultUI.SetActive(true);
+    }
+
+    // 결과 화면 닫기(무한 모드 진입)
+    public void HideGoalResult() {
+        if (goalResultUI != null)
+        {
+            goalResultUI.SetActive(false);
+        }
+    }
+
+    // 종료를 고른 뒤의 결과 화면: 선택 버튼을 숨기고 RESTART / SELECT를 보여 준다
+    public void ShowGoalFinished() {
+        if (goalResultUI == null)
+        {
+            return;
+        }
+
+        goalResultTitle.text = "RUN COMPLETE";
+        goalResultQuestion.text = "";
+        SetObjectsActive(goalChoiceObjects, false);
+        SetObjectsActive(goalFinishObjects, true);
+    }
+
+    private static void SetObjectsActive(GameObject[] objects, bool active) {
+        if (objects == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < objects.Length; i++)
+        {
+            if (objects[i] != null)
+            {
+                objects[i].SetActive(active);
+            }
+        }
     }
 
     // 진행 불가 오류 UI 표시(연결되지 않았으면 로그만 남긴다)
