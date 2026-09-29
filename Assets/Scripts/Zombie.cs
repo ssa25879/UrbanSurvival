@@ -24,6 +24,10 @@ public class Zombie : LivingEntity
 
     public ZombieData zombieData { get; private set; } // 이 개체의 셋업 데이터(미니맵 등 UI에서 강화 개체 판별용)
 
+    public float noPathRelocateSeconds = 5f; // 플레이어까지 유효한 경로가 이 시간 동안 없으면 재배치를 요청(기획서 10장 "길 막힘")
+    private float noPathElapsed; // 유효한 경로가 없는 상태로 지난 시간
+    public event System.Action<Zombie> onPathBlocked; // 재배치 요청 이벤트(스폰 지점 선택은 ZombieSpawner가 담당)
+
     // 추적할 대상이 존재하는지 알려주는 프로퍼티
     private bool hasTarget {
         get
@@ -92,10 +96,16 @@ public class Zombie : LivingEntity
             if (hasTarget)
             {
                 // 추적 대상이 있을 경우
-                // navMeshAgent의 경로를 갱신하고, 이동
-                navMeshAgent.isStopped = false;
-                // targetEntity의 위치를 받아 이동경로 갱신
-                navMeshAgent.SetDestination(targetEntity.transform.position);
+                // 직전 갱신에서 계산된 경로가 완전한지 확인(SetDestination 직후에는 경로가 아직 계산 중이라 갱신 전에 확인)
+                CheckPathBlocked();
+
+                // navMeshAgent의 경로를 갱신하고, 이동(NavMesh 밖에 있으면 SetDestination이 오류를 내므로 건너뜀)
+                if (navMeshAgent.isOnNavMesh)
+                {
+                    navMeshAgent.isStopped = false;
+                    // targetEntity의 위치를 받아 이동경로 갱신
+                    navMeshAgent.SetDestination(targetEntity.transform.position);
+                }
             }
             else
             {
@@ -124,6 +134,48 @@ public class Zombie : LivingEntity
             
             // 0.25초 주기로 처리 반복
             yield return new WaitForSeconds(0.25f);
+        }
+    }
+
+    // 유효한 경로가 없는 상태가 noPathRelocateSeconds 이상 이어지면 재배치를 요청한다
+    private void CheckPathBlocked() {
+        bool blocked = !navMeshAgent.isOnNavMesh
+            || (!navMeshAgent.pathPending && navMeshAgent.pathStatus != NavMeshPathStatus.PathComplete);
+
+        if (!blocked)
+        {
+            noPathElapsed = 0f;
+            return;
+        }
+
+        // 경로 갱신 주기(0.25초)마다 한 번씩 누적
+        noPathElapsed += 0.25f;
+        if (noPathElapsed >= noPathRelocateSeconds)
+        {
+            noPathElapsed = 0f;
+            if (onPathBlocked != null)
+            {
+                onPathBlocked(this);
+            }
+        }
+    }
+
+    // 지정한 위치로 옮긴다(체력·점수·생존 집계는 그대로 유지)
+    public void Relocate(Vector3 position, Quaternion rotation) {
+        if (dead)
+        {
+            return;
+        }
+
+        noPathElapsed = 0f;
+        transform.rotation = rotation;
+        if (navMeshAgent.enabled)
+        {
+            navMeshAgent.Warp(position);
+        }
+        else
+        {
+            transform.position = position;
         }
     }
 

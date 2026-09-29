@@ -1,6 +1,7 @@
-﻿﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 using Random = UnityEngine.Random;
 
 // 좀비 게임 오브젝트를 주기적으로 생성
@@ -32,6 +33,22 @@ public class ZombieSpawner : MonoBehaviour {
     public int baseWaveZombieCount = 4; // 1웨이브 스폰 마릿수
     public int zombieCountIncreasePerWave = 2; // 웨이브가 지날 때마다 증가하는 마릿수(예: 4,6,8,10 ...)
     public int maxConcurrentZombies = 500; // 씬에 동시에 존재하는 좀비 최대 수(2026-09-29 확정). 시체가 사라지기 전까지는 슬롯을 차지한다
+
+    [Header("스폰 위치 검증 (기획서 10·11장)")]
+    public float minSpawnDistanceFromPlayer = 12f; // 플레이어에서 이 거리 이상 떨어진 스폰 지점만 사용
+    public float spawnPointSampleDistance = 2f; // 스폰 지점에서 NavMesh 위 위치를 찾는 최대 거리
+    public int spawnCandidateTries = 10; // 한 번의 소환에서 스폰 지점 후보를 뽑아 보는 횟수
+    public float spawnRetryDelay = 0.5f; // 후보가 모두 실패했을 때 다시 시도하기까지의 대기 시간(초)
+    public float spawnFailureLimit = 10f; // 이 시간 동안 계속 실패하면 오류로 기록(초)
+
+    private readonly float spawnPointCheckInterval = 1f; // 스폰 지점 경로 검증 결과를 재사용하는 시간(경로 계산 횟수 절약)
+    private float[] spawnPointCheckedAt; // 스폰 지점별 마지막 검증 시각
+    private bool[] spawnPointUsable; // 스폰 지점별 검증 결과
+    private Vector3[] spawnPointNavPosition; // 스폰 지점별 NavMesh 위 위치
+    private float spawnRetryTime; // 다음 소환 시도 가능 시각
+    private float spawnFailureStartTime = -1f; // 연속 실패가 시작된 시각(-1이면 실패 중이 아님)
+    private bool spawnFailureLogged; // 연속 실패 오류를 이미 기록했는지
+    private float lastRelocateFailureLogTime = -100f; // 재배치 실패 로그 도배 방지
 
     private readonly List<Zombie> spawnedZombies = new List<Zombie>(); // 살아있는 좀비와 아직 사라지지 않은 시체(동시 상한 계산용)
     private int pendingSpawns; // 상한 때문에 아직 소환하지 못하고 대기 중인 좀비 수
@@ -88,21 +105,157 @@ public class ZombieSpawner : MonoBehaviour {
     private void SpawnPending() {
         while (pendingSpawns > 0 && spawnedZombies.Count < maxConcurrentZombies)
         {
-            CreateZombie();
+            // 후보가 모두 실패한 직후에는 spawnRetryDelay 동안 기다렸다가 다시 시도
+            if (Time.time < spawnRetryTime)
+            {
+                return;
+            }
+
+            Transform spawnPoint;
+            Vector3 spawnPosition;
+            if (!TryGetSpawnPosition(out spawnPoint, out spawnPosition))
+            {
+                OnSpawnFailed();
+                return;
+            }
+
+            spawnFailureStartTime = -1f;
+            spawnFailureLogged = false;
+            CreateZombie(spawnPoint, spawnPosition);
             pendingSpawns--;
         }
     }
 
+    // 스폰 지점 후보를 뽑아 사용할 수 있는 지점을 찾는다(NavMesh 위, 플레이어에서 충분히 멀고, 플레이어까지 경로가 완전)
+    private bool TryGetSpawnPosition(out Transform spawnPoint, out Vector3 spawnPosition) {
+        spawnPoint = null;
+        spawnPosition = Vector3.zero;
+
+        if (spawnPoints == null || spawnPoints.Length == 0)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < spawnCandidateTries; i++)
+        {
+            int index = Random.Range(0, spawnPoints.Length);
+            if (IsSpawnPointUsable(index))
+            {
+                spawnPoint = spawnPoints[index];
+                spawnPosition = spawnPointNavPosition[index];
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // 스폰 지점 하나가 지금 사용 가능한지 검사(결과는 spawnPointCheckInterval 동안 재사용)
+    private bool IsSpawnPointUsable(int index) {
+        if (spawnPointCheckedAt == null || spawnPointCheckedAt.Length != spawnPoints.Length)
+        {
+            spawnPointCheckedAt = new float[spawnPoints.Length];
+            spawnPointUsable = new bool[spawnPoints.Length];
+            spawnPointNavPosition = new Vector3[spawnPoints.Length];
+            for (int i = 0; i < spawnPointCheckedAt.Length; i++)
+            {
+                spawnPointCheckedAt[i] = -100f;
+            }
+        }
+
+        if (Time.time < spawnPointCheckedAt[index] + spawnPointCheckInterval)
+        {
+            return spawnPointUsable[index];
+        }
+
+        spawnPointCheckedAt[index] = Time.time;
+        spawnPointUsable[index] = false;
+
+        // 1) NavMesh 위에 배치할 수 있어야 한다
+        NavMeshHit spawnHit;
+        if (!NavMesh.SamplePosition(spawnPoints[index].position, out spawnHit, spawnPointSampleDistance, NavMesh.AllAreas))
+        {
+            return false;
+        }
+        spawnPointNavPosition[index] = spawnHit.position;
+
+        // 플레이어가 없거나 이미 사망했으면 거리·경로 검사는 생략
+        if (cachedPlayerHealth == null)
+        {
+            cachedPlayerHealth = FindObjectOfType<PlayerHealth>();
+        }
+        if (cachedPlayerHealth == null || cachedPlayerHealth.dead)
+        {
+            spawnPointUsable[index] = true;
+            return true;
+        }
+
+        // 2) 플레이어에서 최소 거리 이상(수평 기준) 떨어져 있어야 한다
+        Vector3 toPlayer = cachedPlayerHealth.transform.position - spawnHit.position;
+        toPlayer.y = 0f;
+        if (toPlayer.magnitude < minSpawnDistanceFromPlayer)
+        {
+            return false;
+        }
+
+        // 3) 플레이어까지 경로가 완전해야 한다(플레이어 위치가 NavMesh에서 멀면 경로 검사는 생략해 스폰이 멈추지 않게 함)
+        NavMeshHit playerHit;
+        if (NavMesh.SamplePosition(cachedPlayerHealth.transform.position, out playerHit, spawnPointSampleDistance * 1.5f, NavMesh.AllAreas))
+        {
+            NavMeshPath path = new NavMeshPath();
+            if (!NavMesh.CalculatePath(spawnHit.position, playerHit.position, NavMesh.AllAreas, path)
+                || path.status != NavMeshPathStatus.PathComplete)
+            {
+                return false;
+            }
+        }
+
+        spawnPointUsable[index] = true;
+        return true;
+    }
+
+    // 사용 가능한 스폰 지점이 없을 때: 잠시 후 재시도하고, 오래 이어지면 오류로 기록
+    private void OnSpawnFailed() {
+        spawnRetryTime = Time.time + spawnRetryDelay;
+
+        if (spawnFailureStartTime < 0f)
+        {
+            spawnFailureStartTime = Time.time;
+        }
+        else if (!spawnFailureLogged && Time.time - spawnFailureStartTime >= spawnFailureLimit)
+        {
+            spawnFailureLogged = true;
+            Debug.LogError("[ZombieSpawner] " + spawnFailureLimit + "초 동안 사용 가능한 스폰 지점을 찾지 못했습니다. 소환 대기: " + pendingSpawns);
+        }
+    }
+
+    // 좀비가 플레이어까지 유효한 경로를 얻지 못하고 있을 때: 사용 가능한 스폰 지점으로 옮긴다(체력·생존 집계 유지)
+    private void RelocateZombie(Zombie zombie) {
+        if (zombie == null || zombie.dead)
+        {
+            return;
+        }
+
+        Transform spawnPoint;
+        Vector3 spawnPosition;
+        if (TryGetSpawnPosition(out spawnPoint, out spawnPosition))
+        {
+            zombie.Relocate(spawnPosition, spawnPoint.rotation);
+        }
+        else if (Time.time - lastRelocateFailureLogTime >= 5f)
+        {
+            lastRelocateFailureLogTime = Time.time;
+            Debug.LogWarning("[ZombieSpawner] 경로가 막힌 좀비를 옮길 스폰 지점이 없습니다: " + zombie.name);
+        }
+    }
+
     // 좀비를 생성하고 생성한 좀비에게 추적할 대상을 할당
-    private void CreateZombie() {
+    private void CreateZombie(Transform spawnPoint, Vector3 spawnPosition) {
         // 사용할 좀비 데이터를 랜덤으로 결정
         ZombieData zombieData = zombieDatas[Random.Range(0, zombieDatas.Length)];
         
-        // 생성 위치 랜덤 설정
-        Transform spawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
-        
-        // 프리팹으로 좀비 생성
-        Zombie zombie = Instantiate(zombiePrefab, spawnPoint.position, spawnPoint.rotation);
+        // 프리팹으로 좀비 생성(검증을 통과한 스폰 지점의 NavMesh 위 위치)
+        Zombie zombie = Instantiate(zombiePrefab, spawnPosition, spawnPoint.rotation);
         
         // 생성 시점의 생존 경과 시간 기준으로 시간비례 난이도 배율 계산(신규 생성분에만 적용, 이미 생성된 적에는 소급 적용하지 않음)
         float elapsedMinutes = GameManager.instance != null ? GameManager.instance.elapsedMinutes : 0f;
@@ -120,6 +273,9 @@ public class ZombieSpawner : MonoBehaviour {
         zombie.onDeath += () => GameManager.instance.AddScore(zombieScore);
         zombie.onDeath += () => DropLoot(zombie.transform.position);
         zombie.onDeath += HealPlayerIfAllCleared;
+
+        // 경로가 막혀 5초 이상 플레이어에게 접근하지 못하면 다른 스폰 지점으로 옮김
+        zombie.onPathBlocked += RelocateZombie;
     }
 
     // 화면의 적이 모두 사라진 순간 플레이어 체력을 소폭 회복(회복 상자 효과의 1/3, 초기 제안값)
