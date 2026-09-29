@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -26,10 +26,15 @@ public class ZombieSpawner : MonoBehaviour {
     private readonly float lootScatterRadius = 0.5f; // 같은 위치에서 연속으로 드랍될 때 겹치지 않도록 흩뿌리는 반경
     private readonly float difficultyRampMinutes = 30f; // 0분 100% -> 30분 200%, 이후도 동일한 분당 증가율로 상한 없이 계속 상승
 
-    [Header("웨이브 설정 (2026-09-24 확정, 테스트용 - Inspector에서 조정 가능)")]
-    public float waveInterval = 5f; // 다음 웨이브로 넘어가는 간격(초). 테스트용 값이라 밸런스 확정 전까지 조정 가능
+    [Header("웨이브 설정 (2026-09-29 확정: 3~8초 무작위 간격, 웨이브마다 2마리씩 증가 - Inspector에서 조정 가능)")]
+    public float waveIntervalMin = 3f; // 다음 웨이브까지 최소 간격(초)
+    public float waveIntervalMax = 8f; // 다음 웨이브까지 최대 간격(초)
     public int baseWaveZombieCount = 4; // 1웨이브 스폰 마릿수
     public int zombieCountIncreasePerWave = 2; // 웨이브가 지날 때마다 증가하는 마릿수(예: 4,6,8,10 ...)
+    public int maxConcurrentZombies = 500; // 씬에 동시에 존재하는 좀비 최대 수(2026-09-29 확정). 시체가 사라지기 전까지는 슬롯을 차지한다
+
+    private readonly List<Zombie> spawnedZombies = new List<Zombie>(); // 살아있는 좀비와 아직 사라지지 않은 시체(동시 상한 계산용)
+    private int pendingSpawns; // 상한 때문에 아직 소환하지 못하고 대기 중인 좀비 수
 
     private readonly float clearHealRatio = 1f / 3f; // 적 전멸 순간 회복량 = 회복 상자 효과의 1/3(초기 제안값)
     private float nextSpawnTime; // 다음 스폰 예정 시각(Time.time 기준)
@@ -42,16 +47,27 @@ public class ZombieSpawner : MonoBehaviour {
             return;
         }
 
-        // waveInterval(초)마다 다음 웨이브로 전환(생존 적 전멸 대기 방식 폐지)
+        // 시체가 사라져 파괴된 좀비를 제외해 현재 씬에 남은 수를 갱신
+        spawnedZombies.RemoveAll(IsDestroyed);
+
+        // waveIntervalMin~waveIntervalMax(초) 무작위 간격마다 다음 웨이브로 전환(생존 적 전멸 대기 방식 폐지)
         if (Time.time >= nextSpawnTime)
         {
             wave++;
             SpawnWave();
-            nextSpawnTime = Time.time + waveInterval;
+            nextSpawnTime = Time.time + Random.Range(waveIntervalMin, waveIntervalMax);
         }
+
+        // 상한 때문에 밀린 좀비를 빈 슬롯이 생기는 대로 이어서 소환
+        SpawnPending();
 
         // UI 갱신
         UpdateUI();
+    }
+
+    // 파괴된 Unity 오브젝트인지 확인(RemoveAll용, 매 프레임 델리게이트가 새로 만들어지지 않도록 메서드로 분리)
+    private static bool IsDestroyed(Zombie zombie) {
+        return zombie == null;
     }
 
     // 웨이브 정보를 UI로 표시
@@ -64,9 +80,16 @@ public class ZombieSpawner : MonoBehaviour {
     private void SpawnWave() {
         int spawnCount = baseWaveZombieCount + zombieCountIncreasePerWave * (wave - 1);
 
-        for (int i = 0; i < spawnCount; i++)
+        // 바로 소환하지 않고 대기열에 넣어 두면 SpawnPending이 동시 상한 안에서 소환한다
+        pendingSpawns += spawnCount;
+    }
+
+    // 동시 상한(maxConcurrentZombies)에 여유가 있는 만큼 대기 중인 좀비를 소환
+    private void SpawnPending() {
+        while (pendingSpawns > 0 && spawnedZombies.Count < maxConcurrentZombies)
         {
             CreateZombie();
+            pendingSpawns--;
         }
     }
 
@@ -88,6 +111,7 @@ public class ZombieSpawner : MonoBehaviour {
         // 생성한 좀비에 zombieData와 난이도 배율을 할당하고 리스트에 추가
         zombie.Setup(zombieData, statMultiplier);
         zombies.Add(zombie);
+        spawnedZombies.Add(zombie);
         
         // onDeath 이벤트에 메서드 등록 - 리스트에서 제거, 화면에서 제거, 점수 증가, 드랍 판정, 전멸 여부 확인
         // (zombies.Remove가 먼저 실행되어야 아래 전멸 판정이 갱신된 카운트를 보고 판단할 수 있음)
