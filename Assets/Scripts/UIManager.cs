@@ -26,6 +26,8 @@ public class UIManager : MonoBehaviour {
     public GameObject gameoverUI; // 게임 오버시 활성화할 UI
     public Text resultStatsText; // 게임 오버 화면에 표시할 결과 요약(점수/생존시간/도달 웨이브)
     public GameObject pauseUI; // 일시정지 중 활성화할 UI
+    public GameObject progressErrorUI; // 진행 불가 오류 시 활성화할 UI(재시작 버튼 포함)
+    public Text progressErrorText; // 오류 UI의 안내 문구
 
     public GameObject goalReachedUI; // 1차 목표(30분 생존) 달성 시 잠시 표시할 알림 UI(없으면 표시 생략)
     public Text goalReachedText; // 알림 UI 안의 문구(없으면 기존 문구 유지)
@@ -106,6 +108,23 @@ public class UIManager : MonoBehaviour {
 
     private void HideGoalReachedUI() {
         goalReachedUI.SetActive(false);
+    }
+
+    // 진행 불가 오류 UI 표시(연결되지 않았으면 로그만 남긴다)
+    public void ShowProgressError(string message) {
+        Debug.LogError("[UIManager] 진행 오류: " + message);
+
+        if (progressErrorUI == null)
+        {
+            return;
+        }
+
+        if (progressErrorText != null)
+        {
+            progressErrorText.text = message;
+        }
+
+        progressErrorUI.SetActive(true);
     }
 
     // 일시정지 UI 활성화

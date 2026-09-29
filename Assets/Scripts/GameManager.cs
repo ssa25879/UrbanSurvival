@@ -94,6 +94,21 @@ public class GameManager : MonoBehaviour {
         }
     }
 
+    // 진행 불가 오류 상태(사용할 수 있는 스폰 지점이 계속 없는 경우 등): 시뮬레이션을 멈추고 오류 UI와 재시작을 제공
+    // 게임 오버 상태로 취급해 입력·점수·생성을 막는다. 이미 종료된 판에서는 무시한다
+    public void EnterErrorState(string message) {
+        if (isGameover)
+        {
+            return;
+        }
+
+        isGameover = true;
+        isPaused = false;
+        Time.timeScale = 0f;
+        UIManager.instance.SetActivePauseUI(false);
+        UIManager.instance.ShowProgressError(message);
+    }
+
     // 게임 오버 처리
     public void EndGame() {
         // 게임 오버 상태를 참으로 변경

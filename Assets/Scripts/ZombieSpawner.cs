@@ -284,7 +284,14 @@ public class ZombieSpawner : MonoBehaviour {
         else if (!spawnFailureLogged && Time.time - spawnFailureStartTime >= spawnFailureLimit)
         {
             spawnFailureLogged = true;
-            Debug.LogError("[ZombieSpawner] " + spawnFailureLimit + "초 동안 사용 가능한 스폰 지점을 찾지 못했습니다. 소환 대기: " + pendingSpawns);
+            string message = spawnFailureLimit + "초 동안 사용 가능한 스폰 지점을 찾지 못했습니다. 소환 대기: " + pendingSpawns;
+            Debug.LogError("[ZombieSpawner] " + message);
+
+            // 기획서 10장: 재배치·스폰이 모두 불가능하면 진행 오류 UI를 표시하고 재시작을 제공
+            if (GameManager.instance != null)
+            {
+                GameManager.instance.EnterErrorState("NO SPAWN POINT AVAILABLE\nPLEASE RESTART");
+            }
         }
     }
 
@@ -300,11 +307,19 @@ public class ZombieSpawner : MonoBehaviour {
         if (TryGetSpawnPosition(out spawnPoint, out spawnPosition))
         {
             zombie.Relocate(spawnPosition, spawnPoint.rotation);
+            spawnFailureStartTime = -1f;
+            spawnFailureLogged = false;
         }
-        else if (Time.time - lastRelocateFailureLogTime >= 5f)
+        else
         {
-            lastRelocateFailureLogTime = Time.time;
-            Debug.LogWarning("[ZombieSpawner] 경로가 막힌 좀비를 옮길 스폰 지점이 없습니다: " + zombie.name);
+            if (Time.time - lastRelocateFailureLogTime >= 5f)
+            {
+                lastRelocateFailureLogTime = Time.time;
+                Debug.LogWarning("[ZombieSpawner] 경로가 막힌 좀비를 옮길 스폰 지점이 없습니다: " + zombie.name);
+            }
+
+            // 스폰과 같은 조건이므로 연속 실패 시간을 함께 세어, 오래 이어지면 오류 상태로 전환
+            OnSpawnFailed();
         }
     }
 
