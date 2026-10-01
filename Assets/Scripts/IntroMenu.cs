@@ -7,6 +7,8 @@ public class IntroMenu : MonoBehaviour {
     public string gameSceneName = "UrbanSurvival"; // START로 불러올 인게임 씬 이름
     public CharacterSelectMenu characterSelect; // 인게임에서 선택 화면으로 돌아왔을 때 바로 열 캐릭터 선택 패널
     public PracticeSelectMenu practiceSelect; // 연습 씬에서 돌아왔을 때 바로 열 연습 패널(2026-10-01)
+    public TutorialPopup startTutorial; // START를 처음 눌렀을 때 보여 줄 게임 가이드(2026-10-01)
+    public TutorialPopup practiceTutorial; // PRACTICE를 누르면 보여 줄 연습 가이드(다시 보지 않기 가능)
 
     private void Start() {
         // 연습 씬의 SELECT로 온 경우 연습 패널을 연다
@@ -27,6 +29,30 @@ public class IntroMenu : MonoBehaviour {
             {
                 characterSelect.Open();
             }
+        }
+    }
+
+    // START 버튼: 처음이면 가이드를 보여 준 뒤 캐릭터 선택 패널을 연다
+    public void OnStartButton() {
+        if (startTutorial != null)
+        {
+            startTutorial.ShowThen(characterSelect.Open);
+        }
+        else
+        {
+            characterSelect.Open();
+        }
+    }
+
+    // PRACTICE 버튼: 연습 가이드를 보여 준 뒤 연습 패널을 연다
+    public void OnPracticeButton() {
+        if (practiceTutorial != null)
+        {
+            practiceTutorial.ShowThen(practiceSelect.Open);
+        }
+        else
+        {
+            practiceSelect.Open();
         }
     }
 

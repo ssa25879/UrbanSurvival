@@ -10,12 +10,25 @@ public class BossRedZoneAttack : MonoBehaviour {
     private PlayerHealth player;
     private float nextCastTime;
     private int castCount;
+    private Animator animator;
+    private bool hasAttackTrigger; // 모델 애니메이터에 "Attack" 트리거가 있는지(Arm의 Punch 모션)
 
     public static BossRedZoneAttack Attach(Zombie zombie) {
         BossRedZoneAttack attack = zombie.gameObject.AddComponent<BossRedZoneAttack>();
         attack.zombie = zombie;
         attack.data = zombie.zombieData;
         attack.nextCastTime = Time.time + attack.data.rangedFirstDelay;
+        attack.animator = zombie.GetComponentInChildren<Animator>();
+        if (attack.animator != null)
+        {
+            foreach (AnimatorControllerParameter parameter in attack.animator.parameters)
+            {
+                if (parameter.name == "Attack" && parameter.type == AnimatorControllerParameterType.Trigger)
+                {
+                    attack.hasAttackTrigger = true;
+                }
+            }
+        }
         return attack;
     }
 
@@ -49,6 +62,21 @@ public class BossRedZoneAttack : MonoBehaviour {
         nextCastTime = Time.time + data.rangedInterval;
     }
 
+    // 경고 시간이 끝나는 순간(폭발·피해 판정 시점)에 보스가 공격 모션을 재생한다
+    private void ScheduleAttackMotion() {
+        if (hasAttackTrigger)
+        {
+            Invoke(nameof(PlayAttackMotion), data.rangedWarnSeconds);
+        }
+    }
+
+    private void PlayAttackMotion() {
+        if (zombie != null && !zombie.dead && animator != null)
+        {
+            animator.SetTrigger("Attack");
+        }
+    }
+
     private void Cast() {
         castCount++;
         // 보스의 현재 공격력(시간 비례 배율 반영)에 데이터의 배율을 곱한 값이 레드존 피해
@@ -59,7 +87,8 @@ public class BossRedZoneAttack : MonoBehaviour {
         if (slam)
         {
             // 내려찍기: 보스 자신을 중심으로 더 넓게
-            RedZone.Spawn(data.rangedZonePrefab, zombie.transform.position, radius * 1.4f, data.rangedWarnSeconds + 0.3f, damage, 0f);
+            RedZone.Spawn(data.rangedZonePrefab, zombie.transform.position, radius * 1.4f, data.rangedWarnSeconds, damage, 0f, data.rangedPercentMaxHealth);
+            ScheduleAttackMotion();
             return;
         }
 
@@ -75,7 +104,10 @@ public class BossRedZoneAttack : MonoBehaviour {
                 center += new Vector3(around.x, 0f, around.y);
             }
 
-            RedZone.Spawn(data.rangedZonePrefab, center, radius, data.rangedWarnSeconds, damage, i * 0.35f);
+            // 여러 곳도 한꺼번에 폭발한다(경고 시간이 같아야 한 번의 공격 모션과 맞는다)
+            RedZone.Spawn(data.rangedZonePrefab, center, radius, data.rangedWarnSeconds, damage, 0f, data.rangedPercentMaxHealth);
         }
+
+        ScheduleAttackMotion();
     }
 }

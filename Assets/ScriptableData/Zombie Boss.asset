@@ -28,9 +28,11 @@ MonoBehaviour:
   rangedZonePrefab: {fileID: 729387203501105333, guid: 0aace75182b14ae48a5002aab2d96123,
     type: 3}
   rangedFirstDelay: 4
-  rangedInterval: 7
-  rangedWarnSeconds: 1.6
+  rangedInterval: 8
+  rangedWarnSeconds: 1.5
   rangedZoneRadius: 3
   rangedDamageMultiplier: 0.75
-  rangedZoneCount: 1
+  rangedZoneCount: 3
   rangedSlamEvery: 3
+  rangedPercentMaxHealth: 0
+  rangedInstantKillHealth: 0

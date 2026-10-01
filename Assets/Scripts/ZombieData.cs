@@ -27,4 +27,5 @@ public class ZombieData : ScriptableObject {
     public float rangedDamageMultiplier = 0.75f; // 레드존 피해 = 보스 현재 공격력 x 이 값
     public int rangedZoneCount = 1; // 지정 공격 한 번에 만드는 레드존 수
     public int rangedSlamEvery = 3; // 이 횟수마다 한 번은 보스 중심 내려찍기(0이면 사용 안 함)
+    public float rangedPercentMaxHealth = 0f; // 0보다 크면 피해 = 플레이어 최대(전체) 체력 x 이 값(Final Boss 0.9). 0이면 공격력 x 배율
 }

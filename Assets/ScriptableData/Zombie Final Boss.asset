@@ -29,8 +29,9 @@ MonoBehaviour:
     type: 3}
   rangedFirstDelay: 3
   rangedInterval: 5
-  rangedWarnSeconds: 1.4
+  rangedWarnSeconds: 1.5
   rangedZoneRadius: 3.5
   rangedDamageMultiplier: 0.7
   rangedZoneCount: 3
   rangedSlamEvery: 3
+  rangedPercentMaxHealth: 0.75

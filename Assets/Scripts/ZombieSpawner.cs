@@ -69,6 +69,7 @@ public class ZombieSpawner : MonoBehaviour {
     [Header("연습·테스트 설정 (2026-10-01 추가, 메인 씬은 기본값 유지)")]
     public bool spawnNormalWaves = true; // 끄면 일반·강화 적 웨이브를 만들지 않는다(보스만 등장)
     public int practiceBossMinute = 0; // 0보다 크면 연습 모드: 준비 시간 뒤 이 분의 보스 1마리만 소환하고 주기 등장은 하지 않는다(10 = Boss, 30 = Final Boss)
+    public float bossAliveHealthDropChance = 0.2f; // 보스가 살아 있는 동안 처치한 적이 회복템을 추가로 떨어뜨릴 확률(2026-10-01)
     public bool enableBossRangedPattern = true; // 보스 원거리 패턴(레드존) 사용 여부(ZombieData.rangedPattern이 켜진 보스에만 적용)
     public event System.Action<Zombie> onBossSpawned; // 보스가 소환되었을 때(연습 모드 타이머 시작용)
     private bool practiceBossQueued;
@@ -595,6 +596,24 @@ public class ZombieSpawner : MonoBehaviour {
         {
             SpawnDrop(dropPrefab, position, lootScatterRadius);
         }
+
+        // 보스가 살아 있는 동안에는 일반 드랍과 별개로 회복템을 추가로 떨어뜨릴 확률이 있다(2026-10-01)
+        if (healthPackPrefab != null && bossAliveHealthDropChance > 0f && IsAnyBossAlive() && Random.value < bossAliveHealthDropChance)
+        {
+            SpawnDrop(healthPackPrefab, position, lootScatterRadius * 2f);
+        }
+    }
+
+    private static bool IsAnyBossAlive() {
+        for (int i = 0; i < Zombie.bosses.Count; i++)
+        {
+            if (Zombie.bosses[i] != null && !Zombie.bosses[i].dead)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // 보스 처치 드랍(2026-09-29 확정): 무기 1종(소총·SMG·산탄총 중 무작위) + 탄약 + 회복 상자를 모두 떨어뜨린다

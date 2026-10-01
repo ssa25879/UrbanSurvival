@@ -17,6 +17,7 @@ public class RedZone : MonoBehaviour {
     private float radius;
     private float warnSeconds;
     private float damage;
+    private float percentOfMaxHealth; // 0보다 크면 플레이어 최대(전체) 체력 비율로 피해
     private float startTime;
     private bool exploded;
     private float explodeTime;
@@ -24,11 +25,12 @@ public class RedZone : MonoBehaviour {
     private MaterialPropertyBlock block;
 
     // delaySeconds만큼 뒤에 경고가 시작되고(그 전에는 보이지 않음), warnSeconds 뒤에 폭발한다
-    public static RedZone Spawn(RedZone prefab, Vector3 center, float radius, float warnSeconds, float damage, float delaySeconds) {
+    public static RedZone Spawn(RedZone prefab, Vector3 center, float radius, float warnSeconds, float damage, float delaySeconds, float percentOfMaxHealth = 0f) {
         RedZone zone = Instantiate(prefab, new Vector3(center.x, prefab.height, center.z), Quaternion.identity);
         zone.radius = radius;
         zone.warnSeconds = Mathf.Max(0.1f, warnSeconds);
         zone.damage = damage;
+        zone.percentOfMaxHealth = percentOfMaxHealth;
         zone.startTime = Time.time + delaySeconds;
         zone.Apply(0f, zone.warnColor);
         return zone;
@@ -89,7 +91,14 @@ public class RedZone : MonoBehaviour {
             offset.y = 0f;
             if (offset.magnitude <= radius)
             {
-                player.OnDamage(damage, player.transform.position, Vector3.up);
+                float dealt = damage;
+                if (percentOfMaxHealth > 0f)
+                {
+                    // 체력 비율 피해: 플레이어 최대(전체) 체력의 일정 비율(즉사 규칙 없음, 2026-10-01 제거)
+                    dealt = player.startingHealth * percentOfMaxHealth;
+                }
+
+                player.OnDamage(dealt, player.transform.position, Vector3.up);
             }
         }
     }
