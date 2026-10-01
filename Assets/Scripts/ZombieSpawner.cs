@@ -493,7 +493,9 @@ public class ZombieSpawner : MonoBehaviour {
         ZombieData zombieData = dataOverride != null ? dataOverride : zombieDatas[Random.Range(0, zombieDatas.Length)];
         
         // 프리팹으로 좀비 생성(검증을 통과한 스폰 지점의 NavMesh 위 위치)
-        Zombie zombie = Instantiate(zombiePrefab, spawnPosition, GetSpawnRotation(spawnPoint, spawnPosition));
+        // 데이터에 전용 프리팹이 지정돼 있으면 그것을 쓴다(Chubby 강화 적, Arm 보스 등 외형·판정 크기가 다른 개체)
+        Zombie prefab = zombieData.prefabOverride != null ? zombieData.prefabOverride : zombiePrefab;
+        Zombie zombie = Instantiate(prefab, spawnPosition, GetSpawnRotation(spawnPoint, spawnPosition));
         
         // 생성 시점의 생존 경과 시간 기준으로 시간비례 난이도 배율 계산(신규 생성분에만 적용, 이미 생성된 적에는 소급 적용하지 않음)
         float elapsedMinutes = GameManager.instance != null ? GameManager.instance.elapsedMinutes : 0f;

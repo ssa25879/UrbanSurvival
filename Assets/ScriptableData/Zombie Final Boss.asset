@@ -15,9 +15,12 @@ MonoBehaviour:
   health: 600
   damage: 60
   speed: 1.5
-  skinColor: {r: 0.32, g: 0.05, b: 0.3, a: 1}
+  skinColor: {r: 1, g: 0.6, b: 0.6, a: 1}
+  glowColor: {r: 0, g: 0, b: 0, a: 1}
   isElite: 1
+  prefabOverride: {fileID: 2695482231185085349, guid: bc350501329837843b3d148d183b09c7,
+    type: 3}
   isBoss: 1
   displayName: FINAL BOSS
-  modelScale: 2.5
+  modelScale: 2.1
   score: 1000
