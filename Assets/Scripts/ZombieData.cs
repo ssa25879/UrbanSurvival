@@ -16,4 +16,15 @@ public class ZombieData : ScriptableObject {
     public string displayName = ""; // 보스 체력바에 표시할 이름
     public float modelScale = 1f; // 외형·판정 크기 배율(보스를 크게 표시)
     public int score = 100; // 처치 점수
+
+    [Header("보스 원거리 패턴 - 레드존 (2026-10-01 추가, 수치는 초기 제안값)")]
+    public bool rangedPattern = false; // 원거리 패턴(레드존) 사용 여부
+    public RedZone rangedZonePrefab; // 레드존 프리팹(Assets/Prefabs/BossRedZone)
+    public float rangedFirstDelay = 4f; // 등장 후 첫 패턴까지 시간(초)
+    public float rangedInterval = 7f; // 패턴 간격(초)
+    public float rangedWarnSeconds = 1.6f; // 레드존 경고 시간(초). 이 시간이 지나면 폭발
+    public float rangedZoneRadius = 3f; // 레드존 반지름(m)
+    public float rangedDamageMultiplier = 0.75f; // 레드존 피해 = 보스 현재 공격력 x 이 값
+    public int rangedZoneCount = 1; // 지정 공격 한 번에 만드는 레드존 수
+    public int rangedSlamEvery = 3; // 이 횟수마다 한 번은 보스 중심 내려찍기(0이면 사용 안 함)
 }

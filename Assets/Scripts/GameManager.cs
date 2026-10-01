@@ -27,7 +27,9 @@ public class GameManager : MonoBehaviour {
     public KeyCode pauseKey = KeyCode.Escape; // 일시정지 토글 키
 
     // 생존 경과 시간(분). 신규 생성 적의 시간비례 난이도 배율 계산에 사용(씬 로드 시점 기준, 재시작 시 자동 초기화)
-    public float elapsedMinutes => Time.timeSinceLevelLoad / 60f;
+    // 연습 씬(BossTestScene 등)은 startElapsedMinutes를 10·30으로 두어 "게임이 그 시간까지 진행된 상황"에서 시작한다(2026-10-01)
+    public float startElapsedMinutes = 0f;
+    public float elapsedMinutes => startElapsedMinutes + Time.timeSinceLevelLoad / 60f;
 
     // 누적 점수 1,000점당 기본 피해량 +1% 영구 가산, 상한 없음(초기 제안값)
     public float damageMultiplier => 1f + Mathf.Floor(score / 1000f) * 0.01f;
@@ -110,7 +112,7 @@ public class GameManager : MonoBehaviour {
         }
 
         // HUD 진행 시간 표시(게임 시간 기준이라 일시정지 중에는 멈춘다)
-        UIManager.instance.UpdateTimeText(Mathf.FloorToInt(Time.timeSinceLevelLoad));
+        UIManager.instance.UpdateTimeText(Mathf.FloorToInt(elapsedMinutes * 60f));
 
         // 테스트 모드: 지정한 시간이 지나면 목표 달성으로 처리(결과 화면 확인용)
         if (testGoalAfterSeconds > 0f && !primaryGoalReached && Time.timeSinceLevelLoad >= testGoalAfterSeconds)
@@ -136,6 +138,19 @@ public class GameManager : MonoBehaviour {
         isPaused = !isPaused;
         Time.timeScale = isPaused ? 0f : 1f;
         UIManager.instance.SetActivePauseUI(isPaused);
+    }
+
+    // 연습 씬에서 보스를 처치했을 때: 결과 화면을 띄우기 위해 판을 멈춘다(RESTART / SELECT만 가능)
+    public void EnterPracticeResult() {
+        if (isGameover)
+        {
+            return;
+        }
+
+        isGameover = true;
+        isPaused = false;
+        Time.timeScale = 0f;
+        UIManager.instance.SetActivePauseUI(false);
     }
 
     // 점수를 추가하고 UI 갱신

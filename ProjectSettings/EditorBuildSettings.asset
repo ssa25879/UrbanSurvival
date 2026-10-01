@@ -14,5 +14,11 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Main.unity
     guid: 99989cc8447a14929ae49c903ae9cb61
+  - enabled: 1
+    path: Assets/Game/Scenes/BossTestScene.unity
+    guid: e702fe3a4ea0a39499be91dd1a8910d5
+  - enabled: 1
+    path: Assets/Game/Scenes/FinalBossTestScene.unity
+    guid: e38f58405756d4946ad2477102565579
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

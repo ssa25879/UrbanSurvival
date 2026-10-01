@@ -32,6 +32,8 @@ public class PlayerShooter : MonoBehaviour {
 
     private TwoBoneIKConstraint leftHandIK; // 왼손 IK 제약(무기 교체 시 target을 현재 무기의 LeftHandGrip으로 재설정)
 
+    public bool unlockAllWeaponsOnStart = false; // 시작할 때 무기 4종을 모두 보유(연습 씬용, 2026-10-01)
+
     private bool[] unlocked = new bool[SlotCount]; // 슬롯 보유 여부(권총은 항상 true)
     private int currentSlot; // 현재 장착 중인 슬롯 인덱스
 
@@ -48,6 +50,13 @@ public class PlayerShooter : MonoBehaviour {
 
         // 권총은 항상 보유
         unlocked[(int)WeaponSlot.Pistol] = true;
+        if (unlockAllWeaponsOnStart)
+        {
+            for (int i = 0; i < SlotCount; i++)
+            {
+                unlocked[i] = guns[i] != null;
+            }
+        }
 
         // 씬에 배치된 무기 오브젝트 중 활성화되어 있는 것을 시작 슬롯으로 사용(기본값: 권총)
         currentSlot = (int)WeaponSlot.Pistol;
@@ -207,6 +216,14 @@ public class PlayerShooter : MonoBehaviour {
         }
 
         gun.ammoRemain = Mathf.Min(gun.ammoRemain + amount, gun.gunData.reserveAmmoCap);
+    }
+
+    // 연습 씬: 현재 무기의 예비탄이 바닥나면 가득 채운다(탄약이 모자라 보스 처치 시간이 왜곡되지 않게)
+    public void RefillReserveIfEmpty() {
+        if (gun != null && gun.gunData != null && gun.gunData.reserveAmmoCap >= 0 && gun.ammoRemain <= 0)
+        {
+            gun.ammoRemain = gun.gunData.reserveAmmoCap;
+        }
     }
 
     // 탄약 UI 갱신

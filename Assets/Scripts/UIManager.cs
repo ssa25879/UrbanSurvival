@@ -30,6 +30,7 @@ public class UIManager : MonoBehaviour {
     public GameObject pauseUI; // 일시정지 중 활성화할 UI
     public GameObject leaveConfirmUI; // "선택 화면으로 돌아가기" 확인 패널(현재 판이 종료됨을 알림)
     public string introSceneName = "Intro"; // 선택 화면(캐릭터 선택 패널)이 있는 인트로 씬 이름
+    public bool returnToPracticeMenu = false; // 켜면 SELECT가 인트로의 연습(PRACTICE) 패널로 돌아간다(연습 씬용, 2026-10-01)
     public GameObject goalResultUI; // 1차 목표 달성 결과 화면(결과 테스트 모드에서만 사용, 무한 모드 진입 여부를 묻는다)
     public Text goalResultTitle; // 결과 화면 제목
     public Text goalResultStats; // 결과 화면의 점수·생존시간·웨이브
@@ -161,6 +162,21 @@ public class UIManager : MonoBehaviour {
         goalResultUI.SetActive(true);
     }
 
+    // 연습 씬의 보스 처치 결과 화면: 같은 결과 패널을 재사용하고 RESTART / SELECT만 보여 준다
+    public void ShowPracticeResult(string title, string stats) {
+        if (goalResultUI == null)
+        {
+            return;
+        }
+
+        goalResultTitle.text = title;
+        goalResultStats.text = stats;
+        goalResultQuestion.text = "";
+        SetObjectsActive(goalChoiceObjects, false);
+        SetObjectsActive(goalFinishObjects, true);
+        goalResultUI.SetActive(true);
+    }
+
     // 결과 화면 닫기(무한 모드 진입)
     public void HideGoalResult() {
         if (goalResultUI != null)
@@ -239,7 +255,14 @@ public class UIManager : MonoBehaviour {
     public void ReturnToCharacterSelect() {
         // 일시정지 중에 이동하는 경우가 없도록 시간 배율을 원복
         Time.timeScale = 1f;
-        CharacterSelection.openSelectOnIntro = true;
+        if (returnToPracticeMenu)
+        {
+            CharacterSelection.openPracticeOnIntro = true;
+        }
+        else
+        {
+            CharacterSelection.openSelectOnIntro = true;
+        }
         SceneManager.LoadScene(introSceneName);
     }
 

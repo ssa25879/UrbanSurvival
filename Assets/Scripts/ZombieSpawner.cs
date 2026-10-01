@@ -66,6 +66,13 @@ public class ZombieSpawner : MonoBehaviour {
     public ZombieData finalBossData; // 30분 이후 보스(30분 보스와 이후 10분마다 등장하는 보스)
     public float bossIntervalMinutes = 10f; // 보스 등장 간격(분)
 
+    [Header("연습·테스트 설정 (2026-10-01 추가, 메인 씬은 기본값 유지)")]
+    public bool spawnNormalWaves = true; // 끄면 일반·강화 적 웨이브를 만들지 않는다(보스만 등장)
+    public int practiceBossMinute = 0; // 0보다 크면 연습 모드: 준비 시간 뒤 이 분의 보스 1마리만 소환하고 주기 등장은 하지 않는다(10 = Boss, 30 = Final Boss)
+    public bool enableBossRangedPattern = true; // 보스 원거리 패턴(레드존) 사용 여부(ZombieData.rangedPattern이 켜진 보스에만 적용)
+    public event System.Action<Zombie> onBossSpawned; // 보스가 소환되었을 때(연습 모드 타이머 시작용)
+    private bool practiceBossQueued;
+
     private int bossesScheduled; // 지금까지 등장 시각이 지난 보스 수
     private readonly Queue<int> pendingBossMinutes = new Queue<int>(); // 소환 지점을 찾지 못해 대기 중인 보스(등장 분)
 
@@ -97,7 +104,7 @@ public class ZombieSpawner : MonoBehaviour {
         }
 
         // waveIntervalMin~waveIntervalMax(초) 무작위 간격마다 다음 웨이브로 전환(생존 적 전멸 대기 방식 폐지)
-        if (Time.time >= nextSpawnTime)
+        if (spawnNormalWaves && Time.time >= nextSpawnTime)
         {
             wave++;
             SpawnWave();
@@ -168,6 +175,17 @@ public class ZombieSpawner : MonoBehaviour {
 
     // 경과 시간이 보스 등장 시각(bossIntervalMinutes의 배수)에 도달했는지 확인해 대기열에 추가
     private void ScheduleBosses() {
+        // 연습 모드: 지정한 분의 보스를 한 번만 대기열에 넣는다
+        if (practiceBossMinute > 0)
+        {
+            if (!practiceBossQueued)
+            {
+                practiceBossQueued = true;
+                pendingBossMinutes.Enqueue(practiceBossMinute);
+            }
+            return;
+        }
+
         if (GameManager.instance == null || bossIntervalMinutes <= 0f)
         {
             return;
@@ -201,7 +219,7 @@ public class ZombieSpawner : MonoBehaviour {
             spawnFailureLogged = false;
 
             int minute = pendingBossMinutes.Dequeue();
-            bool isGoalBoss = GameManager.instance != null && minute == Mathf.RoundToInt(GameManager.instance.primaryGoalMinutes);
+            bool isGoalBoss = practiceBossMinute <= 0 && GameManager.instance != null && minute == Mathf.RoundToInt(GameManager.instance.primaryGoalMinutes);
             ZombieData data = minute < GameManager.instance.primaryGoalMinutes ? bossData : finalBossData;
             if (data == null)
             {
@@ -503,9 +521,20 @@ public class ZombieSpawner : MonoBehaviour {
 
         // 생성한 좀비에 zombieData와 난이도 배율을 할당하고 리스트에 추가
         zombie.Setup(zombieData, statMultiplier);
+
+        // 보스 원거리 패턴(레드존)
+        if (enableBossRangedPattern && zombieData.rangedPattern && zombieData.rangedZonePrefab != null)
+        {
+            BossRedZoneAttack.Attach(zombie);
+        }
         zombies.Add(zombie);
         spawnedZombies.Add(zombie);
         
+        if (zombieData.isBoss && onBossSpawned != null)
+        {
+            onBossSpawned(zombie);
+        }
+
         // onDeath 이벤트에 메서드 등록 - 리스트에서 제거, 화면에서 제거, 점수 증가, 드랍 판정, 전멸 여부 확인
         // (zombies.Remove가 먼저 실행되어야 아래 전멸 판정이 갱신된 카운트를 보고 판단할 수 있음)
         zombie.onDeath += () => zombies.Remove(zombie);
