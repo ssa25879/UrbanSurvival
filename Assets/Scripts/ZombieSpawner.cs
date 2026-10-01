@@ -286,7 +286,7 @@ public class ZombieSpawner : MonoBehaviour {
 
         if (cachedPlayerHealth == null)
         {
-            cachedPlayerHealth = FindObjectOfType<PlayerHealth>();
+            cachedPlayerHealth = FindFirstObjectByType<PlayerHealth>();
         }
         if (cachedPlayerHealth == null || cachedPlayerHealth.dead)
         {
@@ -403,7 +403,7 @@ public class ZombieSpawner : MonoBehaviour {
         // 플레이어가 없거나 이미 사망했으면 거리·경로 검사는 생략
         if (cachedPlayerHealth == null)
         {
-            cachedPlayerHealth = FindObjectOfType<PlayerHealth>();
+            cachedPlayerHealth = FindFirstObjectByType<PlayerHealth>();
         }
         if (cachedPlayerHealth == null || cachedPlayerHealth.dead)
         {
@@ -533,7 +533,7 @@ public class ZombieSpawner : MonoBehaviour {
 
         if (cachedPlayerHealth == null)
         {
-            cachedPlayerHealth = FindObjectOfType<PlayerHealth>();
+            cachedPlayerHealth = FindFirstObjectByType<PlayerHealth>();
         }
 
         if (cachedPlayerHealth == null || healthPackPrefab == null)

@@ -15,7 +15,7 @@ public static class TestPlaygroundSpawner {
     private static void SpawnPlayground() {
         if (SceneManager.GetActiveScene().name != TargetSceneName) return;
 
-        PlayerHealth player = Object.FindObjectOfType<PlayerHealth>();
+        PlayerHealth player = Object.FindFirstObjectByType<PlayerHealth>();
         if (player == null) return;
 
         Vector3 origin = player.transform.position;
