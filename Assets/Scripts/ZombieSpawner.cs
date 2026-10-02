@@ -44,8 +44,8 @@ public class ZombieSpawner : MonoBehaviour {
     public float spawnFailureLimit = 10f; // 이 시간 동안 계속 실패하면 오류로 기록(초)
 
     [Header("플레이어 주변 스폰 (2026-09-29): 시작 직후 적이 늦게 도착하던 문제")]
-    public float spawnRingMin = 22f; // 플레이어에서 이 거리 이상, spawnRingMax 이하의 NavMesh 위 지점에서 소환(화면 밖에 가깝게)
-    public float spawnRingMax = 30f; // 0이면 이 방식을 끄고 맵 외곽의 고정 스폰 지점만 사용
+    public float spawnRingMin = 12f; // 플레이어에서 이 거리 이상, spawnRingMax 이하의 NavMesh 위 지점에서 소환(화면 밖에 가깝게)
+    public float spawnRingMax = 25f; // 0이면 이 방식을 끄고 맵 외곽의 고정 스폰 지점만 사용
     public int spawnRingPoolSize = 12; // 검증을 통과한 후보를 미리 모아 두는 개수(경로 계산 횟수를 줄이기 위함)
     public float spawnRingRefreshInterval = 1f; // 후보 목록을 다시 만드는 간격(초). 플레이어가 움직이므로 주기적으로 갱신
 

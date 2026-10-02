@@ -18,6 +18,7 @@ public class PracticeBossMode : MonoBehaviour {
     private Zombie boss;
     private float bossStartTime;
     private bool finished;
+    private bool timerFrozen; // 게임 오버로 타이머를 멈췄는지(사망 시 Time.timeScale이 1로 유지되어 시간이 계속 흐르기 때문)
     private PlayerShooter shooter;
     private PlayerHealth playerHealth;
 
@@ -87,13 +88,26 @@ public class PracticeBossMode : MonoBehaviour {
             return;
         }
 
+        // 플레이어가 사망하거나 진행 불가 상태가 되면 그 순간의 처치 시간·보스 체력을 고정한다(2026-10-02 수정: 사망 뒤에도 시간이 흐르던 문제)
+        if (timerFrozen)
+        {
+            return;
+        }
+
+        bool stopped = GameManager.instance != null && GameManager.instance.isGameover;
         float elapsed = Time.time - bossStartTime;
+        if (stopped)
+        {
+            timerFrozen = true;
+        }
+
         UIManager.instance.waveText.text = Label + " TIME " + FormatTime(elapsed)
             + "\nBOSS HP " + Mathf.CeilToInt(Mathf.Max(0f, boss.health)) + " / " + Mathf.CeilToInt(boss.startingHealth);
     }
 
     private void OnBossDied() {
-        if (finished)
+        // 이미 게임 오버(사망 등)가 된 뒤의 처치는 기록하지 않는다
+        if (finished || (GameManager.instance != null && GameManager.instance.isGameover))
         {
             return;
         }
