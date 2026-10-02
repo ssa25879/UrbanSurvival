@@ -266,6 +266,21 @@ public class UIManager : MonoBehaviour {
         SceneManager.LoadScene(introSceneName);
     }
 
+    // 게임 종료 후 로비(인트로 타이틀 화면)로 돌아간다(2026-10-02: 게임 오버·결과 화면의 SELECT를 대체)
+    public void ReturnToLobby() {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(introSceneName);
+    }
+
+    // 게임 종료(에디터에서는 Play Mode 종료)
+    public void QuitGame() {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
+
     // 게임 재시작
     public void GameRestart() {
         // 일시정지 중 재시작하는 경우가 없도록 시간 배율을 원복(안전장치)

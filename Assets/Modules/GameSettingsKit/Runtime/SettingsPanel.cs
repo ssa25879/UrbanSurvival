@@ -89,6 +89,8 @@ namespace GameSettingsKit
             if (closeButton != null) closeButton.onClick.AddListener(Close);
 
             BuildOptions();
+            SpeedUpDropdownScroll(resolutionDropdown);
+            SpeedUpDropdownScroll(qualityDropdown);
             if (window != null) window.SetActive(false);
         }
 
@@ -154,6 +156,22 @@ namespace GameSettingsKit
         {
             SettingsStore.Set(change(SettingsStore.Current));
             RefreshValueLabels();
+        }
+
+        // 드롭다운 목록의 기본 스크롤 속도(1)는 너무 느려 휠 한 칸에 항목이 거의 움직이지 않는다
+        private const float DropdownScrollSensitivity = 60f;
+
+        private static void SpeedUpDropdownScroll(Dropdown dropdown)
+        {
+            if (dropdown == null || dropdown.template == null)
+            {
+                return;
+            }
+            ScrollRect scroll = dropdown.template.GetComponent<ScrollRect>();
+            if (scroll != null)
+            {
+                scroll.scrollSensitivity = DropdownScrollSensitivity;
+            }
         }
 
         private void BuildOptions()

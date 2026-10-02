@@ -182,7 +182,7 @@ namespace GameSettingsKit
             QualitySettings.vSyncCount = Current.vSync ? 1 : 0;
         }
 
-        // 선택 가능한 해상도 목록(주사율만 다른 중복 항목 제거, 작은 것부터)
+        // 선택 가능한 해상도 목록(주사율만 다른 중복 항목 제거, 큰 것부터)
         public static IReadOnlyList<Vector2Int> GetResolutions()
         {
             if (resolutionCache == null)
@@ -200,6 +200,13 @@ namespace GameSettingsKit
                 {
                     resolutionCache.Add(new Vector2Int(Screen.width, Screen.height));
                 }
+
+                // 모니터가 지원하는 가장 큰 해상도(보통 모니터 기본 해상도)를 맨 위로, 아래로 갈수록 작아지게 정렬
+                resolutionCache.Sort((a, b) =>
+                {
+                    int byWidth = b.x.CompareTo(a.x);
+                    return byWidth != 0 ? byWidth : b.y.CompareTo(a.y);
+                });
             }
             return resolutionCache;
         }
