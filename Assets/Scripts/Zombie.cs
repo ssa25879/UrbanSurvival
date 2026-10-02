@@ -20,6 +20,7 @@ public class Zombie : LivingEntity
     public float damage = 20f; // 공격력
     public float timeBetAttack = 0.5f; // 공격 간격
     private float lastAttackTime; // 마지막 공격 시점
+    private bool hasMeleeTrigger; // 애니메이터에 근접 공격 트리거(MeleeAttack)가 있는지
 
     public ZombieData zombieData { get; private set; } // 이 개체의 셋업 데이터(미니맵 등 UI에서 강화 개체 판별용)
 
@@ -52,6 +53,14 @@ public class Zombie : LivingEntity
         // 애니메이터는 좀비 비주얼 모델(자식 오브젝트)에 붙어있음
         zombieAnimator = GetComponentInChildren<Animator>();
         zombieAudioPlayer = GetComponent<AudioSource>();
+
+        foreach (AnimatorControllerParameter parameter in zombieAnimator.parameters)
+        {
+            if (parameter.name == "MeleeAttack" && parameter.type == AnimatorControllerParameterType.Trigger)
+            {
+                hasMeleeTrigger = true;
+            }
+        }
     }
 
     // 좀비 AI의 초기 스펙을 결정하는 셋업 메서드
@@ -270,6 +279,12 @@ public class Zombie : LivingEntity
                 
                 // 공격
                 attackTarget.OnDamage(damage, hitPoint, hitNormal);
+
+                // 근접 공격 모션(컨트롤러에 MeleeAttack 트리거가 있을 때만, 2026-10-02 추가)
+                if (hasMeleeTrigger)
+                {
+                    zombieAnimator.SetTrigger("MeleeAttack");
+                }
             }
         }
     }

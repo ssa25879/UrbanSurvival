@@ -62,11 +62,14 @@ public class BossRedZoneAttack : MonoBehaviour {
         nextCastTime = Time.time + data.rangedInterval;
     }
 
-    // 경고 시간이 끝나는 순간(폭발·피해 판정 시점)에 보스가 공격 모션을 재생한다
+    // Punch 클립에서 팔이 뻗어 닿는 시점(클립 시작 후 초). 모션을 이만큼 앞당겨 시작해 폭발 순간에 타격이 맞는다
+    private const float PunchImpactSeconds = 0.4f;
+
+    // 경고가 끝나는 순간(폭발·피해 판정 시점)에 타격이 오도록 보스가 공격 모션을 미리 시작한다
     private void ScheduleAttackMotion() {
         if (hasAttackTrigger)
         {
-            Invoke(nameof(PlayAttackMotion), data.rangedWarnSeconds);
+            Invoke(nameof(PlayAttackMotion), Mathf.Max(0f, data.rangedWarnSeconds - PunchImpactSeconds));
         }
     }
 
