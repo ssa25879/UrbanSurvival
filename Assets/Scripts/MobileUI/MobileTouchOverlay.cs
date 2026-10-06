@@ -9,10 +9,16 @@ public class MobileTouchOverlay : MonoBehaviour
     private const string ObjectName = "Mobile Touch Overlay";
     private const float MoveDeadZone = 0.2f;
     private const float AimDeadZone = 0.25f;
+    private const float SlotLineOwned = 3f;
+    private const float SlotLineSelected = 7f;
+
+    private static readonly Color SlotSelectedColor = new Color(0.19f, 0.155f, 0.08f, 0.9f);
+    private static readonly Color SlotLockedColor = new Color(0.07f, 0.08f, 0.09f, 0.45f);
+    private static readonly Color SlotOwnedLine = new Color(0.93f, 0.74f, 0.36f, 0.45f);
+    private static readonly Color SlotLockedLine = new Color(0.45f, 0.45f, 0.45f, 0.3f);
 
     private RectTransform controlsRoot; // 정지·게임오버 때 숨길 컨트롤 묶음(일시정지 버튼 제외)
     private GameObject fireButtonObject;
-    private GameObject fireRingObject;
     private GameObject aimZoneObject;
     private TouchJoystick moveStick;
     private TouchJoystick aimStick;
@@ -20,7 +26,9 @@ public class MobileTouchOverlay : MonoBehaviour
     private TouchButton reloadButton;
     private TouchButton pauseButton;
     private readonly TouchButton[] slotButtons = new TouchButton[4];
-    private readonly Text[] slotLabels = new Text[4];
+    private readonly Text[] slotBadges = new Text[4];
+    private readonly Text[] slotNames = new Text[4];
+    private readonly Image[] slotLines = new Image[4];
     private PlayerShooter playerShooter;
     private PlayerInput playerInput;
     private GameObject pauseButtonObject;
@@ -72,7 +80,6 @@ public class MobileTouchOverlay : MonoBehaviour
     {
         bool twin = mode == MobileAimMode.TwinStick;
         fireButtonObject.SetActive(!twin);
-        fireRingObject.SetActive(!twin);
         aimZoneObject.SetActive(twin);
 
         if (resetInput)
@@ -170,9 +177,8 @@ public class MobileTouchOverlay : MonoBehaviour
     // 오른쪽 아래 발사 버튼(오토 에임 모드)
     private void BuildFireButton()
     {
-        fireButton = CreateRoundButton("Fire Button", controlsRoot, new Vector2(-640f, 170f), 220f, "FIRE", 40);
+        fireButton = CreatePanelButton("Fire Button", controlsRoot, new Vector2(-640f, 170f), 220f, "FIRE", 48, 8f);
         fireButtonObject = fireButton.gameObject;
-        fireRingObject = controlsRoot.Find("Fire Button Ring").gameObject; // 링은 버튼의 형제라 함께 전환해야 한다
         fireButton.onDown = () =>
         {
             MobileInputState.FireHeld = true;
@@ -184,21 +190,18 @@ public class MobileTouchOverlay : MonoBehaviour
     // 발사 버튼 위쪽 재장전 버튼
     private void BuildReloadButton()
     {
-        reloadButton = CreateRoundButton("Reload Button", controlsRoot, new Vector2(-430f, 330f), 130f, "R", 44);
+        reloadButton = CreatePanelButton("Reload Button", controlsRoot, new Vector2(-430f, 330f), 130f, "R", 52, 6f);
         reloadButton.onDown = MobileInputState.RequestReload;
     }
 
-    private TouchButton CreateRoundButton(string name, Transform parent, Vector2 anchoredFromBottomRight, float size,
-        string label, int fontSize)
+    // HUD 패널 스타일(둥근 사각 패널 + 상단 앰버 라인) 정사각 버튼. 누르는 동안 앰버 채움 + 어두운 글자
+    private TouchButton CreatePanelButton(string name, Transform parent, Vector2 anchoredFromBottomRight, float size,
+        string label, int fontSize, float lineThickness)
     {
-        // 테두리 링은 버튼 배경의 형제로 먼저 만든다(자식으로 두면 배경을 덮어 버튼이 단색이 된다)
-        Image ring = MobileUIFactory.NewImage(name + " Ring", parent, MobileUIFactory.Amber, MobileUIFactory.Circle);
-        ring.raycastTarget = false;
-        PlaceBottomRight(ring.rectTransform, anchoredFromBottomRight, size + 8f);
-
-        Image background = MobileUIFactory.NewImage(name, parent, MobileUIFactory.Panel, MobileUIFactory.Circle);
+        Image background = MobileUIFactory.NewPanel(name, parent, MobileUIFactory.Panel);
         RectTransform rect = background.rectTransform;
         PlaceBottomRight(rect, anchoredFromBottomRight, size);
+        MobileUIFactory.NewTopLine(rect, lineThickness, MobileUIFactory.Amber);
 
         Text text = MobileUIFactory.NewText("Label", rect, label, fontSize, MobileUIFactory.Light,
             TextAnchor.MiddleCenter);
@@ -206,6 +209,7 @@ public class MobileTouchOverlay : MonoBehaviour
 
         TouchButton button = background.gameObject.AddComponent<TouchButton>();
         button.background = background;
+        button.label = text;
         return button;
     }
 
@@ -220,24 +224,43 @@ public class MobileTouchOverlay : MonoBehaviour
     // 오른쪽 가장자리 세로 배치 무기 슬롯 4개(1=권총, 2=소총, 3=SMG, 4=산탄총)
     private void BuildWeaponSlots()
     {
-        string[] names = { "1 PISTOL", "2 RIFLE", "3 SMG", "4 SHOTGUN" };
+        string[] fallbackNames = { "PISTOL", "AK", "SMG", "SHOTGUN" };
         for (int i = 0; i < 4; i++)
         {
             int slotIndex = i;
-            Image background = MobileUIFactory.NewImage("Slot " + (i + 1), controlsRoot, MobileUIFactory.Panel);
+            // 무기 이름은 HUD(WeaponHUD)와 같게 총 오브젝트 이름을 쓴다
+            string weaponName = playerShooter != null && playerShooter.guns[i] != null
+                ? playerShooter.guns[i].gameObject.name
+                : fallbackNames[i];
+
+            Image background = MobileUIFactory.NewPanel("Slot " + (i + 1), controlsRoot, MobileUIFactory.Panel);
             RectTransform rect = background.rectTransform;
             rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
             rect.pivot = new Vector2(1f, 0.5f);
             rect.anchoredPosition = new Vector2(-24f, 620f - i * 100f);
             rect.sizeDelta = new Vector2(230f, 88f);
+            slotLines[i] = MobileUIFactory.NewTopLine(rect, SlotLineOwned, MobileUIFactory.Amber);
 
-            Text text = MobileUIFactory.NewText("Label", rect, names[i], 30, MobileUIFactory.Light,
+            // 번호 배지(왼쪽)와 무기 이름
+            Text badge = MobileUIFactory.NewText("Badge", rect, (i + 1).ToString(), 40, MobileUIFactory.Amber,
                 TextAnchor.MiddleCenter);
-            MobileUIFactory.Stretch(text.rectTransform);
-            slotLabels[i] = text;
+            badge.rectTransform.anchorMin = new Vector2(0f, 0f);
+            badge.rectTransform.anchorMax = new Vector2(0f, 1f);
+            badge.rectTransform.pivot = new Vector2(0f, 0.5f);
+            badge.rectTransform.offsetMin = new Vector2(8f, 0f);
+            badge.rectTransform.offsetMax = new Vector2(58f, 0f);
+            slotBadges[i] = badge;
+
+            Text nameText = MobileUIFactory.NewText("Name", rect, weaponName.ToUpper(), 32, MobileUIFactory.Light,
+                TextAnchor.MiddleCenter);
+            MobileUIFactory.Stretch(nameText.rectTransform);
+            nameText.rectTransform.offsetMin = new Vector2(58f, 0f);
+            nameText.rectTransform.offsetMax = new Vector2(-8f, 0f);
+            slotNames[i] = nameText;
 
             TouchButton button = background.gameObject.AddComponent<TouchButton>();
             button.background = background;
+            button.disabledColor = SlotLockedColor;
             button.onDown = () =>
             {
                 if (playerShooter != null && playerShooter.IsSlotUnlocked(slotIndex))
@@ -252,15 +275,26 @@ public class MobileTouchOverlay : MonoBehaviour
     // 오른쪽 위 일시정지 버튼(안전 영역 안). 정지 중에는 기존 메뉴가 계속하기를 담당하므로 숨긴다
     private void BuildPauseButton(RectTransform safe)
     {
-        Image background =
-            MobileUIFactory.NewImage("Pause Button", safe, MobileUIFactory.Panel, MobileUIFactory.Circle);
+        Image background = MobileUIFactory.NewPanel("Pause Button", safe, MobileUIFactory.Panel);
         RectTransform rect = background.rectTransform;
         rect.anchorMin = rect.anchorMax = new Vector2(1f, 1f);
         rect.pivot = new Vector2(1f, 1f);
         rect.anchoredPosition = new Vector2(-380f, -24f);
         rect.sizeDelta = new Vector2(110f, 110f);
-        Text text = MobileUIFactory.NewText("Label", rect, "II", 44, MobileUIFactory.Light, TextAnchor.MiddleCenter);
-        MobileUIFactory.Stretch(text.rectTransform);
+        MobileUIFactory.NewTopLine(rect, 5f, MobileUIFactory.Amber);
+
+        // "II" 글리프는 글꼴에 따라 모양이 다를 수 있어 두 개의 세로 막대로 직접 그린다
+        Image[] bars = new Image[2];
+        for (int i = 0; i < 2; i++)
+        {
+            bars[i] = MobileUIFactory.NewImage("Bar " + (i + 1), rect, MobileUIFactory.Light);
+            bars[i].raycastTarget = false;
+            RectTransform barRect = bars[i].rectTransform;
+            barRect.anchorMin = barRect.anchorMax = new Vector2(0.5f, 0.5f);
+            barRect.pivot = new Vector2(0.5f, 0.5f);
+            barRect.anchoredPosition = new Vector2(i == 0 ? -14f : 14f, -4f);
+            barRect.sizeDelta = new Vector2(14f, 46f);
+        }
 
         pauseButton = background.gameObject.AddComponent<TouchButton>();
         pauseButton.background = background;
@@ -299,16 +333,15 @@ public class MobileTouchOverlay : MonoBehaviour
         {
             bool unlocked = playerShooter.IsSlotUnlocked(i);
             bool selected = playerShooter.CurrentSlotIndex == i;
+            // 3가지 상태: 선택(굵은 앰버 라인·앰버 글자·따뜻한 배경) / 보유(밝은 글자) / 미보유(어둡고 흐리게)
+            slotButtons[i].normalColor = selected ? SlotSelectedColor : MobileUIFactory.Panel;
             slotButtons[i].SetInteractable(unlocked);
-            // 선택·보유 상태는 배경색을 직접 갱신한다(누르고 있는 동안의 색은 TouchButton이 담당)
-            if (!slotButtons[i].Pressed)
-            {
-                slotButtons[i].background.color = !unlocked
-                    ? MobileUIFactory.Dim
-                    : (selected ? MobileUIFactory.Amber : MobileUIFactory.Panel);
-            }
-
-            slotLabels[i].color = !unlocked ? MobileUIFactory.Dim : (selected ? Color.black : MobileUIFactory.Light);
+            MobileUIFactory.SetTopLineThickness(slotLines[i], selected ? SlotLineSelected : SlotLineOwned);
+            slotLines[i].color = !unlocked ? SlotLockedLine : (selected ? MobileUIFactory.Amber : SlotOwnedLine);
+            slotBadges[i].color = !unlocked ? MobileUIFactory.Dim : MobileUIFactory.Amber;
+            slotNames[i].color = !unlocked
+                ? MobileUIFactory.Dim
+                : (selected ? MobileUIFactory.Amber : MobileUIFactory.Light);
         }
     }
 }

@@ -156,3 +156,17 @@
 - `MobilePerformance.cs`: 모바일에서 `QualitySettings.vSyncCount=0`, `Application.targetFrameRate=60`(Android 기본 30 FPS 제한 해제). 개발 빌드와 에디터 전용 `MobilePerformanceProbe`가 좌상단에 FPS(평균/최저), 좀비·보스 수를 표시하고 `STRESS` 버튼으로 "좀비 500마리 + 보스(곧 10분 보스 등장) + 플레이어 무적" 상태를 만든다. 릴리스(비개발) 빌드에는 포함되지 않는다.
 - 기기 확인: 태블릿 개발 빌드에서 FPS 표시가 동작하고 평균 60.0이 나왔다(좀비 9마리).
 - **미완료:** `STRESS` 상태(500마리+보스)에서의 FPS 측정, 모바일 전용 품질 단계 추가 여부 결정(병목이 확인될 때만), 30분 연속 플레이.
+
+## Task 9b — 터치 버튼 스타일 개선 (완료)
+
+- 사용자 피드백(실기기 태블릿): 스틱은 좋지만 FIRE·R·무기 슬롯·일시정지가 기존 HUD와 따로 논다. 이동·조준 스틱은 그대로 두고 나머지를 HUD와 같은 시각 언어로 바꿨다.
+- 변경 파일: `MobileUIFactory.cs`, `TouchButton.cs`, `MobileTouchOverlay.cs`(`MobilePerformance.cs`는 수정하지 않음, 단 `NewText` 기본 글꼴이 바뀌어 FPS 라벨·STRESS 버튼 글꼴도 HUD 글꼴로 나온다).
+- 스타일:
+  - `MobileUIFactory`가 씬의 `WeaponHUD`(무기 패널)에서 패널 스프라이트·Image.Type(Sliced)·pixelsPerUnitMultiplier·글꼴(Kenney Future Narrow)을 읽어 캐시한다(못 찾으면 단색 사각형·기본 글꼴로 대체, 다음 호출에서 재시도). `Panel` 색을 HUD 값(0.07, 0.08, 0.09, 0.82)으로 맞췄고, `NewPanel`(HUD 패널)과 `NewTopLine`/`SetTopLineThickness`(상단 앰버 라인)를 추가했다.
+  - FIRE(220)·R(130)·일시정지(110)는 정사각 HUD 패널 + 상단 앰버 라인(8/6/5px). 누르는 동안 앰버 채움과 어두운 글자. 일시정지 "II"는 글리프 대신 세로 막대 2개 Image로 그렸다.
+  - 무기 슬롯 4칸(230x88): 왼쪽에 번호 배지(앰버), 가운데 무기 이름(`playerShooter.guns[i].gameObject.name`, HUD와 같은 이름: Pistol/AK/SMG/Shotgun을 대문자로). 3상태: 선택 = 굵은 앰버 라인(7px) + 앰버 글자 + 따뜻한 어두운 배경, 보유 = 밝은 글자 + 얇은 앰버 라인(알파 .45), 미보유 = 어둡고 흐린 배경·글자·라인(터치 무반응 기존 동작 유지). 앰버 채움 안은 눌림 상태와 혼동돼서 채택하지 않았다.
+  - 이전 원형 링(형제 오브젝트)과 `fireRingObject`는 제거했다. 위치는 기존 값 유지(HUD와 겹치지 않음).
+  - `TouchButton`에 선택 필드 `label`, `labelNormalColor`, `labelPressedColor`를 추가했다(지정하면 눌림 때 글자색 전환). `onDown/onUp/SetInteractable/Release` 등 기존 인터페이스는 그대로다.
+- 확인(에디터 강제 모바일, 플레이어 무적, Game 뷰 1920x1080·2944x1840, Android 대상 에디터): 컴파일 오류 0, EditMode 58/58. 스크린샷으로 점수·웨이브·무기 패널과 같은 둥근 패널·글꼴·상단 앰버 라인으로 어울림을 확인. 오토 에임/쌍둥이 스틱 두 모드(쌍둥이에서 FIRE 숨김·조준 스틱 표시), 슬롯 선택(권총·SMG)/보유(AK)/미보유(SMG 해금 전·산탄총) 상태, FIRE 눌림(앰버 채움, 탄창 10 → 9) 확인. 합성 포인터로 FIRE down/up(FireHeld true/false, FireDown 큐), R 큐, 잠긴 슬롯 swap -1, 열린 슬롯 swap 1, 일시정지 버튼(isPaused true, 컨트롤 숨김, CONTINUE로 재개) 재통과.
+- 환경 복구: `ForceMobileInEditor` false, 플레이 종료, 조준 모드 PlayerPrefs 키 삭제, 시험용 Game 뷰 사이즈 제거(Android 그룹 19개로 복원), 씬 저장 없음.
+- **미검증:** 실기기 터치감과 가독성(태블릿 실제 크기), 멀티터치 실손 조작, Kenney 글꼴에서 "AK"가 "AH"처럼 보이는 점(HUD 무기 이름과 같은 글꼴이라 그대로 둠), 노치. 에디터 스크린샷은 개발 빌드 도구(FPS 라벨·STRESS)가 같이 보인다.
