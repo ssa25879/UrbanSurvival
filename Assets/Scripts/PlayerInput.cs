@@ -228,11 +228,10 @@ public class PlayerInput : MonoBehaviour {
             }
         }
 
-        // 발사·재장전 결정(쌍둥이 스틱 자동 재장전·재개, 단발 무기 자동 반복)은 순수 로직(MobileFireLogic)이 맡는다
+        // 발사·재장전 결정(누른 채 빈 탄창 자동 재장전·재개, 단발 무기 자동 반복)은 순수 로직(MobileFireLogic)이 맡는다
         Gun currentGun = playerShooter != null ? playerShooter.gun : null;
         MobileFireResult decision = fireLogic.Evaluate(new MobileFireFrame
         {
-            twinStick = twin,
             held = held,
             down = down,
             reloadRequested = reload,
