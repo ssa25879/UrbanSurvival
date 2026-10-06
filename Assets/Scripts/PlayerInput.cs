@@ -33,7 +33,7 @@ public class PlayerInput : MonoBehaviour {
 
     // 일시정지·게임오버·창 포커스 변경 직후에는 누르고 있던 발사 버튼이 다시 눌린 것으로 처리되지 않도록,
     // 발사 버튼을 한 번 뗄 때까지 발사 입력을 막는다(UI 버튼 클릭이나 창 클릭으로 돌아온 클릭이 오발이 되는 것을 방지)
-    private bool suppressFireUntilRelease;
+    private readonly FireLatch fireLatch = new FireLatch();
     private readonly List<RaycastResult> uiRaycastResults = new List<RaycastResult>();
 
     private readonly TwinStickFireTracker twinStickFire = new TwinStickFireTracker();
@@ -41,7 +41,7 @@ public class PlayerInput : MonoBehaviour {
     private PlayerShooter playerShooter;
     private Vector3 lastMobileAim;
     private float nextAutoAimTime;
-    private bool resumeFireAfterReload; // 쌍둥이 스틱을 당긴 채 재장전에 들어갔다(끝나면 바로 다시 발사)
+    private readonly MobileFireLogic fireLogic = new MobileFireLogic(); // 모바일 발사·재장전 결정(순수 로직, 테스트 있음)
 
     private void Start() {
         playerShooter = GetComponent<PlayerShooter>();
@@ -51,22 +51,25 @@ public class PlayerInput : MonoBehaviour {
     }
 
     private void OnApplicationFocus(bool hasFocus) {
-        suppressFireUntilRelease = true;
+        fireLatch.RequireRelease();
         MobileInputState.ResetAll();
         twinStickFire.Reset();
+        fireLogic.Reset();
     }
 
     private void OnApplicationPause(bool paused) {
-        suppressFireUntilRelease = true;
+        fireLatch.RequireRelease();
         MobileInputState.ResetAll();
         twinStickFire.Reset();
+        fireLogic.Reset();
     }
 
     // 조준 모드 전환 등으로 눌려 있던 발사 입력이 그대로 발사로 이어지지 않도록, 다음 발사를 한 번 뗀 뒤로 미룬다
     public void RequireFireRelease() {
-        suppressFireUntilRelease = true;
+        fireLatch.RequireRelease();
         MobileInputState.ResetAll();
         twinStickFire.Reset();
+        fireLogic.Reset();
     }
 
     // 마우스 포인터가 게임 화면 밖이거나, 클릭 가능한 UI(버튼 등) 위에 있는지 확인
@@ -116,8 +119,9 @@ public class PlayerInput : MonoBehaviour {
             hasAimWorldDirection = false;
             MobileInputState.ResetAll();
             twinStickFire.Reset();
+            fireLogic.Reset();
             // 정지 중에 누른 버튼(예: 계속하기 클릭)이 재개 직후 발사로 이어지지 않도록 막는다
-            suppressFireUntilRelease = true;
+            fireLatch.RequireRelease();
             return;
         }
 
@@ -133,18 +137,11 @@ public class PlayerInput : MonoBehaviour {
         }
 
         // 발사 차단: 정지·포커스 복귀 직후 누른 채로 남은 버튼, 화면 밖 포인터, 클릭 가능한 UI 위 포인터
-        if (suppressFireUntilRelease)
-        {
-            if (!fire)
-            {
-                suppressFireUntilRelease = false;
-            }
-            else
-            {
-                fire = false;
-                fireDown = false;
-            }
-        }
+        bool latchedFire = fire;
+        bool latchedFireDown = fireDown;
+        fireLatch.Apply(ref latchedFire, ref latchedFireDown);
+        fire = latchedFire;
+        fireDown = latchedFireDown;
 
         // 마우스 포인터 검사는 PC 전용(터치의 발사 버튼은 그 자체가 UI라 이 검사를 거치면 항상 막힌다)
         if (!mobile && (fire || fireDown) && IsPointerBlockedForFire())
@@ -194,42 +191,19 @@ public class PlayerInput : MonoBehaviour {
         Vector3 camForward = cam != null ? cam.transform.forward : Vector3.forward;
         Vector3 camUp = cam != null ? cam.transform.up : Vector3.up;
 
-        if (MobileAimSettings.Mode == MobileAimMode.TwinStick)
+        bool twin = MobileAimSettings.Mode == MobileAimMode.TwinStick;
+        bool held;
+        bool down;
+
+        if (twin)
         {
             Vector2 aimStick = MobileInputState.AimStick;
             twinStickFire.Update(aimStick);
-            fire = twinStickFire.Held;
-            fireDown = twinStickFire.Down;
+            held = twinStickFire.Held;
+            down = twinStickFire.Down;
             MobileInputState.ConsumeFireDown(); // 이 모드에서는 발사 버튼 요청을 쓰지 않는다
 
-            // 조준 스틱을 당긴 채 탄창이 비면 자동으로 재장전한다(쌍둥이 스틱 모드 전용, 2026-10-06 사용자 요청).
-            // PC와 오토 에임 모드는 기존 규칙(자동 재장전 없음)을 그대로 따른다. 재장전할 수 없으면(예비탄 없음) PlayerShooter가 무시한다
-            if (twinStickFire.Held && playerShooter != null && playerShooter.gun != null && playerShooter.gun.state == Gun.State.Empty)
-            {
-                reload = true;
-            }
-
-            // 재장전 중에도 스틱을 계속 당기고 있었다면 재장전이 끝나는 즉시 다시 발사한다(쌍둥이 스틱 모드 전용, 2026-10-06 사용자 요청).
-            // 재장전 중에는 발사 입력을 잠시 거두어(fire=false) PlayerShooter의 "재장전 뒤 한 번 놓아야 발사" 대기를 풀고,
-            // 재장전이 끝난 첫 프레임에 fireDown을 한 번 내서 단발 무기도 한 발이 나가게 한다. 스틱을 놓으면 재개하지 않는다
-            Gun currentGun = playerShooter != null ? playerShooter.gun : null;
-            if (twinStickFire.Held && currentGun != null && currentGun.state == Gun.State.Reloading)
-            {
-                resumeFireAfterReload = true;
-                fire = false;
-                fireDown = false;
-            }
-            else if (resumeFireAfterReload)
-            {
-                resumeFireAfterReload = false;
-                if (twinStickFire.Held)
-                {
-                    fire = true;
-                    fireDown = true;
-                }
-            }
-
-            if (twinStickFire.Held)
+            if (held)
             {
                 Vector3 direction = JoystickMath.ToWorldDirection(aimStick, camForward, camUp);
                 direction.y = 0f;
@@ -243,31 +217,51 @@ public class PlayerInput : MonoBehaviour {
         {
             twinStickFire.Reset();
             bool pressed = MobileInputState.ConsumeFireDown();
-            fire = MobileInputState.FireHeld || pressed;
-            fireDown = pressed;
+            held = MobileInputState.FireHeld || pressed;
+            down = pressed;
 
             // 발사 버튼을 누르는 동안만 대상을 찾는다(버튼을 떼면 마지막 방향 유지)
-            if (fire && (pressed || Time.time >= nextAutoAimTime))
+            if (held && (pressed || Time.time >= nextAutoAimTime))
             {
                 nextAutoAimTime = Time.time + AutoAimRefreshInterval;
                 lastMobileAim = ResolveAutoAim(moveStick, camForward, camUp);
             }
         }
 
-        // 모바일: 권총·샷건 같은 단발(Manual) 무기도 발사 버튼/조준 스틱을 누르고 있으면 자동으로 계속 발사한다(2026-10-06 사용자 요청).
-        // 매 프레임 fireDown을 내보내면 실제 발사 간격은 Gun이 gunData.timeBetFire로 제한한다. 발사할 수 있는 상태(Ready)일 때만 내서,
-        // 탄창이 비었을 때 fireDown이 의도치 않은 자동 재장전을 일으키지 않게 한다(재장전은 R 버튼 또는 쌍둥이 스틱의 자동 재장전만)
-        Gun heldGun = playerShooter != null ? playerShooter.gun : null;
-        if (fire && heldGun != null && heldGun.gunData != null && heldGun.state == Gun.State.Ready
-            && heldGun.gunData.fireMode != GunData.FireMode.Automatic)
+        // 발사·재장전 결정(쌍둥이 스틱 자동 재장전·재개, 단발 무기 자동 반복)은 순수 로직(MobileFireLogic)이 맡는다
+        Gun currentGun = playerShooter != null ? playerShooter.gun : null;
+        MobileFireResult decision = fireLogic.Evaluate(new MobileFireFrame
         {
-            fireDown = true;
-        }
-
+            twinStick = twin,
+            held = held,
+            down = down,
+            reloadRequested = reload,
+            gunState = ToMobileGunState(currentGun),
+            gunIsAutomatic = currentGun != null && currentGun.gunData != null
+                && currentGun.gunData.fireMode == GunData.FireMode.Automatic
+        });
+        fire = decision.fire;
+        fireDown = decision.fireDown;
+        reload = decision.reload;
         aimWorldDirection = lastMobileAim;
         hasAimWorldDirection = true;
     }
 
+    // Gun의 상태를 MobileCore의 열거형으로 바꾼다(MobileCore는 게임 코드에 의존하지 않는다)
+    private static MobileGunState ToMobileGunState(Gun gun) {
+        if (gun == null || gun.gunData == null)
+        {
+            return MobileGunState.None;
+        }
+
+        switch (gun.state)
+        {
+            case Gun.State.Ready: return MobileGunState.Ready;
+            case Gun.State.Empty: return MobileGunState.Empty;
+            case Gun.State.Reloading: return MobileGunState.Reloading;
+            default: return MobileGunState.None;
+        }
+    }
     // 사거리 안 가장 가까운 적 → 이동 방향 → 마지막 방향 순으로 조준 방향을 정한다
     private Vector3 ResolveAutoAim(Vector2 moveStick, Vector3 camForward, Vector3 camUp) {
         aimCandidates.Clear();

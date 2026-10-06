@@ -296,6 +296,36 @@ public class MobileTouchOverlay : MonoBehaviour
         };
     }
 
+    // 알림창·전화·앱 전환으로 앱이 멈추거나 포커스를 잃으면 포인터 해제 이벤트가 오지 않을 수 있다.
+    // 그러면 버튼이 눌린 상태(Pressed)와 스틱이 잡은 손가락이 남아 다음 첫 터치가 무시되므로, 모든 컨트롤을 놓는다
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        ReleaseAllControls();
+    }
+
+    private void OnApplicationPause(bool paused)
+    {
+        ReleaseAllControls();
+    }
+
+    private void ReleaseAllControls()
+    {
+        if (moveStick == null || fireButton == null)
+        {
+            return; // 생성이 끝나기 전에 신호가 온 경우
+        }
+
+        moveStick.ResetStick();
+        aimStick.ResetStick();
+        fireButton.Release();
+        reloadButton.Release();
+        pauseButton.Release();
+        for (int i = 0; i < slotButtons.Length; i++)
+        {
+            slotButtons[i].Release();
+        }
+    }
+
     private void Update()
     {
         GameManager manager = GameManager.instance;

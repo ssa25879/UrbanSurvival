@@ -124,7 +124,10 @@ public class PlayerShooter : MonoBehaviour {
             {
                 // 총구 자체 방향이 아니라 캐릭터가 조준 중인 정면 방향으로 발사(팔 IK 영향 배제)
                 // 판정 레이는 캐릭터 중심선의 고정 높이에서 출발(총구 위치·높이에 따라 조준선과 어긋나던 문제)
-                gun.Fire(transform.forward, GetAimOrigin());
+                // 모바일은 조준 방향이 정해진 같은 프레임에 그 방향으로 쏜다(캐릭터 회전은 다음 물리 스텝에 적용되어 transform.forward를 쓰면
+                // 오토 에임·쌍둥이 스틱의 첫 발이 이전 방향으로 나간다). PC는 hasAimWorldDirection이 false라 기존과 같다
+                Vector3 shotDirection = playerInput.hasAimWorldDirection ? playerInput.aimWorldDirection : transform.forward;
+                gun.Fire(shotDirection, GetAimOrigin());
             }
         }
 

@@ -10,7 +10,7 @@
 | 항목 | 상태 |
 |---|---|
 | 모바일 입력·터치 UI·조준 모드·설정 | **구현 완료** (에디터 검증) |
-| 자동 테스트 | EditMode **72/72 통과** (기존 14건 + 모바일 로직 58건) |
+| 자동 테스트 | EditMode **92/92 통과** (기존 14건 + 모바일 로직 78건) |
 | Android 개발용 APK | **빌드·태블릿 설치 완료** (`1.0.0`/코드 1, 180 MB, 2026-10-06 13:26) |
 | 실기기 검증 | 태블릿 1대(TB373FU)만. **S26 Ultra 미검증** |
 | 성능 목표(500마리+보스 60 FPS) | **미측정** (개발 빌드의 STRESS 버튼으로 재야 함) |
@@ -75,7 +75,7 @@ FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f --prune-empty --tag-name-fi
 | `Assets/Scripts/WeaponHUD.cs`, `ReloadIndicator.cs`, `TutorialPopup.cs` | 표기 변경(AR), 모바일 문구, 한글 폰트 후보 추가 |
 | `Assets/Modules/GameSettingsKit/Runtime/SettingsStore.cs` | 모바일에서 해상도·전체 화면·vSync 적용 건너뜀(플랫폼 일반 가드) |
 | `Assets/Editor/MobileEditorMenu.cs` | 메뉴 3개(아래) |
-| `Assets/Game/Tests/EditMode/Mobile*.cs`, `JoystickMathTests.cs` 등 | 모바일 로직 테스트 58건 |
+| `Assets/Game/Tests/EditMode/Mobile*.cs`, `JoystickMathTests.cs` 등 | 모바일 로직 테스트 78건 |
 | `Assets/Images/`, `StoreAssets/` | 앱 아이콘 원본·가공본, Play 스토어 이미지 |
 | `docs/store/` | 에셋 라이선스 점검, 스토어 문안·개인정보처리방침 초안, GUI PRO 제외 안내 |
 
@@ -129,7 +129,7 @@ $U editor_play / editor_stop
 
 ## 6. 검증 현황
 
-- 자동: EditMode 72/72(기존 `SpecDataTests` 14 + 모바일 58).
+- 자동: EditMode 92/92(기존 `SpecDataTests` 14 + 모바일 78).
 - 에디터 플레이(강제 모바일, 입력 주입): 오토 에임 대상 선택, 쌍둥이 스틱, 일시정지·재개 오발 방지, 재장전 후 계속 누름 규칙, 슬롯 교체, 설정 창 토글 저장·복원, 인트로 설정 창, QUIT 숨김, 모바일 문구, 탄약 패널 보스 시 위치, 단발 무기 자동 연속 발사, 쌍둥이 스틱 자동 재장전·재개, 아이콘 슬롯 18/18.
 - 실기기(TB373FU, Android 15, 가로 2944×1840): 앱 기동, 크래시 없음, 터치 UI 배치 확인(캡처), 개발 빌드 FPS 표시 `60.0`(좀비 9마리). 사용자가 직접 플레이해 보았다(결과 상세는 기록 없음).
 - `adb dumpsys` 확인값: `targetSdk=36`, `minSdk=25`, `versionName=1.0.0`, `primaryCpuAbi=arm64-v8a`, 권한 `INTERNET`(개발 빌드).
@@ -195,3 +195,29 @@ $U editor_play / editor_stop
 - **줄바꿈:** `.gitattributes`에 `*.sh text eol=lf`를 추가했다(2026-10-06). Windows에서 `core.autocrlf=true`로 받아도 스크립트가 CRLF로 바뀌어 깨지지 않는다. 이 줄이 없던 커밋(`56c5202` 이전)을 받은 PC에서는 `dos2unix`가 필요할 수 있다.
 - **프로젝트 고정값:** 제외 경로(`EXCLUDES`)와 기본 공개 저장소 주소는 스크립트 위쪽에 있다. 주소는 `PUBLIC_REMOTE`, 사본 위치는 `CLEAN_DIR`(`..._clean.git`으로 끝나야 함)로 바꾼다.
 - 결과 SHA가 이 PC와 같으려면 입력(커밋 내용)이 같아야 한다. 같은 커밋이면 어느 PC에서 돌려도 같은 SHA가 나온다(검증: 이 PC에서 두 번 실행해 동일, 이미 올라간 `323b1f1`의 후손임을 확인).
+
+## 부록. 최종 코드 리뷰 결과 (2026-10-06)
+
+브랜치 전체(`d29867b..4e840c7`)를 별도 검토자(Opus)가 읽기 전용으로 검토했다. 판정은 **With fixes**, Critical 없음. PC 입력 회귀와 모드 간 규칙 누수는 찾지 못했다(PC 경로는 `ReadDesktopInput`으로 옮겼을 뿐 동작이 같고, 쌍둥이 스틱 전용 규칙은 해당 분기 안에서만 동작).
+
+### 고친 것 (Important 3건, 한 번에 처리, 테스트 92/92)
+1. **오토 에임·쌍둥이 스틱의 첫 발이 이전 방향으로 나감.** 조준 방향은 `PlayerInput.Update`에서 정해지지만 캐릭터 회전은 다음 `FixedUpdate`에 적용되어, 같은 프레임에 쏘면 `transform.forward`(옛 방향)로 나갔다. `PlayerShooter`가 모바일에서는 `playerInput.aimWorldDirection`으로 쏘도록 한 줄 변경(PC는 `hasAimWorldDirection=false`라 그대로). 확인: 대상 좀비를 등 뒤 5 m에 세우고 권총을 한 번 탭 — 수정 전 탄창 10→9인데 대상 체력 그대로(빗나감), 수정 후 대상 체력 30→20(명중).
+2. **모바일 발사 상태 기계에 자동 테스트가 없었음.** 쌍둥이 스틱 자동 재장전·재개, 단발 무기 자동 반복, 발사 래치를 MonoBehaviour에서 꺼내 순수 클래스 `MobileFireLogic`, `FireLatch`(MobileCore)로 분리하고 20건 테스트를 추가했다. `PlayerInput`은 이 클래스를 호출한다. 확인: 리팩터링 후 에디터 플레이에서 소총 쌍둥이 스틱 자동 재장전 → 재개(예비탄 150→120, 재차 재장전), 오토 에임 빈 탄창 자동 재장전 없음.
+3. **앱 포커스·일시정지 때 위젯 내부 상태가 남음.** `PlayerInput`은 `MobileInputState`만 지워서 `TouchButton.Pressed`와 `TouchJoystick.activePointerId`가 남았고 다음 첫 터치가 무시될 수 있었다. `MobileTouchOverlay`가 `OnApplicationFocus/Pause`에서 모든 버튼·스틱을 놓도록 추가. 확인: 수정 전 일시정지 신호 후 `Pressed=True`, 스틱 `activePointerId=2` 유지 → 수정 후 해제되고 새 탭이 정상 동작.
+
+### 고치지 않은 것 (결정)
+- **회사명·제품명 변경이 PC 저장 위치도 바꿈(검토자 Important).** `PlayerSettings.companyName/productName`은 플랫폼 공통 값이라 Android만 분리할 수 없다. 사용자가 정한 이름이고 인수인계 문서에 이미 기록했다. 영향: PC 빌드·에디터에서 이전 `DefaultCompany/Zombie`에 저장된 설정·연습 최고 기록·튜토리얼 확인 여부가 새 위치에서 보이지 않는다(삭제되지 않음). 이전 값을 가져오려면 레지스트리 키를 복사하면 된다.
+
+### 보류한 Minor (필요하면 별도 작업)
+- 재장전 중 모드 전환 시 재개 상태 잔존 → 위 2번 분리로 `Reset()`이 처리해 해소됨.
+- `MobileTouchOverlay.Update`가 매 프레임 `reloadButton.SetInteractable(true)`·`SetTopLineThickness`를 호출(값이 바뀔 때만 호출하도록 개선 가능).
+- `sceneLoaded`를 람다로 구독(해제 불가). 현재는 도메인 리로드가 켜져 있어 실제 문제 없음.
+- `tools/publish-clean-repo.sh`의 `--all` 푸시는 모든 로컬 브랜치를 공개한다(임시 브랜치가 있으면 대상 브랜치를 명시하도록 개선 가능).
+- 엄지가 FIRE 버튼 밖으로 조금만 미끄러져도 발사가 멈춘다(`OnPointerExit`). 실기기에서 체감 확인 필요.
+
+### 검토자가 판단을 보류한 항목 (결정 기록)
+- 기존 HUD 캔버스에는 `SafeAreaFitter`가 없다(오버레이만 적용): 실기기(노치) 검수 항목으로 남김.
+- 모바일에서 품질 단계 변경 시 `SetQualityLevel`이 vSync를 되돌릴 수 있음: `SettingsStore`가 모바일에서 vSync 적용을 건너뛰고 `targetFrameRate`를 쓰므로 영향은 낮다고 보며 실기기 FPS 측정으로 확인.
+- AK→AR 표기가 PC HUD에도 적용됨: 사용자 요청 범위.
+- 오토 에임이 시야를 검사하지 않음: 스펙 13장의 의도된 결정.
+- 무기 픽업·밸런스·500마리 성능: 실기기 계측 대상.
