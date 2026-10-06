@@ -36,6 +36,12 @@ crashlytics-build.properties
 # Builds and packages
 *.apk
 *.aab
+
+# Android signing keys (never commit)
+*.keystore
+*.jks
+keystore.properties
+/Keystore/
 *.unitypackage
 *.app
 
