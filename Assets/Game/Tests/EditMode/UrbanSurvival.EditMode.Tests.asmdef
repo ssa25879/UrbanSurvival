@@ -3,6 +3,7 @@
     "rootNamespace": "",
     "references": [
         "Assembly-CSharp",
+        "UrbanSurvival.MobileCore",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

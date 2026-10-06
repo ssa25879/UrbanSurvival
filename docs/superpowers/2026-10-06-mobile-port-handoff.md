@@ -18,3 +18,11 @@
 - PC 기준(에디터 플레이, `UrbanSurvival.unity`): 플레이 진입 정상, 권총 탄창 10발·Ready, 5초 안에 좀비 소환, 메인 카메라 존재.
 - **미검증(사용자 수동 확인 필요):** WASD 이동, 마우스 조준, 좌클릭 발사, R 재장전, 1~4 교체, Esc 일시정지. 키보드·마우스 입력은 자동으로 재현하지 못했다. 이 항목은 Task 7 이후 PC 회귀 확인의 비교 기준이다.
 - 활성 빌드 대상은 아직 StandaloneWindows64이다(Task 12에서 Android로 전환).
+
+## Task 1 — MobileCore 어셈블리, MobileInputState, MobilePlatform (완료)
+
+- 신규 어셈블리 `UrbanSurvival.MobileCore`(`Assets/Scripts/MobileCore/`, 자동 참조). 게임 코드에 의존하지 않는 순수 로직을 담는다. `Assembly-CSharp`이 자동으로 참조하고, 테스트 어셈블리 `UrbanSurvival.EditMode.Tests`에 참조를 추가했다.
+- `MobileInputState`: 터치 UI → `PlayerInput` 정적 브리지(`Move`, `AimStick`, `FireHeld`, 요청/소비 방식의 `FireDown`·`Reload`·`Swap`, `ResetAll`).
+- `MobilePlatform.IsMobile`: 빌드에서는 `Application.isMobilePlatform`, 에디터에서는 `ForceMobileInEditor`(EditorPrefs)로도 켠다. 에디터 메뉴는 Task 7에서 추가한다.
+- 테스트: `MobileInputStateTests` 8건. 구현 전에 컴파일 실패(`MobileInputState` 없음)를 확인한 뒤 구현했다. EditMode 전체 22/22 통과(기존 `SpecDataTests` 14건 포함).
+- 다음 Task가 쓰는 것: `MobileInputState`, `MobilePlatform`.
