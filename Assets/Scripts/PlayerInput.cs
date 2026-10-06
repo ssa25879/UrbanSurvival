@@ -201,6 +201,13 @@ public class PlayerInput : MonoBehaviour {
             fireDown = twinStickFire.Down;
             MobileInputState.ConsumeFireDown(); // 이 모드에서는 발사 버튼 요청을 쓰지 않는다
 
+            // 조준 스틱을 당긴 채 탄창이 비면 자동으로 재장전한다(쌍둥이 스틱 모드 전용, 2026-10-06 사용자 요청).
+            // PC와 오토 에임 모드는 기존 규칙(자동 재장전 없음)을 그대로 따른다. 재장전할 수 없으면(예비탄 없음) PlayerShooter가 무시한다
+            if (twinStickFire.Held && playerShooter != null && playerShooter.gun != null && playerShooter.gun.state == Gun.State.Empty)
+            {
+                reload = true;
+            }
+
             if (twinStickFire.Held)
             {
                 Vector3 direction = JoystickMath.ToWorldDirection(aimStick, camForward, camUp);

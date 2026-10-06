@@ -35,7 +35,7 @@ public class WeaponHUD : MonoBehaviour {
             return;
         }
 
-        weaponNameText.text = gun.gameObject.name;
+        weaponNameText.text = WeaponDisplayName.Get(gun.gameObject.name); // AK는 AR로 표기
 
         if (reloadIndicator != null)
         {

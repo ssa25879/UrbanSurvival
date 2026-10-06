@@ -26,7 +26,6 @@ public class MobileTouchOverlay : MonoBehaviour
     private TouchButton reloadButton;
     private TouchButton pauseButton;
     private readonly TouchButton[] slotButtons = new TouchButton[4];
-    private readonly Text[] slotBadges = new Text[4];
     private readonly Text[] slotNames = new Text[4];
     private readonly Image[] slotLines = new Image[4];
     private PlayerShooter playerShooter;
@@ -60,6 +59,7 @@ public class MobileTouchOverlay : MonoBehaviour
         playerShooter = FindFirstObjectByType<PlayerShooter>();
         playerInput = FindFirstObjectByType<PlayerInput>();
         BuildCanvas();
+        gameObject.AddComponent<MobileHudLayout>(); // 총기·탄약 패널을 상단 중앙으로 옮긴다
         ApplyAimMode(MobileAimSettings.Mode, false);
         MobileAimSettings.Changed += OnAimModeChanged;
     }
@@ -177,7 +177,8 @@ public class MobileTouchOverlay : MonoBehaviour
     // 오른쪽 아래 발사 버튼(오토 에임 모드)
     private void BuildFireButton()
     {
-        fireButton = CreatePanelButton("Fire Button", controlsRoot, new Vector2(-640f, 170f), 220f, "FIRE", 48, 8f);
+        // 오른쪽 아래 모서리(기존 총기·탄약 패널이 있던 자리. 탄약 표시는 상단 중앙으로 옮겼다)
+        fireButton = CreatePanelButton("Fire Button", controlsRoot, new Vector2(-134f, 134f), 220f, "FIRE", 48, 8f);
         fireButtonObject = fireButton.gameObject;
         fireButton.onDown = () =>
         {
@@ -187,10 +188,10 @@ public class MobileTouchOverlay : MonoBehaviour
         fireButton.onUp = () => MobileInputState.FireHeld = false;
     }
 
-    // 발사 버튼 위쪽 재장전 버튼
+    // 발사 버튼 왼쪽 재장전 버튼(발사 버튼과 아래쪽 정렬)
     private void BuildReloadButton()
     {
-        reloadButton = CreatePanelButton("Reload Button", controlsRoot, new Vector2(-430f, 330f), 130f, "R", 52, 6f);
+        reloadButton = CreatePanelButton("Reload Button", controlsRoot, new Vector2(-329f, 89f), 130f, "R", 52, 6f);
         reloadButton.onDown = MobileInputState.RequestReload;
     }
 
@@ -221,41 +222,27 @@ public class MobileTouchOverlay : MonoBehaviour
         rect.sizeDelta = new Vector2(size, size);
     }
 
-    // 오른쪽 가장자리 세로 배치 무기 슬롯 4개(1=권총, 2=소총, 3=SMG, 4=산탄총)
+    // 발사·재장전 버튼 위쪽 가로 한 줄 무기 슬롯 4개(PISTOL / AR / SMG / SG, 왼쪽부터 슬롯 1~4)
     private void BuildWeaponSlots()
     {
-        string[] fallbackNames = { "PISTOL", "AK", "SMG", "SHOTGUN" };
         for (int i = 0; i < 4; i++)
         {
             int slotIndex = i;
-            // 무기 이름은 HUD(WeaponHUD)와 같게 총 오브젝트 이름을 쓴다
-            string weaponName = playerShooter != null && playerShooter.guns[i] != null
-                ? playerShooter.guns[i].gameObject.name
-                : fallbackNames[i];
 
             Image background = MobileUIFactory.NewPanel("Slot " + (i + 1), controlsRoot, MobileUIFactory.Panel);
             RectTransform rect = background.rectTransform;
             rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
             rect.pivot = new Vector2(1f, 0.5f);
-            rect.anchoredPosition = new Vector2(-24f, 620f - i * 100f);
-            rect.sizeDelta = new Vector2(230f, 88f);
+            rect.anchoredPosition = new Vector2(-24f - (3 - i) * 170f, 302f);
+            rect.sizeDelta = new Vector2(160f, 84f);
             slotLines[i] = MobileUIFactory.NewTopLine(rect, SlotLineOwned, MobileUIFactory.Amber);
 
-            // 번호 배지(왼쪽)와 무기 이름
-            Text badge = MobileUIFactory.NewText("Badge", rect, (i + 1).ToString(), 40, MobileUIFactory.Amber,
-                TextAnchor.MiddleCenter);
-            badge.rectTransform.anchorMin = new Vector2(0f, 0f);
-            badge.rectTransform.anchorMax = new Vector2(0f, 1f);
-            badge.rectTransform.pivot = new Vector2(0f, 0.5f);
-            badge.rectTransform.offsetMin = new Vector2(8f, 0f);
-            badge.rectTransform.offsetMax = new Vector2(58f, 0f);
-            slotBadges[i] = badge;
-
-            Text nameText = MobileUIFactory.NewText("Name", rect, weaponName.ToUpper(), 32, MobileUIFactory.Light,
-                TextAnchor.MiddleCenter);
+            // 축약 이름만 표시(번호 배지 없음)
+            Text nameText = MobileUIFactory.NewText("Name", rect, WeaponDisplayName.SlotShortLabel(i), 32,
+                MobileUIFactory.Light, TextAnchor.MiddleCenter);
             MobileUIFactory.Stretch(nameText.rectTransform);
-            nameText.rectTransform.offsetMin = new Vector2(58f, 0f);
-            nameText.rectTransform.offsetMax = new Vector2(-8f, 0f);
+            nameText.rectTransform.offsetMin = new Vector2(6f, 0f);
+            nameText.rectTransform.offsetMax = new Vector2(-6f, 0f);
             slotNames[i] = nameText;
 
             TouchButton button = background.gameObject.AddComponent<TouchButton>();
@@ -338,7 +325,6 @@ public class MobileTouchOverlay : MonoBehaviour
             slotButtons[i].SetInteractable(unlocked);
             MobileUIFactory.SetTopLineThickness(slotLines[i], selected ? SlotLineSelected : SlotLineOwned);
             slotLines[i].color = !unlocked ? SlotLockedLine : (selected ? MobileUIFactory.Amber : SlotOwnedLine);
-            slotBadges[i].color = !unlocked ? MobileUIFactory.Dim : MobileUIFactory.Amber;
             slotNames[i].color = !unlocked
                 ? MobileUIFactory.Dim
                 : (selected ? MobileUIFactory.Amber : MobileUIFactory.Light);
