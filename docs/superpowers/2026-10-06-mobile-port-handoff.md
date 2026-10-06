@@ -249,3 +249,9 @@
 - **한계(중요):** (1) 이 브랜치의 이전 커밋과 다른 브랜치(`SideProject`, `main`)에는 파일이 그대로 남아 있고 저장소는 공개 상태라서 공개 기록에서 사라진 것은 아니다. (2) 다른 PC에서 이 브랜치를 받거나 병합하면 해당 폴더가 삭제된다(Asset Store에서 다시 임포트해야 복구, 안내는 `docs/store/third-party-not-in-repo.md`). 완전 제거(대체, 비공개 전환, 기록 삭제)는 사용자 결정으로 남겼다. 기록 삭제(강제 푸시)는 되돌릴 수 없어 승인 없이 하지 않았다.
 - **Toon Shooter Game Kit:** 사용자 진술로 CC0, 원문 미확인으로 점검표에 기록했다. 라이선스 근거(페이지 주소, 확인일)를 같은 폴더에 `License.txt`로 남기는 것을 권고했다.
 - 신규 문서 `docs/store/third-party-not-in-repo.md`, 점검표·체크리스트 갱신.
+
+## Task 14e — 공개용 깨끗한 저장소(방법 B) 준비 (진행 중) 와 Searching.ogg 출처 확인
+
+- 사용자 지시: "과거 기록만 private 처리" 대신 방법 B(기존 저장소는 비공개 보존, GUI PRO를 기록 전체에서 지운 새 공개 저장소) 진행. 이 저장소(`D:\work\Zombie`)는 건드리지 않고 `D:\work\Zombie_clean.git`(bare 복제본, remote 제거)에서 `git filter-branch`로 정리한다. 푸시는 사용자 승인 후에만.
+- 사용자가 `Searching.ogg`의 출처를 확인(OpenGameArt https://opengameart.org/content/searching, CC0). `Assets/Game/Audio/Music/SOURCE.md` 신규, 점검표·체크리스트에서 "출처 불명" 목록에서 제외. `singularity_calm.wav`는 페이지 주소가 아직 없다.
+- 1차 정리 검증: 커밋 143개 유지, GUI PRO 경로가 있는 커밋 0개, 도달 가능한 GUI PRO 객체 0개, `SideProject-Mobile` 최신 트리 해시가 원본과 동일(`88256277…`), `main`은 원래 GUI PRO가 없어 동일, `SideProject`만 트리가 달라짐(GUI PRO 제거).
