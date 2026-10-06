@@ -35,7 +35,7 @@ public class TutorialPopup : MonoBehaviour {
         onConfirmed = onDone;
         dontShowChecked = false;
         ApplyFont();
-        bodyText.text = body;
+        bodyText.text = MobilePlatform.IsMobile ? MobileTutorialText.Convert(body, MobileAimSettings.Mode) : body;
         if (dontShowButton != null)
         {
             dontShowButton.gameObject.SetActive(showEveryTime);
@@ -75,7 +75,7 @@ public class TutorialPopup : MonoBehaviour {
     private void ApplyFont() {
         if (koreanFont == null)
         {
-            koreanFont = Font.CreateDynamicFontFromOSFont(new[] { "Malgun Gothic", "맑은 고딕", "NanumGothic", "Noto Sans KR", "Gulim", "AppleGothic" }, 22);
+            koreanFont = Font.CreateDynamicFontFromOSFont(new[] { "Malgun Gothic", "맑은 고딕", "NanumGothic", "Noto Sans KR", "Gulim", "AppleGothic", "Noto Sans CJK KR", "Noto Sans CJK", "sans-serif" }, 22);
         }
 
         if (koreanFont == null || koreanTexts == null)

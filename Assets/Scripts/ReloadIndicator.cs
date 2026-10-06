@@ -64,7 +64,8 @@ public class ReloadIndicator : MonoBehaviour {
             else if (gun.state == Gun.State.Empty)
             {
                 // 예비탄까지 없으면 재장전이 불가능하므로 항상 사용 가능한 권총(1번 슬롯)으로 교체를 안내
-                message = gun.ammoRemain == 0 ? "NO AMMO  [1]" : "RELOAD  [R]";
+                bool mobile = MobilePlatform.IsMobile; // 모바일은 키 안내 대신 버튼을 쓴다(무기 칸으로 권총 교체 가능)
+                message = gun.ammoRemain == 0 ? (mobile ? "NO AMMO" : "NO AMMO  [1]") : (mobile ? "RELOAD" : "RELOAD  [R]");
                 color = emptyColor;
                 color.a = Mathf.Lerp(0.5f, 1f, (Mathf.Sin(Time.unscaledTime * blinkSpeed) + 1f) * 0.5f);
             }
