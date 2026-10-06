@@ -182,6 +182,7 @@ $U editor_play / editor_stop
 - **소규모 업데이트:** 작업 폴더의 `origin`(`URP_ZombieGame`)에 평소처럼 커밋·푸시한다.
 - **큰 업데이트:** 사용자가 요청할 때 공개용 저장소 `UrbanSurvival`에 올린다. 절차는 `tools/publish-clean-repo.sh`(제외 경로를 모든 커밋에서 지운 사본 생성·검증, 푸시 안 함) → 결과 확인 → `tools/publish-clean-repo.sh --push`(일반 푸시, `--force` 없음).
 - 기록 정리는 결정적이라 같은 커밋에서 다시 만들면 같은 SHA가 나온다(`SideProject-Mobile` 323b1f1 재현 확인). 그래서 새 커밋은 공개 저장소에 fast-forward로 올라간다. 단, 작성자 이메일을 가리거나 제외 경로를 늘리면 SHA가 모두 바뀌어 공개 저장소를 새로 만들어야 한다.
+- **2026-10-06 재생성:** 협업자 작성자를 가리기로 결정해(이름·주소 → `contributor`) SHA가 모두 바뀌었다. 사용자가 `UrbanSurvival`을 지우고 다시 만든 뒤 푸시했다(SideProject `b377593`, SideProject-Mobile `546e444`, main `88d880e`). 위와 아래의 `323b1f1`은 옛 공개 저장소의 기록이며 지금은 없다. 가릴 주소는 Git 밖 `.git/publish-clean.env`(`HIDE_EMAIL=...`)에서 읽으므로 다른 PC에서는 이 파일을 먼저 만든다.
 - 작업 폴더 `origin`은 `URP_ZombieGame`을 유지한다.
 
 ### 다른 PC에서 `tools/publish-clean-repo.sh` 쓰기
