@@ -136,3 +136,23 @@
   - **안드로이드 한글 렌더링:** `CreateDynamicFontFromOSFont`가 실기기에서 한글 글꼴을 찾는지 확인하지 못했다. 튜토리얼이 네모(□)로 보이면 한글이 포함된 폰트 에셋을 프로젝트에 넣는 별도 작업이 필요하다(Task 12 실기기 검수 항목).
   - 게임 오버·결과 화면의 QUIT 숨김은 코드 경로가 인트로와 같지만 해당 화면에서 직접 보지는 못했다.
   - 터치 메뉴 버튼 크기(약 48dp)와 게임 오버·일시정지·결과 화면의 터치 조작은 실기기에서 확인해야 한다. 버튼 크기 조정 코드는 필요성이 확인되지 않아 추가하지 않았다.
+
+## Task 12 — Android 빌드 설정과 첫 개발 빌드 (진행 중: 빌드·설치·실행 성공, 사용자 실기기 검수 대기)
+
+- `Urban Survival/Mobile/Apply Android Settings`(`MobileEditorMenu.ApplyAndroidSettings`, 커밋 `d593480`)로 설정을 코드로 적용했다: 회사명 `YWS`, 제품명 `Urban Survival`, 패키지명 `com.yws.urbansurvival`, 가로 화면만(세로 자동 회전 끔), IL2CPP, ARM64, 최소 API 25, 타깃 API 36(`AndroidApiLevel36`), AAB 출력, Android 스크립팅 정의 `URP_COMPATIBILITY_MODE` 추가. `ProjectSettings.asset`에는 이 변경만 커밋했고 원래 있던 `runInBackground: 1` 변경은 제외했다.
+- **주의(사용자 결정 반영):** 회사명·제품명을 바꾸면 Windows 빌드와 에디터의 PlayerPrefs 저장 위치(레지스트리 `YWS/Urban Survival`)가 달라진다. 이전 `DefaultCompany/Zombie`에 저장된 설정·튜토리얼 확인 여부·연습 최고 기록은 새 위치에서 보이지 않는다(삭제된 것은 아니다).
+- 에디터 활성 빌드 대상을 사용자 승인 후 **Android로 전환**했다(재임포트 약 11분). 지금도 Android 상태다. PC(Windows) 빌드를 하려면 `unity command switch_build_target --target StandaloneWindows64 --confirm true`로 되돌려야 한다.
+- 개발용 APK: Android SDK 36 플랫폼과 NDK가 설치되어 있어 추가 다운로드 없이 빌드됐다. `Builds/Android/UrbanSurvival-dev.apk`(179 MB, 빌드 시간 약 22분, Development + AllowDebugging, `buildAppBundle=false`로 임시 변경). **`buildAppBundle`은 현재 false다. Task 14에서 AAB를 만들 때 다시 true로 켠다.**
+- 기기 설치·실행: `adb`로 연결된 **Lenovo `TB373FU`**(XiaoxinPad 2025로 추정, Android 15 / API 35, Mali-G615, OpenGL ES 3.2, 가로 2944×1840 = 16:10)에 설치하고 실행했다. 로그에서 `Company Name: YWS`, `Product Name: Urban Survival` 확인. 크래시 없음.
+- 화면 확인(앱 실행 캡처 1장, 확인 후 삭제): 이동 스틱, FIRE, R, 무기 슬롯 4칸(미획득 슬롯은 흐리게), 일시정지, 미니맵, 점수·HP·웨이브 패널이 겹치지 않고 보인다. 개발 빌드 FPS 표시 `FPS 60.0 worst 60 / zombies 9 bosses 0`(좀비 9마리일 때).
+- **발견한 문제(미해결):**
+  - 로그 `Failed to load native plugin: Unable to lookup library path for '_burst_0_0'`: Burst 네이티브 라이브러리를 못 찾는다는 메시지. 게임은 동작하지만 Burst 최적화가 빠졌을 수 있다. 원인 미확인(릴리스 빌드에서 재확인 필요).
+  - 로그 `Hidden/InternalErrorShader`가 `lanternDouble` 오브젝트(`Assets/Materials/light.mat`, 셰이더 `Unlit/Color`)에 적용됨: Android 빌드에서 이 셰이더가 오류 셰이더로 대체되어 가로등 전구가 분홍색일 수 있다. 외관 문제로 보이며 `light.mat`을 URP Unlit으로 바꾸는 것을 검토한다(기존 프로젝트 자체 에셋 변경이라 사용자 확인 필요).
+- 한 대(TB373FU)만 연결됐다. **S26 Ultra는 연결되지 않아 미검증이다.**
+- **미검증(사용자 실기기 조작 필요):** 이동 스틱·발사·재장전·무기 교체·일시정지 동작, 멀티터치, 오토 에임/쌍둥이 스틱 전환, 설정 창 토글, 한글 튜토리얼 렌더링, 노치/펀치홀(S26 Ultra), 메뉴 터치 크기, 게임 오버·결과 화면의 QUIT 숨김, 앱 전환·뒤로 가기 동작. 플레이 중 입력은 adb로 재현할 수 없다.
+
+## Task 13 — 모바일 성능 (진행 중: 도구 작성·기기 동작 확인, 스트레스 측정 대기)
+
+- `MobilePerformance.cs`: 모바일에서 `QualitySettings.vSyncCount=0`, `Application.targetFrameRate=60`(Android 기본 30 FPS 제한 해제). 개발 빌드와 에디터 전용 `MobilePerformanceProbe`가 좌상단에 FPS(평균/최저), 좀비·보스 수를 표시하고 `STRESS` 버튼으로 "좀비 500마리 + 보스(곧 10분 보스 등장) + 플레이어 무적" 상태를 만든다. 릴리스(비개발) 빌드에는 포함되지 않는다.
+- 기기 확인: 태블릿 개발 빌드에서 FPS 표시가 동작하고 평균 60.0이 나왔다(좀비 9마리).
+- **미완료:** `STRESS` 상태(500마리+보스)에서의 FPS 측정, 모바일 전용 품질 단계 추가 여부 결정(병목이 확인될 때만), 30분 연속 플레이.
