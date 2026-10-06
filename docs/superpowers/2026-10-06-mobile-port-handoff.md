@@ -12,6 +12,8 @@
 
 - **Rider 후처리 훅 주의:** 기존 `.cs` 파일을 Edit하면 Rider가 파일 전체를 재포맷(중괄호 줄바꿈 등)해 diff가 부풀 수 있다. 기존 파일을 고친 뒤에는 반드시 `git diff --stat`으로 의도한 줄만 바뀌었는지 확인한다. 이 저장소 `.cs`는 CRLF+BOM이라 MSYS `sed -i`도 줄바꿈을 망가뜨린다. 정확한 치환은 PowerShell `[IO.File]::ReadAllText/WriteAllText`(UTF8 BOM, `r`n 사용)로 한다.
 
+- **Unity CLI 병행(사용자 요청, 2026-10-06):** `unity`(1.0.0-beta.11)가 설치되어 있고 실행 중인 에디터(포트 7800)에 연결된다. 접두는 `unity command --caller plugin --skill unity-cli --no-banner --result-only <명령> --<인자> <값>`이다. 쓸 수 있는 명령: `editor_play`/`editor_stop`, `open_scene --path`, `eval '<C#>'`(Roslyn), `run_tests --mode EditMode`(동기, 결과 즉시 반환), `console`, `get/set_player_settings`, `get/set_quality_settings`, `switch_build_target`, `build`, `build_status`, `screenshot`, `get_performance_stats`. Task 12(Android 설정·빌드)와 Task 13(품질·성능)에서 활용한다. `unity build`/`unity test`는 별도 에디터를 띄우므로 이미 열린 프로젝트에서는 `unity command build`(열린 에디터 사용)를 쓴다.
+
 ## Task 0 — 브랜치·기준 확보 (완료)
 
 - 변경: `.gitignore`에 `*.keystore`, `*.jks`, `keystore.properties`, `/Keystore/` 추가.
@@ -119,3 +121,18 @@
 - 시험 뒤 PlayerPrefs 키 삭제, 강제 모바일 끔, 씬 저장 안 함.
 - **미검증:** `Application.isMobilePlatform` 가드(에디터에서는 항상 false)는 실기기에서 확인해야 한다. 해상도·전체 화면이 건드려지지 않는지, vSync가 0으로 유지되는지는 Task 12·13에서 본다. 설정 창의 Graphics 드롭다운에는 아직 모바일 전용 품질 단계가 없다(Task 13).
 - 알아둘 점: 설정 창을 일시정지 메뉴 밖에서 직접 열면 오버레이 버튼이 창 위에 겹쳐 보인다(시험용으로만 가능한 경로). 실제 흐름은 일시정지 메뉴에서 열기 때문에 컨트롤이 숨는다.
+
+## Task 11 — 모바일 문구·메뉴 대응 (완료)
+
+- `ReloadIndicator`: 모바일에서 "RELOAD" / "NO AMMO"(키 안내 `[R]`·`[1]` 제거). PC 문구는 그대로.
+- `MobileTutorialText.Convert(body, mode)`(MobileCore, 순수 함수): 인트로 튜토리얼의 PC 전용 조작 두 줄과 재장전 팁 한 문장만 모바일 문구로 바꾼다. 서식 태그와 나머지 가이드는 유지하고, 해당 문장이 없는 연습 튜토리얼은 그대로 둔다. `TutorialPopup`이 모바일에서만 이 함수를 거친다. 조준 모드(오토 에임/쌍둥이 스틱)에 따라 문구가 다르다.
+- `MobileQuitHider`: 모바일에서 `onClick`에 `QuitGame`이 연결된 버튼을 씬 로드 때 끈다(인트로·게임 오버 화면의 QUIT).
+- **안드로이드 한글 폰트 대비:** `TutorialPopup.ApplyFont`가 Windows 폰트 이름(`Malgun Gothic` 등)만 찾아서 Android에서는 한글이 깨질 수 있다. 후보 이름 뒤에 `Noto Sans CJK KR`, `Noto Sans CJK`, `sans-serif`를 추가했다(PC는 앞의 이름이 먼저 걸려 동작이 같다).
+- 테스트: `MobileTutorialTextTests` 5건. 구현 전에 컴파일 실패 확인 후 통과. EditMode 58/58(MCP와 CLI `run_tests` 모두 확인).
+- 확인(에디터 강제 모바일):
+  - 인트로: QUIT 버튼 꺼짐. 실제 튜토리얼 본문(`TutorialSeen_Game`)을 변환하면 PC 전용 단어(WASD, 마우스, 좌클릭, ESC, R 키)가 남지 않는다.
+  - 게임 씬: 탄창 0 + 예비탄 20 → "RELOAD", 예비탄 0 → "NO AMMO". 강제 모바일을 끄면 "RELOAD  [R]", "NO AMMO  [1]"로 PC 문구가 유지된다.
+- **미검증:**
+  - **안드로이드 한글 렌더링:** `CreateDynamicFontFromOSFont`가 실기기에서 한글 글꼴을 찾는지 확인하지 못했다. 튜토리얼이 네모(□)로 보이면 한글이 포함된 폰트 에셋을 프로젝트에 넣는 별도 작업이 필요하다(Task 12 실기기 검수 항목).
+  - 게임 오버·결과 화면의 QUIT 숨김은 코드 경로가 인트로와 같지만 해당 화면에서 직접 보지는 못했다.
+  - 터치 메뉴 버튼 크기(약 48dp)와 게임 오버·일시정지·결과 화면의 터치 조작은 실기기에서 확인해야 한다. 버튼 크기 조정 코드는 필요성이 확인되지 않아 추가하지 않았다.
