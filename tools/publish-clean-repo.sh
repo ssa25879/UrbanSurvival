@@ -17,8 +17,15 @@ SRC="$(git rev-parse --show-toplevel)"
 DEST="${CLEAN_DIR:-$SRC/../Zombie_clean.git}"
 REMOTE_URL="${PUBLIC_REMOTE:-https://github.com/ssa25879/UrbanSurvival.git}"
 EXCLUDES=("Assets/GUI PRO Kit - Simple Casual" "Assets/GUI PRO Kit - Simple Casual.meta")
+# 공개본에서 가릴 작성자(2026-10-06 사용자 결정: 이름·주소 모두 가림). 커밋 작성자·커미터와 SCRUB_FILES 본문에서 바꾼다.
+HIDE_EMAIL="contributor@noreply.invalid"
+HIDE_TO_NAME="contributor"
+HIDE_TO_EMAIL="contributor@noreply.invalid"
+# 본문에 HIDE_EMAIL이 적힌 파일(git log -S로 확인한 것만). 새로 생기면 여기에 추가한다
+SCRUB_FILES=("docs/superpowers/2026-10-06-mobile-port-final-handoff.md")
 
 LOGFILE="${TMPDIR:-/tmp}/publish-clean-filter.log"
+IDX_SCRIPT="${TMPDIR:-/tmp}/publish-clean-index-filter.sh"
 
 case "$DEST" in
   *_clean.git) ;;
@@ -46,12 +53,27 @@ git clone --bare --no-hardlinks "$SRC" "$DEST" >/dev/null 2>&1
 cd "$DEST"
 git remote remove origin   # 실수로 원본에 푸시하지 않도록
 
-echo "== 2. 기록에서 제외 경로 삭제 (git filter-branch, 시간이 걸린다)"
-RM_ARGS=""
-for p in "${EXCLUDES[@]}"; do RM_ARGS="$RM_ARGS \"$p\""; done
-export FILTER_BRANCH_SQUELCH_WARNING=1
+echo "== 2. 기록에서 제외 경로 삭제, 작성자 가림 (git filter-branch, 시간이 걸린다)"
+{
+  printf 'git rm -r -q --cached --ignore-unmatch --'
+  for p in "${EXCLUDES[@]}"; do printf ' %q' "$p"; done
+  printf '\n'
+  # 주소는 환경 변수로 넘긴다(perl 정규식에 직접 쓰면 @가 배열로 해석됨)
+  perl_expr='s/\Q$ENV{HIDE_EMAIL}\E/$ENV{HIDE_TO_EMAIL}/g'
+  for f in "${SCRUB_FILES[@]}"; do
+    # 파일이 있는 커밋에서만 본문의 주소를 바꾼다(바이트 그대로 처리, 줄바꿈 변환 없음)
+    printf 'e=$(git ls-files -s -- %q)\n' "$f"
+    printf 'if [ -n "$e" ]; then m=${e%%%% *}; s=$(echo "$e" | cut -d" " -f2); n=$(git cat-file blob "$s" | perl -pe %q | git hash-object -w --stdin); git update-index --cacheinfo "$m,$n,"%q; fi\n' \
+      "$perl_expr" "$f"
+  done
+} >"$IDX_SCRIPT"
+export FILTER_BRANCH_SQUELCH_WARNING=1 HIDE_EMAIL HIDE_TO_NAME HIDE_TO_EMAIL
 git filter-branch -f --prune-empty --tag-name-filter cat \
-  --index-filter "git rm -r -q --cached --ignore-unmatch -- $RM_ARGS" -- --branches >"$LOGFILE" 2>&1 \
+  --env-filter '
+    if [ "$GIT_AUTHOR_EMAIL" = "$HIDE_EMAIL" ]; then GIT_AUTHOR_NAME="$HIDE_TO_NAME"; GIT_AUTHOR_EMAIL="$HIDE_TO_EMAIL"; fi
+    if [ "$GIT_COMMITTER_EMAIL" = "$HIDE_EMAIL" ]; then GIT_COMMITTER_NAME="$HIDE_TO_NAME"; GIT_COMMITTER_EMAIL="$HIDE_TO_EMAIL"; fi
+    export GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL' \
+  --index-filter ". '$IDX_SCRIPT'" -- --branches >"$LOGFILE" 2>&1 \
   || { echo "filter-branch 실패: $LOGFILE 확인" >&2; exit 1; }
 
 echo "== 3. 이전 기록 잔여물 제거"
@@ -70,6 +92,10 @@ for p in "${EXCLUDES[@]}"; do
   reach=$(printf '%s\n' "$objects_list" | grep -cF -- "$p" || true)
   [ "$reach" -eq 0 ] || { echo "실패: 도달 가능한 객체 중 '$p' 경로 $reach개" >&2; fail=1; }
 done
+n=$(git log --branches --format='%an <%ae>%n%cn <%ce>' | grep -cF -- "$HIDE_EMAIL" || true)
+[ "$n" -eq 0 ] || { echo "실패: 작성자·커미터에 '$HIDE_EMAIL'이 남아 있음($n)" >&2; fail=1; }
+n=$(git log --branches -S"$HIDE_EMAIL" --format='%h' | wc -l)
+[ "$n" -eq 0 ] || { echo "실패: 파일 본문 기록에 '$HIDE_EMAIL'이 남아 있음(커밋 $n개, SCRUB_FILES 확인)" >&2; fail=1; }
 if [ -n "$(git fsck --full 2>&1)" ]; then echo "실패: git fsck 출력이 있음" >&2; fail=1; fi
 for b in $(git for-each-ref --format='%(refname:short)' refs/heads); do
   o=$(git -C "$SRC" rev-parse "$b^{tree}" 2>/dev/null || echo none)
