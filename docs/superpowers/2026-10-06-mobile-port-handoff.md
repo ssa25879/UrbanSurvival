@@ -37,3 +37,9 @@
 
 - 조준 스틱 출력이 0이 아니면 눌림. 데드존 밖으로 처음 나간 프레임에만 `Down`, 유지 중에는 `Held`만 true. 중앙 복귀 후 다시 당기면 새 `Down`. `Reset()`은 상태를 비운다.
 - 테스트 5건(`TwinStickFireTrackerTests`).
+
+## Task 4 — AutoAimTargeting (완료)
+
+- `AutoAimTargeting.Select(origin, candidates, range, moveDirection, lastDirection)`: 사거리 안 가장 가까운 살아 있는 적 → 이동 방향 → 마지막 방향 순. 수평(XZ) 거리, 사거리와 같은 거리는 대상, range 0 이하는 대상 없음, 겹친 적(거리 0)은 건너뛴다. 결과는 `AimResult{valid, hasTarget, direction}`.
+- 테스트 11건(`AutoAimTargetingTests`, 500마리 후보 포함).
+- 알려진 한계(설계 결정): 벽 뒤 적도 후보다. 실제 피해는 기존 총구·Raycast 판정이 막는다.
