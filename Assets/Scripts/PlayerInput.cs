@@ -41,6 +41,7 @@ public class PlayerInput : MonoBehaviour {
     private PlayerShooter playerShooter;
     private Vector3 lastMobileAim;
     private float nextAutoAimTime;
+    private bool resumeFireAfterReload; // 쌍둥이 스틱을 당긴 채 재장전에 들어갔다(끝나면 바로 다시 발사)
 
     private void Start() {
         playerShooter = GetComponent<PlayerShooter>();
@@ -206,6 +207,26 @@ public class PlayerInput : MonoBehaviour {
             if (twinStickFire.Held && playerShooter != null && playerShooter.gun != null && playerShooter.gun.state == Gun.State.Empty)
             {
                 reload = true;
+            }
+
+            // 재장전 중에도 스틱을 계속 당기고 있었다면 재장전이 끝나는 즉시 다시 발사한다(쌍둥이 스틱 모드 전용, 2026-10-06 사용자 요청).
+            // 재장전 중에는 발사 입력을 잠시 거두어(fire=false) PlayerShooter의 "재장전 뒤 한 번 놓아야 발사" 대기를 풀고,
+            // 재장전이 끝난 첫 프레임에 fireDown을 한 번 내서 단발 무기도 한 발이 나가게 한다. 스틱을 놓으면 재개하지 않는다
+            Gun currentGun = playerShooter != null ? playerShooter.gun : null;
+            if (twinStickFire.Held && currentGun != null && currentGun.state == Gun.State.Reloading)
+            {
+                resumeFireAfterReload = true;
+                fire = false;
+                fireDown = false;
+            }
+            else if (resumeFireAfterReload)
+            {
+                resumeFireAfterReload = false;
+                if (twinStickFire.Held)
+                {
+                    fire = true;
+                    fireDown = true;
+                }
             }
 
             if (twinStickFire.Held)
