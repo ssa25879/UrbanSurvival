@@ -255,3 +255,34 @@
 - 사용자 지시: "과거 기록만 private 처리" 대신 방법 B(기존 저장소는 비공개 보존, GUI PRO를 기록 전체에서 지운 새 공개 저장소) 진행. 이 저장소(`D:\work\Zombie`)는 건드리지 않고 `D:\work\Zombie_clean.git`(bare 복제본, remote 제거)에서 `git filter-branch`로 정리한다. 푸시는 사용자 승인 후에만.
 - 사용자가 `Searching.ogg`의 출처를 확인(OpenGameArt https://opengameart.org/content/searching, CC0). `Assets/Game/Audio/Music/SOURCE.md` 신규, 점검표·체크리스트에서 "출처 불명" 목록에서 제외. `singularity_calm.wav`는 페이지 주소가 아직 없다.
 - 1차 정리 검증: 커밋 143개 유지, GUI PRO 경로가 있는 커밋 0개, 도달 가능한 GUI PRO 객체 0개, `SideProject-Mobile` 최신 트리 해시가 원본과 동일(`88256277…`), `main`은 원래 GUI PRO가 없어 동일, `SideProject`만 트리가 달라짐(GUI PRO 제거).
+
+## Task 15 — 세션 1 정리·개선 2건·릴리스 APK (완료, 2026-10-06 오후, 두 세션 동시 작업 중 세션 1)
+
+두 세션이 같은 폴더에서 동시에 작업했다(세션 1: Unity·모바일, 세션 2: 저장소·문서). 진행 상황 공유는 `WorkNotes/Collab.md`(Git 제외)를 쓴다.
+
+### 변경
+- `0ace6c0` `MobileTouchOverlay.Update`: 슬롯 4칸 표시를 상태(미보유/보유/선택)가 바뀔 때만 갱신하고, 매 프레임 `reloadButton.SetInteractable(true)` 호출을 없앴다(최종 리뷰 보류 Minor 해소).
+- `175e6d7` **모바일 자동 재장전 확대(사용자 요청):** 오토 에임 FIRE 버튼도 누른 채 탄창이 비면 자동 재장전하고, 재장전이 끝나면 누르고 있는 한 계속 발사한다(쌍둥이 스틱과 같은 규칙). `MobileFireLogic`의 쌍둥이 스틱 전용 분기와 `MobileFireFrame.twinStick`을 없앴다. **PC(좌클릭)는 기존대로 자동 재장전 없음.** 테스트는 모드 무관 규칙으로 정리했다(92→88건, 중복 제거 + 단발 무기 재개 추가).
+- `20450fd` **아이템 습득 범위 3 m(사용자 요청, 모바일·PC 공통, 보스 레드존 반경과 같음):** 새 `Assets/Scripts/ItemPickupRange.cs`가 `Start`에서 현재 `lossyScale`로 환산해 `SphereCollider` 반경을 월드 3 m로 맞춘다(무기 픽업은 `Awake`에서 스케일을 바꾸므로 그 뒤). 아이템 프리팹 5개(Ammo/Health/Rifle/SMG/Shotgun)에 추가했다. 사격 레이(`Gun`)는 트리거를 무시하므로 총알을 막지 않는다. 프리팹 diff에는 Unity 6 직렬화 형식 갱신(Light·Renderer 필드, 값 동일)이 섞여 있다.
+- `e038672` **GUI PRO Kit 다시 추적(사용자 결정: `URP_ZombieGame`은 비공개 유지):** `.gitignore`의 GUI PRO 제외 규칙을 지우고 4,960개 + `.meta`를 다시 추가했다(내용은 `SideProject`와 동일). 공개용 사본은 `tools/publish-clean-repo.sh`의 `EXCLUDES`가 모든 커밋에서 지우므로 계속 빠진다. Task 14d의 "Git 추적에서 제거"는 이 커밋으로 되돌려졌다.
+
+### 원인 조사(수정 안 함, 사용자 결정 "그대로 둔다")
+- `light.mat`(`Unlit/Color`): 게임 씬의 `lanternDouble` 4개가 모두 비활성이라 화면에 보이지 않는다. 기기 로그의 `Hidden/InternalErrorShader` 메시지는 GI Meta 패스 안내(디버그 레벨)다.
+- "TextMesh Pro Essential Resources are missing": 커밋된 `TMP Settings.asset`의 `assetVersion`이 빈 값(옛 TMP)이라 uGUI의 `TMP_PackageResourceImporter.OnDestroy`가 출력한다. 작업 트리의 미커밋 `Assets/TextMesh Pro/*`가 갱신본(버전 2)이라 이 PC에서는 해결된 상태지만, 새로 clone하면 다시 뜬다.
+- `_burst_0_0` 로드 실패: APK에 `lib_burst_generated.so`가 있다. Unity 이슈 트래커에 따르면 분할 라이브러리를 먼저 찾다가 실패하는 개발 빌드 전용 로그로 동작에 영향이 없다. 릴리스 빌드에서 사라지는지는 미검증.
+
+### 빌드·기기
+- 개발 APK(`0ace6c0` 기준, 287 MB, 약 17분) → 태블릿 TB373FU 설치·실행, 사용자 "정상 작동 확인".
+- STRESS FPS(사용자 측정, 직전 개발 빌드): 몬스터 전부가 화면에 보일 때 약 29 FPS. 사용자 판단 "양호" → 모바일 품질 단계는 추가하지 않는다.
+- **릴리스 APK**(`20450fd` 기준, `Builds/Android/UrbanSurvival-release.apk`, 81 MB, 약 6분, `--options` 없음, 디버그 키 서명 → 스토어 업로드 불가) → 태블릿 설치, 사용자가 자동 재장전·습득 범위 확인.
+  - `aapt` 확인: 1.0.0/1, minSdk 25, arm64-v8a, `LEANBACK_LAUNCHER` 없음, debuggable 아님.
+  - **`INTERNET` 권한이 릴리스에도 남는다.** `forceInternetPermission=false`, Unity Analytics 켜짐 → Analytics가 원인으로 추정(미확인). Analytics를 끌지는 사용자 결정(최종 인수인계 7장 2번).
+
+### 검증
+- EditMode 88/88, 재컴파일 오류 없음.
+- 에디터 플레이(강제 모바일): 슬롯 표시 갱신(`2,0,0,0` → 해금 `2,1,0,0` → 장착 `1,2,0,0`). 오토 에임 소총 FIRE 누름 유지 → 탄창이 빌 때마다 자동 재장전 후 계속 발사(예비탄 120→90→60→30→0), 손을 떼면 멈춤, 예비탄 0이면 Empty 유지. 습득: 2.6 m의 탄약·SMG 습득, 4.0 m 남음(SMG 런타임 스케일 0.28 → 로컬 반경 10.67).
+- **미검증:** S26 Ultra(노치·SafeArea), 아이템이 많을 때 큰 트리거로 늘어나는 물리 비용, 릴리스 빌드의 `_burst_0_0` 로그.
+
+### 다음 작업
+- 아이템 자석 연출(2026-10-07 예정, 사용자 지시): 습득 범위에 들어오면 아이템이 캐릭터 쪽으로 끌려온 뒤 습득. 지금은 `PlayerHealth.OnTriggerEnter`가 즉시 `IItem.Use`를 호출해 3 m 밖에서 바로 사라진다. 검토 항목은 `WorkNotes/Collab.md` "다음 작업".
+- 릴리스 AAB: 키스토어 준비 후. `INTERNET` 권한 정리(Analytics 결정)도 함께.
