@@ -25,6 +25,11 @@ if [ -z "${HIDE_EMAIL:-}" ] && [ -f "$CONF" ]; then HIDE_EMAIL="$(sed -n 's/^HID
 [ -n "${HIDE_EMAIL:-}" ] || { echo "가릴 주소가 없습니다. $CONF 에 'HIDE_EMAIL=<주소>'를 적거나 환경 변수로 주세요." >&2; exit 2; }
 HIDE_TO_NAME="contributor"
 HIDE_TO_EMAIL="contributor@noreply.invalid"
+# 비공개 origin은 e038672에서 .gitignore의 GUI PRO 제외 규칙을 지우고 GUI PRO를 다시 추적한다.
+# 공개본 clone 사용자가 GUI PRO를 임포트해 실수로 커밋하지 않도록, 이 커밋의 후손에서만 공개본 .gitignore에 규칙을 되살린다.
+# (이미 공개된 커밋은 바뀌지 않아 SHA가 유지된다)
+GITIGNORE_ANCHOR="e038672"
+export GIGNORE_BLOCK=$'# Third-party asset not redistributed in this public repository (license; see docs/store/third-party-not-in-repo.md)\n/Assets/GUI PRO Kit - Simple Casual/\n/Assets/GUI PRO Kit - Simple Casual.meta\n'
 # 본문에 HIDE_EMAIL이 적힌 적이 있는 파일(git log -S로 확인한 것만). 새로 생기면 여기에 추가한다
 SCRUB_FILES=("docs/superpowers/2026-10-06-mobile-port-final-handoff.md" "tools/publish-clean-repo.sh")
 
@@ -70,6 +75,8 @@ echo "== 2. 기록에서 제외 경로 삭제, 작성자 가림 (git filter-bran
     printf 'if [ -n "$e" ]; then m=${e%%%% *}; s=$(echo "$e" | cut -d" " -f2); n=$(git cat-file blob "$s" | perl -pe %q | git hash-object -w --stdin); git update-index --cacheinfo "$m,$n,"%q; fi\n' \
       "$perl_expr" "$f"
   done
+  # GITIGNORE_ANCHOR의 후손이고 .gitignore에 GUI PRO 규칙이 없으면 끝에 덧붙인다
+  printf 'if git merge-base --is-ancestor %q "$GIT_COMMIT" 2>/dev/null; then e=$(git ls-files -s -- .gitignore); if [ -n "$e" ]; then m=${e%%%% *}; s=$(echo "$e" | cut -d" " -f2); if ! git cat-file blob "$s" | grep -qF "/Assets/GUI PRO Kit - Simple Casual/"; then n=$({ git cat-file blob "$s"; printf %%s "$GIGNORE_BLOCK"; } | git hash-object -w --stdin); git update-index --cacheinfo "$m,$n,.gitignore"; fi; fi; fi\n' "$GITIGNORE_ANCHOR"
 } >"$IDX_SCRIPT"
 export FILTER_BRANCH_SQUELCH_WARNING=1 HIDE_EMAIL HIDE_TO_NAME HIDE_TO_EMAIL
 git filter-branch -f --prune-empty --tag-name-filter cat \
@@ -95,6 +102,12 @@ objects_list=$(git rev-list --objects --branches)
 for p in "${EXCLUDES[@]}"; do
   reach=$(printf '%s\n' "$objects_list" | grep -cF -- "$p" || true)
   [ "$reach" -eq 0 ] || { echo "실패: 도달 가능한 객체 중 '$p' 경로 $reach개" >&2; fail=1; }
+done
+for b in $(git for-each-ref --format='%(refname:short)' refs/heads); do
+  if git -C "$SRC" merge-base --is-ancestor "$GITIGNORE_ANCHOR" "$b" 2>/dev/null; then
+    git show "$b:.gitignore" | grep -qF "/Assets/GUI PRO Kit - Simple Casual/" \
+      || { echo "실패: $b 공개본 .gitignore에 GUI PRO 제외 규칙이 없음" >&2; fail=1; }
+  fi
 done
 n=$(git log --branches --format='%an <%ae>%n%cn <%ce>' | grep -cF -- "$HIDE_EMAIL" || true)
 [ "$n" -eq 0 ] || { echo "실패: 작성자·커미터에 '$HIDE_EMAIL'이 남아 있음($n)" >&2; fail=1; }

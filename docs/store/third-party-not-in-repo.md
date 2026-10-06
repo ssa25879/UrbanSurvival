@@ -1,7 +1,8 @@
 # 저장소에 포함하지 않는 외부 에셋
 
 - 작성일: 2026-10-06 (사용자 지시: GUI PRO Kit를 저장소에서 제거)
-- 이 브랜치(`SideProject-Mobile`)에서 아래 에셋은 Git 추적에서 제외되어 있다. **로컬 작업 폴더에는 그대로 있고** `.gitignore`가 막고 있어 실수로 다시 올라가지 않는다.
+- **갱신(2026-10-06 저녁, 사용자 결정): 비공개 저장소 `URP_ZombieGame`(origin)에는 포함, 공개 저장소 `UrbanSurvival`에서만 제외한다.** 원본 저장소는 비공개로 전환됐고, `SideProject-Mobile`도 `e038672`에서 GUI PRO를 다시 추적한다(`.gitignore` 규칙 삭제). 공개본은 `tools/publish-clean-repo.sh`가 모든 커밋에서 GUI PRO를 지우고, `e038672` 이후 커밋의 공개본 `.gitignore`에는 제외 규칙을 되살린다(이미 공개된 커밋의 SHA는 그대로).
+- 아래 본문은 "제거" 당시 기록이다. "이 저장소"는 이제 **공개본**을 뜻한다.
 
 ## GUI PRO Kit - Simple Casual
 
@@ -17,7 +18,7 @@
 
 1. Asset Store에서 **GUI PRO Kit - Simple Casual**을 임포트해 `Assets/GUI PRO Kit - Simple Casual/`에 둔다(구매한 계정 필요). 같은 패키지를 임포트하면 원래 `.meta`의 GUID가 복원되어 씬·프리팹 참조가 이어진다.
 2. 임포트하지 않으면 위 6개 에셋을 참조하는 UI가 비어 보이고(프레임 없음, 일시정지 메뉴 없음) 콘솔에 "missing" 경고가 난다.
-3. **다른 브랜치(`SideProject`, `main`)에는 이 에셋이 아직 추적되어 있다.** 이 브랜치를 그쪽에 병합하면 병합이 해당 파일을 삭제하므로, 병합 전에 아래 "완전 제거 방법"을 먼저 결정한다.
+3. 비공개 origin을 clone하면 GUI PRO가 함께 받아지므로 이 단계가 필요 없다. 공개본(`UrbanSurvival`)을 clone했을 때만 1번이 필요하다.
 
 ### 완전히 없애려면(선택)
 

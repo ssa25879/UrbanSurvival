@@ -21,14 +21,16 @@
 
 | 저장소 | 주소 | 비고 |
 |---|---|---|
-| 기존 | https://github.com/ssa25879/URP_ZombieGame | 브랜치 `SideProject`, `SideProject-Mobile`, `main`. **기록에 GUI PRO Kit 포함, 공개 상태**. 비공개 전환 예정(사용자) |
+| 기존 | https://github.com/ssa25879/URP_ZombieGame | 브랜치 `SideProject`, `SideProject-Mobile`, `main`. **GUI PRO Kit 포함, 2026-10-06 비공개 전환 완료** |
 | 공개용(신규) | https://github.com/ssa25879/UrbanSurvival | 기존 기록에서 GUI PRO Kit를 지운 사본(아래 "공개용 저장소 만든 방법") |
 
 - 모바일 작업 브랜치: **`SideProject-Mobile`** (`SideProject`의 `d29867b`에서 분기). 모바일 변경은 이 브랜치에만 있다. `main`과 `SideProject`는 건드리지 않았다.
-- 로컬 작업 폴더: `D:\work\Zombie`. 이 폴더에는 Git 추적에서 빠진 `Assets/GUI PRO Kit - Simple Casual/`이 **로컬에 그대로 있다**(`.gitignore`로 제외).
-- **AGENTS.md(로컬, Git 추적 안 함)는 갱신하지 않았다.** AGENTS.md는 "작업 브랜치는 `SideProject`만"이라고 되어 있어 모바일 브랜치와 충돌한다. 반영 여부는 사용자가 정한다.
+- 로컬 작업 폴더: `D:\work\Zombie`.
+- AGENTS.md(로컬, Git 추적 안 함)는 2026-10-06에 모바일 브랜치 규칙과 저장소 운영을 반영해 갱신했다. AGENTS.md와 `WorkNotes/`는 다른 PC로 사용자가 구글 드라이브로 옮긴다.
 
-### GUI PRO Kit (저장소에 없음)
+### GUI PRO Kit (2026-10-06 갱신: 비공개 origin에는 포함, 공개본에서만 제외)
+
+- **현재:** 사용자 결정으로 `e038672`부터 비공개 origin에서 다시 추적한다. 공개본은 스크립트가 기록에서 지우고 `.gitignore` 제외 규칙을 되살린다. 아래는 "제거" 당시의 기록이다.
 
 - 이유: 저장소가 공개이고 Asset Store 에셋 원본 재배포 가능성이 있어 사용자 지시로 제거. 프로젝트가 실제로 쓰는 것은 6개(스프라이트 5 + 일시정지 프리팹 1)뿐이다. 자세한 내용과 복구 방법은 `docs/store/third-party-not-in-repo.md`.
 - **새로 clone하면 HUD 패널 프레임과 일시정지 메뉴가 비어 보인다.** Asset Store에서 같은 패키지를 `Assets/GUI PRO Kit - Simple Casual/`에 임포트하면 GUID가 복원되어 이어진다.

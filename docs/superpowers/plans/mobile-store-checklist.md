@@ -34,6 +34,7 @@
 
 - [x] 게임 코드는 네트워크 통신, 계정, 광고, 인앱 결제를 쓰지 않는다(검색 결과 0건). 저장 데이터는 `PlayerPrefs`(설정, 조준 모드, 튜토리얼 확인 여부, 연습 최고 기록)뿐이고 기기 밖으로 보내지 않는다.
 - [ ] **주의: Unity Analytics가 켜져 있다.** `ProjectSettings/UnityConnectSettings.asset`에서 `UnityAnalyticsSettings.m_Enabled: 1`, `m_InitializeOnStartup: 1`이고, `Packages/manifest.json`에 `com.unity.analytics` 3.8.2와 `com.unity.modules.unityanalytics`가 있다. 코드에서 직접 이벤트를 보내지 않아도 플레이어가 시작할 때 Unity의 기본 분석(기기·세션 정보)이 전송될 수 있다. 이 경우 **Data Safety 양식에 수집 항목(예: 기기 또는 기타 ID, 앱 활동 등)을 신고하고 개인정보처리방침에 적어야 한다.** 분석을 쓸 계획이 없다면 끄는 것이 신고 부담이 작다. **끌지 말지는 사용자가 결정**한다(끄려면 Project Settings > Services > Analytics를 끄고 필요 없는 `com.unity.analytics` 패키지 제거를 검토).
+  - **2026-10-06 사용자 결정: 끈다.** 설정 변경과 릴리스 재빌드, 매니페스트의 `INTERNET` 제거 확인은 다음 작업(세션 1)에서 한다. 확인되면 이 항목을 체크하고 Data Safety는 "수집 없음"으로 작성한다.
 - [ ] 개인정보처리방침 URL 준비(**사용자**). 수집이 없더라도 Play는 URL을 요구한다.
 - [ ] Data Safety 양식 작성(**사용자**), 위 Analytics 결정 반영
 - [ ] 권한: Android 빌드가 요구하는 권한을 AAB 매니페스트에서 확인한다(인터넷 권한이 포함되는지 포함). 불필요한 권한이 있으면 제거 방법을 검토 — Task 14 Step 5
@@ -107,4 +108,5 @@
 
 - `targetSdk=36`, `minSdk=25`, `versionName=1.0.0`, `versionCode=1`, `primaryCpuAbi=arm64-v8a`(32비트 없음).
 - 요청 권한: `android.permission.INTERNET` 하나. 개발 빌드는 프로파일러 연결 때문에 INTERNET이 들어갈 수 있다. **릴리스 빌드에서 INTERNET이 남는지 다시 확인**하고, 남으면 Data Safety·개인정보처리방침 서술에 영향이 있으니 불필요하면 제거 설정을 검토한다(게임은 네트워크를 쓰지 않는다. Unity Analytics를 켜 두면 INTERNET이 필요하다).
+  - 2026-10-06 릴리스 APK(`20450fd` 기준) 확인: `INTERNET`이 **남아 있음**(`forceInternetPermission=false`, Analytics 켜짐 → Analytics가 원인으로 추정, 미확인). 이 APK는 **Unity 디버그 키로 서명한 기기 테스트용이라 Play에 올릴 수 없다.** 업로드는 업로드 키스토어로 서명한 AAB만 한다. Analytics를 끈 뒤 다시 확인한다.
 - 런처 카테고리에 `LEANBACK_LAUNCHER`가 있었다(→ TV 호환을 껐으므로 다음 빌드에서 사라져야 한다).
