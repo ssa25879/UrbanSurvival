@@ -37,6 +37,13 @@ public class PlayerShooter : MonoBehaviour {
     private bool[] unlocked = new bool[SlotCount]; // 슬롯 보유 여부(권총은 항상 true)
     private int currentSlot; // 현재 장착 중인 슬롯 인덱스
 
+    public int CurrentSlotIndex => currentSlot; // 현재 장착 슬롯(모바일 슬롯 UI 표시용, 읽기 전용)
+
+    // 슬롯을 보유하고 무기 오브젝트가 있는지(모바일 슬롯 UI 활성 표시용, 읽기 전용)
+    public bool IsSlotUnlocked(int slotIndex) {
+        return slotIndex >= 0 && slotIndex < SlotCount && unlocked[slotIndex] && guns[slotIndex] != null;
+    }
+
     private bool blockFireUntilRelease; // 재장전/스왑 직후 발사 버튼을 새로 눌러야 하는 상태
 
     private PlayerInput playerInput; // 플레이어의 입력

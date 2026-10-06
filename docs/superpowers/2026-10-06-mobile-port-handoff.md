@@ -10,6 +10,8 @@
 - `mcp__UnityMCP__execute_code`(CodeDom, C# 6)에서는 `Object`가 모호하므로 `UnityEngine.Object.FindFirstObjectByType<T>()`처럼 완전한 이름을 쓴다.
 - 플레이 모드 진입 직후 첫 호출은 도메인 리로드로 타임아웃이 날 수 있다. 몇 초 뒤 다시 호출한다.
 
+- **Rider 후처리 훅 주의:** 기존 `.cs` 파일을 Edit하면 Rider가 파일 전체를 재포맷(중괄호 줄바꿈 등)해 diff가 부풀 수 있다. 기존 파일을 고친 뒤에는 반드시 `git diff --stat`으로 의도한 줄만 바뀌었는지 확인한다. 이 저장소 `.cs`는 CRLF+BOM이라 MSYS `sed -i`도 줄바꿈을 망가뜨린다. 정확한 치환은 PowerShell `[IO.File]::ReadAllText/WriteAllText`(UTF8 BOM, `r`n 사용)로 한다.
+
 ## Task 0 — 브랜치·기준 확보 (완료)
 
 - 변경: `.gitignore`에 `*.keystore`, `*.jks`, `keystore.properties`, `/Keystore/` 추가.
@@ -51,3 +53,11 @@
 - 설정 창 토글 연결은 Task 10.
 
 **여기까지 순수 로직(MobileCore) 완료. EditMode 53/53 통과.**
+
+## Task 6 — Zombie.alive 목록과 PlayerShooter 읽기 접근자 (완료)
+
+- `Zombie.alive`(정적 `List<Zombie>`): `Setup`에서 등록, `Die()`와 `OnDestroy()`에서 제거. 보스 포함, 시체는 제외. `ZombieSpawner.CreateZombie`가 항상 `Setup`을 호출하므로 모든 소환 경로가 등록된다.
+- `PlayerShooter.CurrentSlotIndex`(읽기 전용)와 `IsSlotUnlocked(int)`: 슬롯 UI 표시용. 전투 로직은 바꾸지 않았다.
+- 확인: 구현 전에 `Zombie.alive` 컴파일 실패를 확인했다. 에디터 플레이에서 살아 있는 좀비 13마리가 `alive` 13개와 일치했고 시체가 목록에 없었다. 한 마리를 `Die()` 처리하자 13 → 12로 줄고 목록에서 빠졌다. 권총 슬롯 보유 true, 소총 false, 범위 밖(9) false. EditMode 53/53 통과, 콘솔 오류 없음.
+- 자동 테스트는 만들지 않았다(MonoBehaviour와 NavMesh 필요). 계획서대로 플레이 모드 확인으로 대신했다.
+- 서식 사고: Rider 훅이 `Zombie.cs`를 재포맷해 diff가 80줄로 늘었다. 원복하고 PowerShell 정확 치환으로 의도한 8줄만 반영했다(위 "Rider 후처리 훅 주의" 참고).

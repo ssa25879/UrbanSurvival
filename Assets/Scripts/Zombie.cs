@@ -25,6 +25,7 @@ public class Zombie : LivingEntity
     public ZombieData zombieData { get; private set; } // 이 개체의 셋업 데이터(미니맵 등 UI에서 강화 개체 판별용)
 
     public static readonly System.Collections.Generic.List<Zombie> bosses = new System.Collections.Generic.List<Zombie>(); // 살아있는 보스 목록(보스 체력 UI가 참조)
+    public static readonly System.Collections.Generic.List<Zombie> alive = new System.Collections.Generic.List<Zombie>(); // 살아있는 좀비 전체 목록(모바일 오토 에임 대상 탐색용)
     public bool isBoss { get { return zombieData != null && zombieData.isBoss; } }
 
     public float noPathRelocateSeconds = 5f; // 플레이어까지 유효한 경로가 이 시간 동안 없으면 재배치를 요청(기획서 10장 "길 막힘")
@@ -72,6 +73,11 @@ public class Zombie : LivingEntity
     public void Setup(ZombieData zombieData, float statMultiplier) {
         this.zombieData = zombieData;
 
+        if (!alive.Contains(this))
+        {
+            alive.Add(this);
+        }
+
         // 기본 체력 설정
         startingHealth = zombieData.health * statMultiplier;
         health = startingHealth;
@@ -113,6 +119,7 @@ public class Zombie : LivingEntity
 
     private void OnDestroy() {
         bosses.Remove(this);
+        alive.Remove(this);
     }
 
     private void Start() {
@@ -244,6 +251,7 @@ public class Zombie : LivingEntity
 
         // LivingEntity의 Die()를 실행하여 기본 사망 처리 실행
         base.Die();
+        alive.Remove(this);
 
         // Collider 비활성화
         Collider[] colliders = GetComponents<Collider>();
