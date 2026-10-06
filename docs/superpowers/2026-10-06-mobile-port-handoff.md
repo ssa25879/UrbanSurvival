@@ -218,3 +218,16 @@
 - 체크리스트(`mobile-store-checklist.md`)의 아이콘·이미지 항목 갱신. 남은 이미지: **휴대전화 스크린샷(최소 2장)**.
 - **미검증:** 실제 런처/Play 목록에서의 모양(빌드 필요). 피처 그래픽은 원본을 1024x500으로 축소만 했다(텍스트 `URBAN SURVIVAL`이 이미지 안에 있고 가독성 확인은 Play Console 미리보기에서).
 - 참고: 이미지 원본이 Assets 안에 있어 Unity가 임포트하지만 어떤 씬에서도 참조하지 않으므로 빌드에는 들어가지 않는다(아이콘 마스터는 아이콘 슬롯으로 들어감).
+
+## Task 14b — Play 스토어 등록 준비 문서 (완료, 사용자 요청 2026-10-06)
+
+사용자가 "현재 빌드를 앱스토어에 올릴 준비"를 요청했다. 빌드는 별도로 진행 중(개발용 APK, Input Handling 경고 창에서 사용자 응답 대기)이라 에디터 없이 가능한 준비를 했다.
+- 신규 문서(`docs/store/`):
+  - `asset-license-audit.md`: 외부 에셋별 출처·라이선스 점검표. CC0 확인됨(Quaternius, Kenney, 남성 음성), **미확인**(Toon Shooter, GUI PRO, 효과음 7개, `Searching.ogg`, 초기 프로젝트 자원), 사용자 확인(AI 생성 이미지 약관).
+  - `store-listing-draft.md`: 한국어·영어 짧은/긴 설명(실제 기능만), Play Console 입력 제안, 콘텐츠 등급(IARC) 가이드, Data Safety 가이드(Unity Analytics 켬/끔 두 시나리오), 개인정보처리방침 초안 A/B.
+- `mobile-store-checklist.md`에 6장 릴리스 런북(10단계, 담당 구분)과 7장 출시 전 문제 목록 추가.
+- **중요 발견:**
+  1. GitHub 저장소 `ssa25879/URP_ZombieGame`이 **공개**(`api.github.com`에서 `private: false`, HTTP 200). Asset Store 에셋 원본이 공개 저장소에 올라가 있어 라이선스 위반 가능성이 있다. 비공개 전환은 사용자가 직접(저장소 설정).
+  2. `AndroidTVCompatibility: 1`(Android TV 호환 켜짐). 터치 전용 게임이라 `0`이 맞다. 에디터가 응답하지 않아(Input 경고 창) 아직 변경하지 못했다.
+  3. Unity Analytics 켜짐(Data Safety 영향), Unity 스플래시 로고 표시, 출처 불명 오디오.
+- 이번 작업에서 하지 않은 것: AAB 빌드(키스토어 없음, 빌드는 요청 시), 프로젝트 설정 변경, 저장소 설정 변경.

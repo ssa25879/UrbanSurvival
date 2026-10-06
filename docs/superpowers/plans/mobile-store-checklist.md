@@ -56,3 +56,49 @@
 - [ ] XiaoxinPad 2025: 설치·실행, 한 판 완료, 화면비(약 16:10) 레이아웃, 한글 튜토리얼 렌더링
 - [ ] 두 기기에서 동시 적 500마리 + 보스 상태 FPS 측정(목표 60, 최소 30)
 - [ ] 30분 이상 연속 플레이(입력 고착·메모리·발열·크래시)
+
+## 6. 릴리스 런북 (AAB 빌드 → Play 업로드)
+
+앞 단계가 막히면 다음 단계로 넘어가지 않는다. 빌드는 사용자가 요청할 때만 한다.
+
+1. **[사용자]** Play Console 개발자 계정 생성·결제·본인 확인, 앱 생성(`Urban Survival`, `com.yws.urbansurvival`).
+2. **[사용자]** 업로드 키스토어 생성(2장 명령). 비밀번호는 대화·파일에 적지 않는다.
+3. **[사용자 + 개발]** Unity `Project Settings > Player > Publishing Settings`에서 Custom Keystore를 지정하고 키스토어·별칭 비밀번호를 입력한다(**사용자**). 입력 후 개발이 릴리스 빌드를 만든다.
+4. **[개발]** `EditorUserBuildSettings.buildAppBundle = true`, 개발 빌드 끔, `AndroidBundleVersionCode`가 이전 업로드보다 큰지 확인.
+5. **[개발]** 빌드(활성 대상이 Android일 때). 개발 빌드와 달리 `--options`는 넘기지 않는다(`None` 값은 지원되지 않아 빌드가 시작되지 않는다).
+   ```bash
+   unity command --caller plugin --skill unity-cli --no-banner build --target Android --outputPath Builds/Android/UrbanSurvival-1.0.0-1.aab --confirm true --detach
+   ```
+   완료 여부는 `unity command ... build_status`로 확인한다(`unity job status`는 "제출됨"까지만 알려 준다). 빌드 중 "Unsupported Input Handling" 창이 뜨면 Ignore.
+6. **[개발]** AAB 검증: 파일 크기, 패키지명, `targetSdkVersion` ≥ 36, `minSdkVersion` 25, `arm64-v8a`만 포함, 권한 목록(인터넷 포함 여부). bundletool은 다운로드가 필요해 사용자 승인 후에 쓴다.
+7. **[사용자]** Play Console: 앱 콘텐츠(개인정보처리방침 URL, 광고 없음, 콘텐츠 등급 설문, 타겟 연령, 데이터 보안), 스토어 등록정보(`docs/store/store-listing-draft.md`), 가격·배포 국가.
+8. **[사용자]** 처음 업로드할 때 Play 앱 서명 등록, 내부 테스트 트랙에 AAB 업로드 → 테스터 초대.
+9. **[사용자]** 개인 계정이면 비공개 테스트(12명·14일 요건, 등록 직전에 최신 정책 확인) 후 Production 신청.
+10. **[개발]** 업로드 후 Play Console의 출시 전 보고서(Pre-launch report)와 크래시 보고서를 확인해 문제를 고친다.
+
+## 7. 출시 전 발견된 문제와 조치 (2026-10-06 점검)
+
+### 출시 차단(해결 전에는 올리지 않는다)
+
+| 문제 | 근거 | 조치 | 담당 |
+|---|---|---|---|
+| **저장소가 공개 상태** | GitHub API 조회 결과 `private: false`. 저장소에 Asset Store 에셋(Toon Shooter, GUI PRO) 원본이 들어 있다 | 라이선스 확인 후 저장소 비공개 전환 또는 해당 에셋 제외 | 사용자(`docs/store/asset-license-audit.md` 3장) |
+| 출처 불명 오디오·초기 프로젝트 자원 | 효과음 7개, `Searching.ogg`, 일부 모델·재질에 출처 기록 없음 | 출처 확인 또는 CC0 대체 | 사용자 + 개발 |
+| Play 계정·키스토어·개인정보처리방침 URL·스크린샷 | 아직 없음 | 런북 1·2·7 | 사용자 |
+
+### 설정 정리(에디터가 자유로울 때 개발이 처리)
+
+| 항목 | 현재 값 | 문제 | 조치 |
+|---|---|---|---|
+| `AndroidTVCompatibility` | `1` (켜짐) | 터치 전용 휴대전화·태블릿 게임인데 Android TV 호환이 선언되면 Play가 TV 요건(리모컨/게임패드)을 적용할 수 있다 | `0`으로 변경(사용자 승인 후) |
+| Unity 스플래시 로고 | 표시(`m_ShowUnitySplashLogo: 1`) | 라이선스에 따라 끌 수 있음 | 사용자가 Unity 라이선스 확인 후 결정 |
+| Unity Analytics | 켜짐, 시작 시 초기화 | Data Safety·개인정보처리방침 영향 | 켤지 끌지 사용자 결정(`store-listing-draft.md` 6·7장) |
+| Active Input Handling | `Both` | 빌드 때 경고 창. Android에서는 하나만 권장 | 현재는 Ignore로 진행. 단일 방식으로 바꾸려면 새 Input System 사용처 조사·재검증 필요 |
+| 기본 품질 단계 | PC용 단계 그대로 | 모바일 성능 미측정 | Task 13: STRESS(500마리+보스) 측정 후 병목이 있으면 모바일 단계 추가 |
+
+### 품질(실기기 확인 필요)
+
+- 한글 튜토리얼이 Android에서 깨지는지(OS 폰트 이름으로 찾는 방식). 안 보이면 한글 폰트 에셋을 프로젝트에 넣어야 한다.
+- 로그 `_burst_0_0` 네이티브 플러그인 로드 실패 메시지(릴리스 빌드에서 재확인).
+- `lanternDouble`의 `Assets/Materials/light.mat`(`Unlit/Color`)이 오류 셰이더로 나와 전구가 분홍색일 수 있음 → URP Unlit으로 교체(사용자 승인 후).
+- S26 Ultra 설치·노치 확인, 30분 연속 플레이, 두 기기 FPS(목표 60, 최소 30).
