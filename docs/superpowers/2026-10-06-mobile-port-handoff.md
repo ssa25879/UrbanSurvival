@@ -207,3 +207,14 @@
   - 샷건: 누르고 있는 동안 8발이 간격을 두고 나감(게임 시간 t=49.92에서 탄창 4, t=54.38에서 0), 한 프레임에 몰아 쏘지 않음.
   - 스틱/버튼을 놓으면 즉시 멈춤. EditMode 72/72.
 - 자동 테스트는 만들지 않았다(`PlayerShooter`·`Gun` 필요). 플레이 모드 확인으로 대신했다.
+
+## Task 14a — 앱 아이콘·스토어 이미지 적용 (완료, 사용자가 이미지 제공 2026-10-06)
+
+- 사용자가 `Assets/Images/AppIcon-1.png`(1254x1254, 앱 아이콘용 키아트)와 `AppIcon-2.png`(1794x876, 피처 그래픽용, 비율 2.048)를 올렸다. 게임 분위기(군인 + 좀비 + 앰버 가로등 조명)와 맞는다.
+- **크롭 선택(사용자 결정):** 적응형 아이콘은 가장자리가 마스크(중앙 약 66%)로 잘려 원본 그대로는 군인이 작다. 크롭 A(전체)/B(군인 중심 1000px)/C(860px)를 원형 마스크 미리보기로 보여 드렸고 사용자가 **B**를 골랐다.
+- 생성 파일: `Assets/Images/Android/AppIcon_1024.png`(B 크롭 1024), `AppIcon_Foreground_Empty.png`(투명 전경), `StoreAssets/play-icon-512.png`(Play 고해상도 아이콘 512x512, 32bit PNG, 653KB), `StoreAssets/play-feature-graphic-1024x500.png`(1024x500, 24bit PNG 알파 없음, 1064KB). `StoreAssets/`는 Unity가 임포트하지 않는 폴더(Assets 밖)다.
+- `MobileEditorMenu.ApplyAndroidIcons`(메뉴 `Urban Survival/Mobile/Apply Android Icons`): 적응형(배경=아이콘 그림, 전경=투명)·라운드·레거시 18개 슬롯을 채운다. 확인: 적용 전 `filled=0/18`(RED), 적용 후 `filled=18/18`(GREEN).
+- `ProjectSettings.asset`에는 아이콘 슬롯과 버전 `bundleVersion 1.0.0`만 커밋(원래 있던 `runInBackground` 변경은 제외).
+- 체크리스트(`mobile-store-checklist.md`)의 아이콘·이미지 항목 갱신. 남은 이미지: **휴대전화 스크린샷(최소 2장)**.
+- **미검증:** 실제 런처/Play 목록에서의 모양(빌드 필요). 피처 그래픽은 원본을 1024x500으로 축소만 했다(텍스트 `URBAN SURVIVAL`이 이미지 안에 있고 가독성 확인은 Play Console 미리보기에서).
+- 참고: 이미지 원본이 Assets 안에 있어 Unity가 임포트하지만 어떤 씬에서도 참조하지 않으므로 빌드에는 들어가지 않는다(아이콘 마스터는 아이콘 슬롯으로 들어감).

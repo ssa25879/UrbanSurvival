@@ -14,7 +14,7 @@
 - [ ] 릴리스 AAB 빌드 성공(서명 포함) — Task 14 Step 4
 - [ ] AAB 매니페스트 확인: 패키지명, `targetSdkVersion` ≥ 36, `minSdkVersion` 25, 네이티브 라이브러리 `arm64-v8a`만 포함 — Task 14 Step 5
 - [ ] 버전 정책: `bundleVersion` `1.0.0`, `AndroidBundleVersionCode` `1`. **업로드할 때마다 `AndroidBundleVersionCode`를 1씩 올린다.**
-- [ ] 앱 아이콘(적응형 아이콘 포함): **사용자가 원본 제공 필요**(1024×1024 PNG 권장, 적응형은 전경·배경 432×432 분리). 제공 전에는 Unity 기본 아이콘 상태
+- [x] 앱 아이콘: 사용자가 `Assets/Images/AppIcon-1.png`(1254x1254)을 제공했고, 군인 중심 1000px 크롭(`Assets/Images/Android/AppIcon_1024.png`)을 적응형(배경 레이어에 전체 그림, 전경은 투명)·라운드·레거시 슬롯 18개에 적용했다(`Urban Survival/Mobile/Apply Android Icons`). 실제 런처에서 보이는 모양은 빌드해서 확인해야 한다
 - [ ] 스플래시: Unity 라이선스 종류에 따라 Unity 로고 표시 여부가 달라진다. 사용자 확인 필요
 
 ## 2. 서명 (사용자 보관)
@@ -45,7 +45,7 @@
 - [ ] 앱 생성(앱 이름 `Urban Survival`, 패키지명 `com.yws.urbansurvival`)
 - [ ] 앱 카테고리, 대상 연령, 콘텐츠 등급 설문, Data Safety, 개인정보처리방침 URL
 - [ ] 스토어 설명(짧은 설명, 자세한 설명), 연락처 이메일
-- [ ] 이미지: 앱 아이콘 512×512 PNG, 피처 그래픽 1024×500, 휴대전화 스크린샷(최소 2장, 가로 화면). 태블릿 스크린샷은 선택 사항이지만 XiaoxinPad 같은 태블릿 지원을 알리려면 준비
+- [ ] 이미지: 앱 아이콘 512×512 PNG(준비됨: `StoreAssets/play-icon-512.png`), 피처 그래픽 1024×500(준비됨: `StoreAssets/play-feature-graphic-1024x500.png`, 알파 없는 24bit PNG, 원본은 `Assets/Images/AppIcon-2.png`), 휴대전화 스크린샷(최소 2장, 가로 화면, **미준비**). 태블릿 스크린샷은 선택 사항
 - [ ] 내부/비공개 테스트 트랙 설정, 테스트 릴리스 업로드
 - [ ] Production 제출
 - [ ] **신규 개인 개발자 계정은 Production 접근 전 비공개 테스트 요건이 있을 수 있다.** 모바일 기획서 기준은 최소 12명의 테스터가 14일 동안 지속적으로 참여한 뒤 Production 접근을 신청하는 방식이다. 계정 종류(개인/조직)와 현재 정책을 등록 직전에 공식 문서로 확인한다.
