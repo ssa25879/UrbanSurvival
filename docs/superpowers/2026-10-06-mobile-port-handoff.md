@@ -105,3 +105,17 @@
 - 환경 복구: `ForceMobileInEditor` false, 플레이 종료, 저장한 조준 모드 PlayerPrefs 키 삭제, 시험용 Game 뷰 사이즈 제거, 씬 저장 없음.
 - **미검증:** 실제 멀티터치(동시에 두 손가락)와 터치 감도, 노치·펀치홀(`Screen.safeArea`는 에디터에서 전체 화면), 실기기 터치 대상 크기(48dp 이상인지), 일시정지 중 손가락 누른 채 재개했을 때 오발 방지(Task 7 `RequireFireRelease`는 확인했으나 오버레이 경유 실손 확인은 못 함), 포커스 상실 경로.
 - 시험 중 알게 된 점: 시작 위치 주변에 무기 픽업이 있어 슬롯이 금방 해금될 수 있다(잠긴 슬롯 시험은 `unlocked` 배열을 리플렉션으로 조정).
+
+## Task 10 — 설정 창 조준 모드 토글과 모바일 설정 정리 (완료)
+
+- `MobileAimModeSettingsBinder`(모듈 밖): 모바일에서만 씬 로드 때 `SettingsPanel`을 찾아 VSync 행을 복제해 "TWIN-STICK AIM" 토글 행을 만든다. 모바일에서 의미 없는 전체 화면·해상도·VSync 행은 숨긴다. 씬 파일은 수정하지 않았다. `GameSettingsKit` 모듈에는 게임 전용 타입을 넣지 않았다.
+- `SettingsStore`(모듈, 플랫폼 일반 가드만): `ApplyDisplay`는 `Application.isMobilePlatform`이면 건너뛰고, `ApplyQuality`의 `vSyncCount` 적용도 모바일에서는 건너뛴다(vSync가 켜지면 `Application.targetFrameRate`가 무시되기 때문). diff는 +11/-1.
+- 확인(에디터 강제 모바일, `UrbanSurvival.unity`):
+  - 행 구성: Fullscreen·Resolution·VSync 꺼짐, Mobile Aim Mode 켜짐(스크린샷으로 레이아웃 정상, 창이 넘치지 않음).
+  - 토글을 켜면 `MobileAimSettings.Mode=TwinStick`, PlayerPrefs `MobileAimMode=1`, 오버레이의 FIRE 버튼이 숨고 조준 영역이 켜진다.
+  - 창을 닫았다 다시 열면 토글이 켜진 채로 유지되고, 플레이를 껐다 켜도 `TwinStick`이 유지된다(F12).
+  - 인트로(`Intro.unity`)에서도 같은 행 구성이 나오고 오버레이는 만들어지지 않는다.
+  - EditMode 53/53 통과.
+- 시험 뒤 PlayerPrefs 키 삭제, 강제 모바일 끔, 씬 저장 안 함.
+- **미검증:** `Application.isMobilePlatform` 가드(에디터에서는 항상 false)는 실기기에서 확인해야 한다. 해상도·전체 화면이 건드려지지 않는지, vSync가 0으로 유지되는지는 Task 12·13에서 본다. 설정 창의 Graphics 드롭다운에는 아직 모바일 전용 품질 단계가 없다(Task 13).
+- 알아둘 점: 설정 창을 일시정지 메뉴 밖에서 직접 열면 오버레이 버튼이 창 위에 겹쳐 보인다(시험용으로만 가능한 경로). 실제 흐름은 일시정지 메뉴에서 열기 때문에 컨트롤이 숨는다.

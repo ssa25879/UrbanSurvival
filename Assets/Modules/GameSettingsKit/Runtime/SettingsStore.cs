@@ -160,6 +160,12 @@ namespace GameSettingsKit
                 return;
             }
 
+            // 모바일은 화면 크기·전체 화면을 운영체제가 정하므로 적용하지 않는다
+            if (Application.isMobilePlatform)
+            {
+                return;
+            }
+
             FullScreenMode mode = Current.fullscreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed;
             if (Current.resolutionWidth > 0 && Current.resolutionHeight > 0)
             {
@@ -179,7 +185,11 @@ namespace GameSettingsKit
                 QualitySettings.SetQualityLevel(Current.qualityLevel, true);
             }
             // 품질 단계 변경이 vSync 값을 덮어쓰므로 항상 그 뒤에 적용
-            QualitySettings.vSyncCount = Current.vSync ? 1 : 0;
+            // 모바일은 프레임 제한(Application.targetFrameRate)을 쓰므로 vSync 설정을 적용하지 않는다(vSync가 켜지면 targetFrameRate가 무시됨)
+            if (!Application.isMobilePlatform)
+            {
+                QualitySettings.vSyncCount = Current.vSync ? 1 : 0;
+            }
         }
 
         // 선택 가능한 해상도 목록(주사율만 다른 중복 항목 제거, 큰 것부터)
