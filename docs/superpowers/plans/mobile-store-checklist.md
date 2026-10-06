@@ -90,7 +90,7 @@
 
 | 항목 | 현재 값 | 문제 | 조치 |
 |---|---|---|---|
-| `AndroidTVCompatibility` | `1` (켜짐) | 터치 전용 휴대전화·태블릿 게임인데 Android TV 호환이 선언되면 Play가 TV 요건(리모컨/게임패드)을 적용할 수 있다 | `0`으로 변경(사용자 승인 후) |
+| `AndroidTVCompatibility` | ~~`1`~~ → **`0`으로 변경 완료**(2026-10-06) | 기기 `dumpsys`에서 `LEANBACK_LAUNCHER` 카테고리가 확인되어 TV 호환이 실제로 켜져 있었음. 터치 전용이라 끔 | 다음 빌드에서 `LEANBACK_LAUNCHER`가 사라졌는지 `adb shell dumpsys package com.yws.urbansurvival`로 확인 |
 | Unity 스플래시 로고 | 표시(`m_ShowUnitySplashLogo: 1`) | 라이선스에 따라 끌 수 있음 | 사용자가 Unity 라이선스 확인 후 결정 |
 | Unity Analytics | 켜짐, 시작 시 초기화 | Data Safety·개인정보처리방침 영향 | 켤지 끌지 사용자 결정(`store-listing-draft.md` 6·7장) |
 | Active Input Handling | `Both` | 빌드 때 경고 창. Android에서는 하나만 권장 | 현재는 Ignore로 진행. 단일 방식으로 바꾸려면 새 Input System 사용처 조사·재검증 필요 |
@@ -102,3 +102,9 @@
 - 로그 `_burst_0_0` 네이티브 플러그인 로드 실패 메시지(릴리스 빌드에서 재확인).
 - `lanternDouble`의 `Assets/Materials/light.mat`(`Unlit/Color`)이 오류 셰이더로 나와 전구가 분홍색일 수 있음 → URP Unlit으로 교체(사용자 승인 후).
 - S26 Ultra 설치·노치 확인, 30분 연속 플레이, 두 기기 FPS(목표 60, 최소 30).
+
+### 개발 빌드(APK `1.0.0`/코드 1)를 태블릿에 설치해서 기기가 보고한 값 (2026-10-06 `adb shell dumpsys package`)
+
+- `targetSdk=36`, `minSdk=25`, `versionName=1.0.0`, `versionCode=1`, `primaryCpuAbi=arm64-v8a`(32비트 없음).
+- 요청 권한: `android.permission.INTERNET` 하나. 개발 빌드는 프로파일러 연결 때문에 INTERNET이 들어갈 수 있다. **릴리스 빌드에서 INTERNET이 남는지 다시 확인**하고, 남으면 Data Safety·개인정보처리방침 서술에 영향이 있으니 불필요하면 제거 설정을 검토한다(게임은 네트워크를 쓰지 않는다. Unity Analytics를 켜 두면 INTERNET이 필요하다).
+- 런처 카테고리에 `LEANBACK_LAUNCHER`가 있었다(→ TV 호환을 껐으므로 다음 빌드에서 사라져야 한다).

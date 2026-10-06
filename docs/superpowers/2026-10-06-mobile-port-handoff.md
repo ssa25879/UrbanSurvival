@@ -231,3 +231,12 @@
   2. `AndroidTVCompatibility: 1`(Android TV 호환 켜짐). 터치 전용 게임이라 `0`이 맞다. 에디터가 응답하지 않아(Input 경고 창) 아직 변경하지 못했다.
   3. Unity Analytics 켜짐(Data Safety 영향), Unity 스플래시 로고 표시, 출처 불명 오디오.
 - 이번 작업에서 하지 않은 것: AAB 빌드(키스토어 없음, 빌드는 요청 시), 프로젝트 설정 변경, 저장소 설정 변경.
+
+## Task 14c — 개발 빌드 재생성·설치와 릴리스 설정 정리 (완료)
+
+- 개발용 APK 재빌드 성공(사용자 요청 2026-10-06): `Builds/Android/UrbanSurvival-dev.apk` 180 MB, 약 8분. 중간에 "Unsupported Input Handling on Android"(Active Input Handling `Both`) 창이 떠서 사용자가 Ignore로 처리. 새 UI 배치, 쌍둥이 스틱 자동 재장전·재장전 후 계속 발사, 권총·샷건 자동 연속 발사, AK→AR 표기, 새 앱 아이콘, 버전 1.0.0이 들어 있다.
+- 태블릿(TB373FU)에 `adb install -r`로 설치만 했다(실행하지 않음). 기기 보고값: `targetSdk=36`, `minSdk=25`, `versionName=1.0.0`, `versionCode=1`, `primaryCpuAbi=arm64-v8a`, 권한 `INTERNET`뿐.
+- **`AndroidTVCompatibility` 1→0:** 기기 매니페스트에 `LEANBACK_LAUNCHER`가 있어 TV 호환이 켜진 것이 확인됐다. 터치 전용 게임이라 껐다(`ProjectSettings.asset`의 이 한 줄만 커밋, 원래 있던 `runInBackground` 변경은 제외). 다음 빌드에서 사라지는지 확인해야 한다.
+- 아이콘 텍스처(`AppIcon_1024.png`, `AppIcon_Foreground_Empty.png`) 압축을 `Uncompressed`로 변경(빌드 경고 "Compressed texture ... is used as icon" 해소). `.meta` 2개 커밋.
+- 빌드 로그 참고: `totalErrors: 1`이 보고됐으나 APK는 정상 생성·설치·`dumpsys` 확인됨(콘솔의 오류 항목은 구현 전 테스트 단계에서 남은 이전 기록으로 보임). "TextMesh Pro Essential Resources are missing" 경고가 에디터에 있음(게임 HUD는 레거시 Text라 영향 없음으로 보이나 미확인). 라운드·레거시 아이콘은 Unity 향후 버전에서 제거 예정이라는 경고(정보성).
+- **미검증:** 새 빌드에서의 실제 플레이(사용자가 태블릿에서 확인), S26 Ultra, 릴리스 빌드의 INTERNET 권한.
