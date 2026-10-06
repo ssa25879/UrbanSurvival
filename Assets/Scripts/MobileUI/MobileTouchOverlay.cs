@@ -28,6 +28,8 @@ public class MobileTouchOverlay : MonoBehaviour
     private readonly TouchButton[] slotButtons = new TouchButton[4];
     private readonly Text[] slotNames = new Text[4];
     private readonly Image[] slotLines = new Image[4];
+    // 마지막으로 그린 슬롯 상태(-1 미적용, 0 미보유, 1 보유, 2 선택). 바뀐 슬롯만 다시 그린다
+    private readonly int[] slotVisualStates = { -1, -1, -1, -1 };
     private PlayerShooter playerShooter;
     private PlayerInput playerInput;
     private GameObject pauseButtonObject;
@@ -345,11 +347,17 @@ public class MobileTouchOverlay : MonoBehaviour
             return;
         }
 
-        reloadButton.SetInteractable(true);
         for (int i = 0; i < 4; i++)
         {
             bool unlocked = playerShooter.IsSlotUnlocked(i);
             bool selected = playerShooter.CurrentSlotIndex == i;
+            int state = !unlocked ? 0 : (selected ? 2 : 1);
+            if (slotVisualStates[i] == state)
+            {
+                continue;
+            }
+
+            slotVisualStates[i] = state;
             // 3가지 상태: 선택(굵은 앰버 라인·앰버 글자·따뜻한 배경) / 보유(밝은 글자) / 미보유(어둡고 흐리게)
             slotButtons[i].normalColor = selected ? SlotSelectedColor : MobileUIFactory.Panel;
             slotButtons[i].SetInteractable(unlocked);
