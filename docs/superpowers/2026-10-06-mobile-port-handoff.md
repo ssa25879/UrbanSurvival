@@ -240,3 +240,12 @@
 - 아이콘 텍스처(`AppIcon_1024.png`, `AppIcon_Foreground_Empty.png`) 압축을 `Uncompressed`로 변경(빌드 경고 "Compressed texture ... is used as icon" 해소). `.meta` 2개 커밋.
 - 빌드 로그 참고: `totalErrors: 1`이 보고됐으나 APK는 정상 생성·설치·`dumpsys` 확인됨(콘솔의 오류 항목은 구현 전 테스트 단계에서 남은 이전 기록으로 보임). "TextMesh Pro Essential Resources are missing" 경고가 에디터에 있음(게임 HUD는 레거시 Text라 영향 없음으로 보이나 미확인). 라운드·레거시 아이콘은 Unity 향후 버전에서 제거 예정이라는 경고(정보성).
 - **미검증:** 새 빌드에서의 실제 플레이(사용자가 태블릿에서 확인), S26 Ultra, 릴리스 빌드의 INTERNET 권한.
+
+## Task 14d — GUI PRO Kit 저장소 제거, Toon Shooter 라이선스 기록 (완료, 사용자 지시 2026-10-06)
+
+- 사용자 지시: "Toon Shooter는 CC0일 거고, GUI PRO는 저장소에서 제거".
+- **GUI PRO Kit - Simple Casual:** `git rm --cached`로 Git 추적에서 제거(파일 4,960개 + `.meta`, 약 151 MB)하고 `.gitignore`에 `/Assets/GUI PRO Kit - Simple Casual/`와 `.meta`를 추가했다. **로컬 파일은 삭제하지 않았다**(게임·에디터는 그대로 동작, Unity에서 스프라이트·프리팹 로드 확인).
+- 프로젝트가 실제로 쓰는 GUI PRO 자원은 6개뿐이다(Unity 의존성 조회): 스프라이트 5개(`BasicFrame_Rectangle02_s_White`, `LineFrame_White`, `BasicFrame_Circle_337_White`, `Icon_WhiteIcon_Home`, `Icon_WhiteIcon_Setting_s`)와 프리팹 `Play_Pause_common (1)`. 참조하는 곳: 씬 5개(`Intro`, `UrbanSurvival`, `UrbanSurvival_ResultTest`, `BossTestScene`, `FinalBossTestScene`)와 `UrbanSurvivalSettingsTheme.asset`. 따라서 앱(컴파일된 결과물)에는 이 6개가 들어간다.
+- **한계(중요):** (1) 이 브랜치의 이전 커밋과 다른 브랜치(`SideProject`, `main`)에는 파일이 그대로 남아 있고 저장소는 공개 상태라서 공개 기록에서 사라진 것은 아니다. (2) 다른 PC에서 이 브랜치를 받거나 병합하면 해당 폴더가 삭제된다(Asset Store에서 다시 임포트해야 복구, 안내는 `docs/store/third-party-not-in-repo.md`). 완전 제거(대체, 비공개 전환, 기록 삭제)는 사용자 결정으로 남겼다. 기록 삭제(강제 푸시)는 되돌릴 수 없어 승인 없이 하지 않았다.
+- **Toon Shooter Game Kit:** 사용자 진술로 CC0, 원문 미확인으로 점검표에 기록했다. 라이선스 근거(페이지 주소, 확인일)를 같은 폴더에 `License.txt`로 남기는 것을 권고했다.
+- 신규 문서 `docs/store/third-party-not-in-repo.md`, 점검표·체크리스트 갱신.

@@ -82,7 +82,7 @@
 
 | 문제 | 근거 | 조치 | 담당 |
 |---|---|---|---|
-| **저장소가 공개 상태** | GitHub API 조회 결과 `private: false`. 저장소에 Asset Store 에셋(Toon Shooter, GUI PRO) 원본이 들어 있다 | 라이선스 확인 후 저장소 비공개 전환 또는 해당 에셋 제외 | 사용자(`docs/store/asset-license-audit.md` 3장) |
+| **저장소가 공개 상태** | GitHub API 조회 결과 `private: false`. GUI PRO Kit는 이 브랜치에서 추적 제외했으나(커밋 기록·다른 브랜치에는 남음) 공개 저장소의 과거 기록에 파일이 있다 | 저장소 비공개 전환 또는 기록 삭제(`third-party-not-in-repo.md` 완전 제거 방법) | 사용자 |
 | 출처 불명 오디오·초기 프로젝트 자원 | 효과음 7개, `Searching.ogg`, 일부 모델·재질에 출처 기록 없음 | 출처 확인 또는 CC0 대체 | 사용자 + 개발 |
 | Play 계정·키스토어·개인정보처리방침 URL·스크린샷 | 아직 없음 | 런북 1·2·7 | 사용자 |
 

@@ -10,7 +10,9 @@
 | 구분 | 상태 |
 |---|---|
 | CC0로 확인된 에셋 | Quaternius 좀비 키트, Kenney UI 팩 2종, Kenney 폰트, 남성 피격·사망 음성 |
-| 사용자 확인 필요(출처·라이선스 파일 없음) | Toon Shooter Game Kit, GUI PRO Kit, 효과음 7개(`Assets/Audios`), 배경음악 2곡, `Assets/Models`·`Assets/Animations`·`Assets/Materials`의 초기 프로젝트 자원 |
+| 사용자 확인 필요(출처·라이선스 파일 없음) | 효과음 7개(`Assets/Audios`), 배경음악 `Searching.ogg`, `Assets/Models`·`Animations`·`Materials`의 초기 프로젝트 자원 |
+| 사용자 진술(원문 미확인) | Toon Shooter Game Kit: CC0 |
+| 저장소에서 제거 | GUI PRO Kit(2026-10-06, 앱에는 6개 자원 포함, `third-party-not-in-repo.md`) |
 | 사용자 책임 | AI로 만든 앱 아이콘·피처 그래픽의 생성 도구 약관(상업 이용 가능 여부) |
 
 **출시 전 반드시 정리할 것:** 출처를 모르는 효과음·배경음악·초기 프로젝트 자원. 출처를 증명할 수 없으면 CC0 에셋으로 교체하거나 제거한다.
@@ -23,8 +25,8 @@
 | Kenney UI Pack / UI Pack Sci-Fi | `Assets/SideProjectAssets/kenney_ui-pack*/` | HUD UI 스프라이트 | 각 `License.txt`: CC0 | 확인됨 | 크레딧 선택 |
 | Kenney Future Narrow 글꼴 | `Assets/Fonts/`, `GUI PRO Kit/Fonts/` | UI 글꼴 | `Assets/Fonts/License.txt`: CC0 | 확인됨 | 크레딧 선택 |
 | 남성 피격·사망 음성 | `Assets/Game/Audio/Voice/Male/` | 플레이어 피격·사망 | `SOURCE.md`: HaelDB, OpenGameArt, CC0 1.0 선택(2026-10-06) | 확인됨(용도 매핑은 청취 미확인) | 사용자가 음색이 맞는지 들어 볼 것 |
-| Toon Shooter Game Kit - Dec 2022 | `Assets/SideProjectAssets/Toon Shooter Game Kit - Dec 2022/` | 플레이어 캐릭터, 무기 4종, 환경 일부 | 저장소에 라이선스 파일·출처 기록 없음(`Preview.jpg`만 있음) | **미확인** | 구매처(Asset Store 등)와 라이선스(상업용 컴파일 앱에 포함 가능 여부)를 사용자가 확인 |
-| GUI PRO Kit - Simple Casual | `Assets/GUI PRO Kit - Simple Casual/` | HUD 패널 프레임, 일시정지 UI | 저장소에 라이선스 파일 없음(README만) | **미확인** | 구매처와 라이선스 확인 |
+| Toon Shooter Game Kit - Dec 2022 | `Assets/SideProjectAssets/Toon Shooter Game Kit - Dec 2022/` | 플레이어 캐릭터, 무기 4종, 환경 일부 | 저장소에 라이선스 파일·출처 기록 없음(`Preview.jpg`만 있음) | **사용자 진술: CC0(원문 미확인)** | 라이선스 페이지 주소·확인일을 같은 폴더에 `License.txt`로 남길 것 |
+| GUI PRO Kit - Simple Casual | `Assets/GUI PRO Kit - Simple Casual/` | HUD 패널 프레임, 일시정지 UI | 저장소에 라이선스 파일 없음(README만) | **저장소에서 제거함(2026-10-06)** | 앱에는 6개 자원만 포함(`third-party-not-in-repo.md`). 완전 제거·기록 삭제는 사용자 결정 |
 | 효과음 7개 | `Assets/Audios/` (Gun Shoot/Reload, Pick Up, Woman Damage/Die, Zombie Damage/Die) | 총기·픽업·피격 음 | 출처 기록 없음(초기 프로젝트에서 온 것으로 보임, 출처 불명) | **미확인(위험)** | 출처를 확인할 수 없으면 교체(CC0 효과음) |
 | 배경음악 `Searching.ogg` | `Assets/Game/Audio/Music/` | 인트로 BGM | 출처 기록 없음 | **미확인(위험)** | 출처·라이선스 확인 또는 교체 |
 | 배경음악 `singularity_calm.wav` | `Assets/Game/Audio/Music/` | 인게임 BGM | `AGENTS.md`: 사용자 제공, OpenGameArt CC0로 전달받음(원문 미확인) | 부분 확인 | OpenGameArt 페이지에서 곡·라이선스 원문 확인 |

@@ -59,3 +59,7 @@ Desktop.ini
 # Editor-captured debug screenshots
 /Assets/Screenshots/
 /Assets/Screenshots.meta
+
+# Third-party asset not redistributed in this repository (license; see docs/store/third-party-not-in-repo.md)
+/Assets/GUI PRO Kit - Simple Casual/
+/Assets/GUI PRO Kit - Simple Casual.meta
