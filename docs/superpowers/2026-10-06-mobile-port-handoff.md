@@ -79,3 +79,9 @@
 - **미검증:** PC 실제 키보드·마우스 조작 회귀(WASD, 마우스 조준, 좌클릭, R, 1~4, Esc). 코드 경로는 그대로이고 입력 값 읽기 줄이 같은 순서로 옮겨졌다. 사용자가 직접 한 판 확인해 주면 좋다. 포커스 상실·복귀(`OnApplicationFocus/Pause`) 경로도 에디터에서는 재현하지 못했다.
 - 시험 중 한 번 플레이어가 서 있다가 사망해(게임 오버) 입력이 전부 0이 된 것을 래치 문제로 오해했다. 게임 오버/일시정지 때 `MobileInputState.ResetAll()`이 호출되는 것은 설계 의도다.
 - 서식: `PlayerInput.cs`, `PlayerMovement.cs`는 Rider 훅을 피해 PowerShell로 직접 써서 diff가 의도한 줄(+147/-9)로만 나왔다.
+
+## Task 8 — 터치 UI 위젯(스틱·버튼·세이프 에리어) (완료)
+
+- `Assets/Scripts/MobileUI/`에 `MobileUIFactory`(원형 스프라이트 캐시, NewRect/NewImage/NewText/Stretch, 색 상수), `TouchJoystick`(플로팅 스틱, 포인터 ID 하나만 추적), `TouchButton`(누름/뗌, 자기 포인터만 해제, 밖으로 나가면 뗌), `SafeAreaFitter`를 추가했다. 계획서 코드와 동일하며 변경 없음.
+- 확인: 구현 전 `MobileTouchOverlay` 참조가 컴파일 실패하는 RED 확인. 위젯 작성 후 강제 새로고침·컴파일, 콘솔 오류·경고 0건, `execute_code`로 세 위젯 타입 로드 확인.
+- 동작(포인터 독립성 등) 검증은 Task 9 오버레이와 함께 한다.
