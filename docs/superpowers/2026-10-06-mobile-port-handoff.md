@@ -43,3 +43,11 @@
 - `AutoAimTargeting.Select(origin, candidates, range, moveDirection, lastDirection)`: 사거리 안 가장 가까운 살아 있는 적 → 이동 방향 → 마지막 방향 순. 수평(XZ) 거리, 사거리와 같은 거리는 대상, range 0 이하는 대상 없음, 겹친 적(거리 0)은 건너뛴다. 결과는 `AimResult{valid, hasTarget, direction}`.
 - 테스트 11건(`AutoAimTargetingTests`, 500마리 후보 포함).
 - 알려진 한계(설계 결정): 벽 뒤 적도 후보다. 실제 피해는 기존 총구·Raycast 판정이 막는다.
+
+## Task 5 — MobileAimSettings (완료)
+
+- `MobileAimMode { AutoAim = 0, TwinStick = 1 }`, `MobileAimSettings.Mode`(PlayerPrefs 키 `MobileAimMode`, 기본 AutoAim, 잘못된 저장값은 AutoAim, 같은 값이면 `Changed` 미발생).
+- 테스트 4건(`MobileAimSettingsTests`, PlayerPrefs 원상 복구).
+- 설정 창 토글 연결은 Task 10.
+
+**여기까지 순수 로직(MobileCore) 완료. EditMode 53/53 통과.**
