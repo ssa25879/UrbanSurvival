@@ -18,11 +18,15 @@ DEST="${CLEAN_DIR:-$SRC/../Zombie_clean.git}"
 REMOTE_URL="${PUBLIC_REMOTE:-https://github.com/ssa25879/UrbanSurvival.git}"
 EXCLUDES=("Assets/GUI PRO Kit - Simple Casual" "Assets/GUI PRO Kit - Simple Casual.meta")
 # 공개본에서 가릴 작성자(2026-10-06 사용자 결정: 이름·주소 모두 가림). 커밋 작성자·커미터와 SCRUB_FILES 본문에서 바꾼다.
-HIDE_EMAIL="contributor@noreply.invalid"
+# 가릴 주소는 공개본에 남지 않도록 이 파일에 적지 않고, Git 밖의 로컬 파일 <.git>/publish-clean.env에서
+# HIDE_EMAIL=<주소> 한 줄로 읽는다(환경 변수 HIDE_EMAIL이 있으면 그것을 쓴다). 다른 PC에서는 이 파일을 직접 만든다.
+CONF="$(git rev-parse --absolute-git-dir)/publish-clean.env"
+if [ -z "${HIDE_EMAIL:-}" ] && [ -f "$CONF" ]; then HIDE_EMAIL="$(sed -n 's/^HIDE_EMAIL=//p' "$CONF" | tr -d '\r' | head -1)"; fi
+[ -n "${HIDE_EMAIL:-}" ] || { echo "가릴 주소가 없습니다. $CONF 에 'HIDE_EMAIL=<주소>'를 적거나 환경 변수로 주세요." >&2; exit 2; }
 HIDE_TO_NAME="contributor"
 HIDE_TO_EMAIL="contributor@noreply.invalid"
-# 본문에 HIDE_EMAIL이 적힌 파일(git log -S로 확인한 것만). 새로 생기면 여기에 추가한다
-SCRUB_FILES=("docs/superpowers/2026-10-06-mobile-port-final-handoff.md")
+# 본문에 HIDE_EMAIL이 적힌 적이 있는 파일(git log -S로 확인한 것만). 새로 생기면 여기에 추가한다
+SCRUB_FILES=("docs/superpowers/2026-10-06-mobile-port-final-handoff.md" "tools/publish-clean-repo.sh")
 
 LOGFILE="${TMPDIR:-/tmp}/publish-clean-filter.log"
 IDX_SCRIPT="${TMPDIR:-/tmp}/publish-clean-index-filter.sh"
