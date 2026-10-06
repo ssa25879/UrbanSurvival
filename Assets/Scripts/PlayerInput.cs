@@ -254,6 +254,16 @@ public class PlayerInput : MonoBehaviour {
             }
         }
 
+        // 모바일: 권총·샷건 같은 단발(Manual) 무기도 발사 버튼/조준 스틱을 누르고 있으면 자동으로 계속 발사한다(2026-10-06 사용자 요청).
+        // 매 프레임 fireDown을 내보내면 실제 발사 간격은 Gun이 gunData.timeBetFire로 제한한다. 발사할 수 있는 상태(Ready)일 때만 내서,
+        // 탄창이 비었을 때 fireDown이 의도치 않은 자동 재장전을 일으키지 않게 한다(재장전은 R 버튼 또는 쌍둥이 스틱의 자동 재장전만)
+        Gun heldGun = playerShooter != null ? playerShooter.gun : null;
+        if (fire && heldGun != null && heldGun.gunData != null && heldGun.state == Gun.State.Ready
+            && heldGun.gunData.fireMode != GunData.FireMode.Automatic)
+        {
+            fireDown = true;
+        }
+
         aimWorldDirection = lastMobileAim;
         hasAimWorldDirection = true;
     }
