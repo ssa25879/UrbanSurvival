@@ -32,3 +32,8 @@
 - `JoystickMath.Evaluate(offset, radius, deadZone)`: 크기 1 이하, 데드존 이하 0, 데드존 위는 0~1로 다시 편다. 반지름 0 이하와 데드존 1 이상(0.95로 제한)도 NaN 없이 처리한다.
 - `JoystickMath.ToWorldDirection(stick, camForward, camUp)`: `PlayerMovement.GetMoveDirection`과 같은 카메라 기준 평면 변환. 수직 탑뷰는 `camera.up`을 위쪽으로 쓴다.
 - 테스트 11건(`JoystickMathTests`). 구현 전 컴파일 실패 확인 후 통과.
+
+## Task 3 — TwinStickFireTracker (완료)
+
+- 조준 스틱 출력이 0이 아니면 눌림. 데드존 밖으로 처음 나간 프레임에만 `Down`, 유지 중에는 `Held`만 true. 중앙 복귀 후 다시 당기면 새 `Down`. `Reset()`은 상태를 비운다.
+- 테스트 5건(`TwinStickFireTrackerTests`).
