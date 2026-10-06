@@ -176,3 +176,10 @@ $U editor_play / editor_stop
 - 에디터 플레이는 포커스가 없으면 시간이 안 흐른다(`runInBackground`). 이 프로젝트는 `runInBackground: 1`이 로컬 변경으로 남아 있고 커밋하지 않았다.
 - 에디터가 모달 창(Input Handling 등) 뒤에 있으면 모든 CLI·MCP 호출이 막힌다.
 - `.superpowers/`(장부)는 `.git/info/exclude`로 로컬 제외. `Builds/`, `Keystore/`는 `.gitignore`.
+
+## 부록. 저장소 운영 방식 (2026-10-06 사용자 결정)
+
+- **소규모 업데이트:** 작업 폴더의 `origin`(`URP_ZombieGame`)에 평소처럼 커밋·푸시한다.
+- **큰 업데이트:** 사용자가 요청할 때 공개용 저장소 `UrbanSurvival`에 올린다. 절차는 `tools/publish-clean-repo.sh`(제외 경로를 모든 커밋에서 지운 사본 생성·검증, 푸시 안 함) → 결과 확인 → `tools/publish-clean-repo.sh --push`(일반 푸시, `--force` 없음).
+- 기록 정리는 결정적이라 같은 커밋에서 다시 만들면 같은 SHA가 나온다(`SideProject-Mobile` 323b1f1 재현 확인). 그래서 새 커밋은 공개 저장소에 fast-forward로 올라간다. 단, 작성자 이메일을 가리거나 제외 경로를 늘리면 SHA가 모두 바뀌어 공개 저장소를 새로 만들어야 한다.
+- 작업 폴더 `origin`은 `URP_ZombieGame`을 유지한다.
