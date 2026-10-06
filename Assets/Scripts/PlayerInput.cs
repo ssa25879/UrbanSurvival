@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 // 플레이어 캐릭터를 조작하기 위한 사용자 입력을 감지
 // 감지된 입력값을 다른 컴포넌트들이 사용할 수 있도록 제공
+// PC는 키보드·마우스, 모바일(MobilePlatform.IsMobile)은 터치 UI가 쓰는 MobileInputState를 읽어 같은 출력 값을 낸다
 public class PlayerInput : MonoBehaviour {
     public string moveAxisName = "Vertical"; // 앞뒤 움직임을 위한 입력축 이름
     public string rotateAxisName = "Horizontal"; // 좌우 회전을 위한 입력축 이름
@@ -24,13 +25,47 @@ public class PlayerInput : MonoBehaviour {
     public bool swapToSlot3 { get; private set; } // 3번 슬롯(SMG) 스왑 입력
     public bool swapToSlot4 { get; private set; } // 4번 슬롯(산탄총) 스왑 입력
 
+    // 모바일 조준: 유효한 월드 방향(y=0, 정규화)이 있으면 PlayerMovement가 마우스 Ray 투영 대신 이 방향을 쓴다
+    public Vector3 aimWorldDirection { get; private set; }
+    public bool hasAimWorldDirection { get; private set; }
+
+    private const float AutoAimRefreshInterval = 0.1f; // 오토 에임 대상 재탐색 간격(초)
+
     // 일시정지·게임오버·창 포커스 변경 직후에는 누르고 있던 발사 버튼이 다시 눌린 것으로 처리되지 않도록,
     // 발사 버튼을 한 번 뗄 때까지 발사 입력을 막는다(UI 버튼 클릭이나 창 클릭으로 돌아온 클릭이 오발이 되는 것을 방지)
     private bool suppressFireUntilRelease;
     private readonly List<RaycastResult> uiRaycastResults = new List<RaycastResult>();
 
+    private readonly TwinStickFireTracker twinStickFire = new TwinStickFireTracker();
+    private readonly List<AimCandidate> aimCandidates = new List<AimCandidate>(512);
+    private PlayerShooter playerShooter;
+    private Vector3 lastMobileAim;
+    private float nextAutoAimTime;
+
+    private void Start() {
+        playerShooter = GetComponent<PlayerShooter>();
+        lastMobileAim = transform.forward;
+        lastMobileAim.y = 0f;
+        lastMobileAim = lastMobileAim.sqrMagnitude > 0.0001f ? lastMobileAim.normalized : Vector3.forward;
+    }
+
     private void OnApplicationFocus(bool hasFocus) {
         suppressFireUntilRelease = true;
+        MobileInputState.ResetAll();
+        twinStickFire.Reset();
+    }
+
+    private void OnApplicationPause(bool paused) {
+        suppressFireUntilRelease = true;
+        MobileInputState.ResetAll();
+        twinStickFire.Reset();
+    }
+
+    // 조준 모드 전환 등으로 눌려 있던 발사 입력이 그대로 발사로 이어지지 않도록, 다음 발사를 한 번 뗀 뒤로 미룬다
+    public void RequireFireRelease() {
+        suppressFireUntilRelease = true;
+        MobileInputState.ResetAll();
+        twinStickFire.Reset();
     }
 
     // 마우스 포인터가 게임 화면 밖이거나, 클릭 가능한 UI(버튼 등) 위에 있는지 확인
@@ -77,18 +112,24 @@ public class PlayerInput : MonoBehaviour {
             swapToSlot2 = false;
             swapToSlot3 = false;
             swapToSlot4 = false;
+            hasAimWorldDirection = false;
+            MobileInputState.ResetAll();
+            twinStickFire.Reset();
             // 정지 중에 누른 버튼(예: 계속하기 클릭)이 재개 직후 발사로 이어지지 않도록 막는다
             suppressFireUntilRelease = true;
             return;
         }
 
-        // move에 관한 입력 감지
-        move = Input.GetAxis(moveAxisName);
-        // rotate에 관한 입력 감지
-        rotate = Input.GetAxis(rotateAxisName);
-        // fire에 관한 입력 감지
-        fire = Input.GetButton(fireButtonName);
-        fireDown = Input.GetButtonDown(fireButtonName);
+        bool mobile = MobilePlatform.IsMobile;
+        if (mobile)
+        {
+            ReadMobileInput();
+        }
+        else
+        {
+            hasAimWorldDirection = false;
+            ReadDesktopInput();
+        }
 
         // 발사 차단: 정지·포커스 복귀 직후 누른 채로 남은 버튼, 화면 밖 포인터, 클릭 가능한 UI 위 포인터
         if (suppressFireUntilRelease)
@@ -104,11 +145,23 @@ public class PlayerInput : MonoBehaviour {
             }
         }
 
-        if ((fire || fireDown) && IsPointerBlockedForFire())
+        // 마우스 포인터 검사는 PC 전용(터치의 발사 버튼은 그 자체가 UI라 이 검사를 거치면 항상 막힌다)
+        if (!mobile && (fire || fireDown) && IsPointerBlockedForFire())
         {
             fire = false;
             fireDown = false;
         }
+    }
+
+    // PC: 키보드·마우스(기존 동작 그대로)
+    private void ReadDesktopInput() {
+        // move에 관한 입력 감지
+        move = Input.GetAxis(moveAxisName);
+        // rotate에 관한 입력 감지
+        rotate = Input.GetAxis(rotateAxisName);
+        // fire에 관한 입력 감지
+        fire = Input.GetButton(fireButtonName);
+        fireDown = Input.GetButtonDown(fireButtonName);
 
         // reload에 관한 입력 감지
         reload = Input.GetButtonDown(reloadButtonName);
@@ -120,5 +173,83 @@ public class PlayerInput : MonoBehaviour {
         swapToSlot2 = Input.GetKeyDown(KeyCode.Alpha2);
         swapToSlot3 = Input.GetKeyDown(KeyCode.Alpha3);
         swapToSlot4 = Input.GetKeyDown(KeyCode.Alpha4);
+    }
+
+    // 모바일: 터치 UI가 쓴 MobileInputState를 읽는다(마우스 좌표는 쓰지 않는다)
+    private void ReadMobileInput() {
+        Vector2 moveStick = MobileInputState.Move;
+        rotate = moveStick.x;
+        move = moveStick.y;
+        aimPosition = Vector2.zero;
+
+        reload = MobileInputState.ConsumeReload();
+        int slot = MobileInputState.ConsumeSwap();
+        swapToSlot1 = slot == 0;
+        swapToSlot2 = slot == 1;
+        swapToSlot3 = slot == 2;
+        swapToSlot4 = slot == 3;
+
+        Camera cam = Camera.main;
+        Vector3 camForward = cam != null ? cam.transform.forward : Vector3.forward;
+        Vector3 camUp = cam != null ? cam.transform.up : Vector3.up;
+
+        if (MobileAimSettings.Mode == MobileAimMode.TwinStick)
+        {
+            Vector2 aimStick = MobileInputState.AimStick;
+            twinStickFire.Update(aimStick);
+            fire = twinStickFire.Held;
+            fireDown = twinStickFire.Down;
+            MobileInputState.ConsumeFireDown(); // 이 모드에서는 발사 버튼 요청을 쓰지 않는다
+
+            if (twinStickFire.Held)
+            {
+                Vector3 direction = JoystickMath.ToWorldDirection(aimStick, camForward, camUp);
+                direction.y = 0f;
+                if (direction.sqrMagnitude > 0.0001f)
+                {
+                    lastMobileAim = direction.normalized;
+                }
+            }
+        }
+        else
+        {
+            twinStickFire.Reset();
+            bool pressed = MobileInputState.ConsumeFireDown();
+            fire = MobileInputState.FireHeld || pressed;
+            fireDown = pressed;
+
+            // 발사 버튼을 누르는 동안만 대상을 찾는다(버튼을 떼면 마지막 방향 유지)
+            if (fire && (pressed || Time.time >= nextAutoAimTime))
+            {
+                nextAutoAimTime = Time.time + AutoAimRefreshInterval;
+                lastMobileAim = ResolveAutoAim(moveStick, camForward, camUp);
+            }
+        }
+
+        aimWorldDirection = lastMobileAim;
+        hasAimWorldDirection = true;
+    }
+
+    // 사거리 안 가장 가까운 적 → 이동 방향 → 마지막 방향 순으로 조준 방향을 정한다
+    private Vector3 ResolveAutoAim(Vector2 moveStick, Vector3 camForward, Vector3 camUp) {
+        aimCandidates.Clear();
+        for (int i = 0; i < Zombie.alive.Count; i++)
+        {
+            Zombie zombie = Zombie.alive[i];
+            if (zombie != null)
+            {
+                aimCandidates.Add(new AimCandidate(zombie.transform.position, !zombie.dead));
+            }
+        }
+
+        float range = 0f;
+        if (playerShooter != null && playerShooter.gun != null && playerShooter.gun.gunData != null)
+        {
+            range = playerShooter.gun.gunData.range;
+        }
+
+        Vector3 moveDirection = JoystickMath.ToWorldDirection(moveStick, camForward, camUp);
+        AimResult result = AutoAimTargeting.Select(transform.position, aimCandidates, range, moveDirection, lastMobileAim);
+        return result.valid ? result.direction : lastMobileAim;
     }
 }

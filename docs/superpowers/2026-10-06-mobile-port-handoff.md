@@ -61,3 +61,21 @@
 - 확인: 구현 전에 `Zombie.alive` 컴파일 실패를 확인했다. 에디터 플레이에서 살아 있는 좀비 13마리가 `alive` 13개와 일치했고 시체가 목록에 없었다. 한 마리를 `Die()` 처리하자 13 → 12로 줄고 목록에서 빠졌다. 권총 슬롯 보유 true, 소총 false, 범위 밖(9) false. EditMode 53/53 통과, 콘솔 오류 없음.
 - 자동 테스트는 만들지 않았다(MonoBehaviour와 NavMesh 필요). 계획서대로 플레이 모드 확인으로 대신했다.
 - 서식 사고: Rider 훅이 `Zombie.cs`를 재포맷해 diff가 80줄로 늘었다. 원복하고 PowerShell 정확 치환으로 의도한 8줄만 반영했다(위 "Rider 후처리 훅 주의" 참고).
+
+## Task 7 — PlayerInput 모바일 경로와 PlayerMovement 조준 방향 (완료)
+
+- `PlayerInput`: PC 입력은 `ReadDesktopInput()`으로 옮겼고 동작은 그대로다. 모바일은 `ReadMobileInput()`이 `MobileInputState`를 읽어 같은 출력(`move`, `rotate`, `fire`, `fireDown`, `reload`, `swapToSlot1~4`)과 새 `aimWorldDirection`·`hasAimWorldDirection`을 낸다. 마우스 포인터 차단(`IsPointerBlockedForFire`)은 PC에서만 거친다(터치 발사 버튼은 UI 자체라 막히기 때문).
+- 오토 에임은 발사를 누르는 동안 0.1초마다(눌린 첫 프레임은 즉시) 재탐색한다. 쌍둥이 스틱은 `TwinStickFireTracker`와 `JoystickMath.ToWorldDirection`을 쓴다. `RequireFireRelease()`로 조준 모드 전환 직후 오발을 막는다(Task 9, 10에서 호출).
+- `PlayerMovement.GetAimDirection`: `hasAimWorldDirection`이면 마우스 Ray 투영 대신 그 방향을 쓴다. 전투 로직(`PlayerShooter`, `Gun`)은 수정하지 않았다.
+- `Assets/Editor/MobileEditorMenu.cs`: 메뉴 `Urban Survival/Mobile/Force Mobile Input In Editor`로 에디터에서 모바일 입력을 강제한다(EditorPrefs, 빌드에는 영향 없음). **현재 꺼져 있다.** 켠 채로 두면 에디터 PC 입력이 막힌다.
+- 확인(에디터 플레이, `execute_code`로 입력 주입, 플레이어 무적 처리):
+  - PC 경로: 강제 모바일 끔 → `hasAimWorldDirection=false`, `aimPosition`은 마우스 좌표.
+  - 오토 에임: 조준 방향이 사거리 안 가장 가까운 좀비 방향과 일치(`(-0.93, 0, -0.36)`), 캐릭터가 그 방향을 봤고 탄창 10→9. 발사를 떼면 `fire=false`.
+  - 쌍둥이 스틱: 스틱 +X → 카메라 기준 오른쪽(`(0.71, 0, -0.71)`), `fire` 유지 중 `fireDown=false`.
+  - 일시정지: 입력이 모두 초기화되고(`fire=false`, `FireHeld=false`) 탄창 변화 없음. 재개 후 래치가 해제되고 새로 누르면 발사(9→8).
+  - 무기 교체: `RequestSwap(1)`로 권총 → AK(소총) 교체 확인.
+  - 재장전 후 계속 누름: 소총 연사 중 `RequestReload` → 재장전 완료 후 `fire=true`(계속 누름)인데 탄창이 30으로 유지됨(자동 발사 없음). 뗐다가 다시 누르니 탄창 감소.
+  - EditMode 53/53 통과, 콘솔 오류 없음.
+- **미검증:** PC 실제 키보드·마우스 조작 회귀(WASD, 마우스 조준, 좌클릭, R, 1~4, Esc). 코드 경로는 그대로이고 입력 값 읽기 줄이 같은 순서로 옮겨졌다. 사용자가 직접 한 판 확인해 주면 좋다. 포커스 상실·복귀(`OnApplicationFocus/Pause`) 경로도 에디터에서는 재현하지 못했다.
+- 시험 중 한 번 플레이어가 서 있다가 사망해(게임 오버) 입력이 전부 0이 된 것을 래치 문제로 오해했다. 게임 오버/일시정지 때 `MobileInputState.ResetAll()`이 호출되는 것은 설계 의도다.
+- 서식: `PlayerInput.cs`, `PlayerMovement.cs`는 Rider 훅을 피해 PowerShell로 직접 써서 diff가 의도한 줄(+147/-9)로만 나왔다.
