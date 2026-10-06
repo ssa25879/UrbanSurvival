@@ -3,7 +3,7 @@
 - 작성일: 2026-10-06
 - 브랜치: **모바일 포팅은 `SideProject-Mobile` 브랜치를 사용한다**(`SideProject`에서 분기, 2026-10-06 사용자 지시). 모바일 관련 코드·UI·설정·빌드 변경은 모두 이 브랜치에만 커밋하며 `SideProject`·`main`에는 커밋하지 않는다.
 - 기준 문서: `Urban_Survival_Android_모바일_포팅_상세_기획서_20261006_v1.0.docx` (이하 **모바일 기획서**), PC 상세 기획서 v1.19, 사용자 결정(조준 모드: 오토 에임 기본 + 쌍둥이 스틱 옵션)
-- 앱 정보(2026-10-06 사용자 확정): 회사명 `YWS`, 패키지명 `com.yws.urbansurvival`
+- 앱 정보(2026-10-06 사용자 확정): 회사명 `YWS`, 패키지명 `com.yws.urbansurvival`, 제품명 `Urban Survival`
 - 테스트 실기기(사용자 보유): Samsung Galaxy S26 Ultra, Lenovo XiaoxinPad 2025
 - 상태: 설계 초안, 사용자 검토 대기(D2·D3 승인 완료)
 
@@ -135,7 +135,7 @@
 ## 9. Android 빌드와 성능
 
 ### 9.1 빌드 설정 (모바일 기획서 11장)
-Android, Landscape 고정(Portrait 불허), IL2CPP, ARM64, AAB, 최소 API 25, 타깃 API 36 이상, URP 호환 모드 유지. 회사명은 `YWS`, 패키지명은 `com.yws.urbansurvival`로 확정했다(Play에 올린 뒤에는 변경 불가). 제품명(스토어 표시 이름)·버전·아이콘·스플래시·키스토어는 배포 전에 확정한다. 키스토어는 Git에 커밋하지 않으며 `.gitignore`에 패턴을 추가한다.
+Android, Landscape 고정(Portrait 불허), IL2CPP, ARM64, AAB, 최소 API 25, 타깃 API 36 이상, URP 호환 모드 유지. 회사명은 `YWS`, 패키지명은 `com.yws.urbansurvival`, 제품명(앱 표시 이름)은 게임 이름 `Urban Survival`로 확정했다(패키지명은 Play에 올린 뒤 변경 불가). 버전·아이콘·스플래시·키스토어는 배포 전에 확정한다. 키스토어는 Git에 커밋하지 않으며 `.gitignore`에 패턴을 추가한다.
 
 ### 9.2 URP 호환 모드 주의
 이 프로젝트는 호환 모드를 꺼야 하는 시점에 후처리 `CheckPostProcessForDepth` 예외가 났다. Android 빌드도 호환 모드를 켜 둔 채 진행하고, 호환 모드 정의(`URP_COMPATIBILITY_MODE`)가 Android 대상에도 있는지 확인한다.
@@ -146,7 +146,7 @@ Android, Landscape 고정(Portrait 불허), IL2CPP, ARM64, AAB, 최소 API 25, �
 3. 확인된 항목만 모바일 전용 Quality Level에서 조정한다(그림자, 후처리, Render Scale, 파티클 등).
 4. PC 품질은 변경하지 않으며 모바일 Quality 적용 후 PC 값 불변을 확인한다.
 5. 동시 적 500마리 상한과 같은 게임 규칙 변경은 밸런스 결정이므로 별도로 판단한다.
-6. 목표 FPS는 목표 기기가 정해지기 전까지 고정하지 않고 30·60 FPS 유지 가능 여부를 함께 측정한다.
+6. 목표 FPS(2026-10-06 사용자 확정): **동시 적 500마리 + 보스가 소환된 상태에서 60 FPS를 목표, 최소 30 FPS**. 측정 기기는 S26 Ultra와 XiaoxinPad 2025이며 두 기기 모두에서 측정한다. 이 부하 조건은 연습 씬(보스 연습)이나 에디터 테스트로 재현하는 방법을 구현 계획에서 정한다.
 
 ## 10. Git 운영
 - 모든 모바일 변경은 `SideProject-Mobile`에서만 커밋한다. 작업 시작 시마다 현재 브랜치를 확인한다.
@@ -194,8 +194,7 @@ Android, Landscape 고정(Portrait 불허), IL2CPP, ARM64, AAB, 최소 API 25, �
 Play Console 개발자 계정·등록비·신원 확인, 앱 생성, 개인정보처리방침 URL, Data Safety, 콘텐츠 등급, 스토어 설명·스크린샷·피처 그래픽, 테스트 트랙 운영, 업로드 키 보관, 최종 제출. 신규 개인 계정은 Production 전 비공개 테스트 요건(모바일 기획서 부록 A 기준 12명·14일)이 있어 등록 직전에 최신 정책을 다시 확인한다.
 
 ## 15. 결정 현황
-- 확정(2026-10-06): 회사명 `YWS`, 패키지명 `com.yws.urbansurvival`, 원격 등록 승인, 일시정지 버튼(D3)·`Zombie.alive` 추가(D2) 승인, 테스트 실기기 S26 Ultra·XiaoxinPad 2025.
+- 확정(2026-10-06): 회사명 `YWS`, 패키지명 `com.yws.urbansurvival`, 제품명 `Urban Survival`, 목표 FPS(500마리+보스에서 60, 최소 30), 원격 등록 승인, 일시정지 버튼(D3)·`Zombie.alive` 추가(D2) 승인, 테스트 실기기 S26 Ultra·XiaoxinPad 2025.
 - 미결정:
-  1. 스토어 표시 제품명(현재 Player Settings의 `Zombie`를 바꿀지).
-  2. 목표 FPS: 두 기기의 실측 후 확정(§9.3). 두 기기는 화면비·성능이 달라(폰 20:9급 고주사율, 태블릿 약 16:10) 레이아웃 검수 대상에 모두 포함한다.
-  3. 에디터 플레이 검수 외에 두 기기에서의 실제 설치·터치 검수 절차(USB 디버깅 설정은 사용자가 준비).
+  1. 500마리+보스 부하를 재현하는 측정 방법(구현 계획에서 정한다).
+  2. 두 기기의 화면비·성능이 달라(폰 20:9급, 태블릿 약 16:10) 레이아웃 검수 대상에 모두 포함한다. 실기기 설치·터치 검수 절차(USB 디버깅 설정은 사용자가 준비)는 P3 시작 전에 확인한다.
