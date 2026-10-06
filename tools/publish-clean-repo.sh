@@ -18,10 +18,27 @@ DEST="${CLEAN_DIR:-$SRC/../Zombie_clean.git}"
 REMOTE_URL="${PUBLIC_REMOTE:-https://github.com/ssa25879/UrbanSurvival.git}"
 EXCLUDES=("Assets/GUI PRO Kit - Simple Casual" "Assets/GUI PRO Kit - Simple Casual.meta")
 
+LOGFILE="${TMPDIR:-/tmp}/publish-clean-filter.log"
+
 case "$DEST" in
   *_clean.git) ;;
   *) echo "CLEAN_DIR는 '_clean.git'으로 끝나야 합니다(실수로 다른 폴더를 지우지 않기 위함): $DEST" >&2; exit 2 ;;
 esac
+
+echo "== 0. 사전 확인 (전체 기록·모든 브랜치가 로컬에 있어야 한다)"
+if [ "$(git -C "$SRC" rev-parse --is-shallow-repository)" = "true" ]; then
+  echo "얕은(shallow) 저장소입니다. 기록이 잘려 있으면 SHA가 달라집니다. 'git fetch --unshallow' 후 다시 실행하세요." >&2; exit 3
+fi
+# 이 스크립트는 로컬 브랜치(refs/heads)만 사본에 넣는다. origin에만 있는 브랜치가 있으면 공개본에서 빠지므로 중단한다
+missing=$(comm -13 \
+  <(git -C "$SRC" for-each-ref --format='%(refname:short)' refs/heads | sort) \
+  <(git -C "$SRC" for-each-ref --format='%(refname:short)' refs/remotes/origin | sed 's#^origin/##' | grep -v -e '^HEAD$' -e '^origin$' | sort) || true)
+if [ -n "$missing" ] && [ "${ALLOW_PARTIAL:-0}" != "1" ]; then
+  echo "origin에는 있지만 로컬에 없는 브랜치가 있습니다(공개본에서 빠집니다):" >&2
+  echo "$missing" | sed 's/^/  - /' >&2
+  echo "로컬에 만들려면: git branch --track <이름> origin/<이름>   (일부러 빼려면 ALLOW_PARTIAL=1)" >&2
+  exit 3
+fi
 
 echo "== 1. 사본 생성: $DEST"
 rm -rf "$DEST"
@@ -34,8 +51,8 @@ RM_ARGS=""
 for p in "${EXCLUDES[@]}"; do RM_ARGS="$RM_ARGS \"$p\""; done
 export FILTER_BRANCH_SQUELCH_WARNING=1
 git filter-branch -f --prune-empty --tag-name-filter cat \
-  --index-filter "git rm -r -q --cached --ignore-unmatch -- $RM_ARGS" -- --branches >/tmp/publish-clean-filter.log 2>&1 \
-  || { echo "filter-branch 실패: /tmp/publish-clean-filter.log 확인" >&2; exit 1; }
+  --index-filter "git rm -r -q --cached --ignore-unmatch -- $RM_ARGS" -- --branches >"$LOGFILE" 2>&1 \
+  || { echo "filter-branch 실패: $LOGFILE 확인" >&2; exit 1; }
 
 echo "== 3. 이전 기록 잔여물 제거"
 for r in $(git for-each-ref --format='%(refname)' refs/original); do git update-ref -d "$r"; done
@@ -48,8 +65,11 @@ for p in "${EXCLUDES[@]}"; do
   n=$(git log --branches --name-only --format='' -- "$p" | wc -l)
   [ "$n" -eq 0 ] || { echo "실패: 기록에 '$p'가 남아 있음($n)" >&2; fail=1; }
 done
-reach=$(git rev-list --objects --branches | grep -c 'GUI PRO' || true)
-[ "$reach" -eq 0 ] || { echo "실패: 도달 가능한 GUI PRO 객체 $reach개" >&2; fail=1; }
+objects_list=$(git rev-list --objects --branches)
+for p in "${EXCLUDES[@]}"; do
+  reach=$(printf '%s\n' "$objects_list" | grep -cF -- "$p" || true)
+  [ "$reach" -eq 0 ] || { echo "실패: 도달 가능한 객체 중 '$p' 경로 $reach개" >&2; fail=1; }
+done
 if [ -n "$(git fsck --full 2>&1)" ]; then echo "실패: git fsck 출력이 있음" >&2; fail=1; fi
 for b in $(git for-each-ref --format='%(refname:short)' refs/heads); do
   o=$(git -C "$SRC" rev-parse "$b^{tree}" 2>/dev/null || echo none)

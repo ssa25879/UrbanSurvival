@@ -1,0 +1,2 @@
+# 셸 스크립트는 어느 환경에서 받아도 LF로 유지한다(Windows의 core.autocrlf=true에서 CRLF로 바뀌면 bash가 실행하지 못한다)
+*.sh text eol=lf
