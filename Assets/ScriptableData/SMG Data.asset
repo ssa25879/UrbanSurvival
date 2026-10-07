@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6cb3864f76dc458fbe03c34ce5b1f352, type: 3}
   m_Name: SMG Data
   m_EditorClassIdentifier: Assembly-CSharp::GunData
-  shotClip: {fileID: 8300000, guid: b82a66dab749415458d1f6600c997095, type: 3}
+  shotClip: {fileID: 8300000, guid: 45eeec497c094ef41a72b42f0e1d1119, type: 3}
   reloadClip: {fileID: 8300000, guid: 9eca29ee7f8209e419470fcd586aec21, type: 3}
   damage: 12
   startAmmoRemain: 200
