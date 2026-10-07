@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Pistol Data
   m_EditorClassIdentifier: Assembly-CSharp::GunData
   shotClip: {fileID: 8300000, guid: 5dc6e0d99d6178a43bdee10d1333f208, type: 3}
-  reloadClip: {fileID: 8300000, guid: 9eca29ee7f8209e419470fcd586aec21, type: 3}
+  reloadClip: {fileID: 8300000, guid: e008fcbe1cde7d14191205e0a9647054, type: 3}
   damage: 10
   startAmmoRemain: -1
   reserveAmmoCap: -1

@@ -12,7 +12,10 @@ public class Zombie : LivingEntity
 
     public ParticleSystem hitEffect; // 피격 시 재생할 파티클 효과
     public AudioClip deathSound; // 사망 시 재생할 소리
-    public AudioClip hitSound; // 피격 시 재생할 소리
+    public AudioClip hitSound; // 피격 시 재생할 소리(hitSounds가 비어 있을 때 사용)
+    public AudioClip[] hitSounds; // 피격 시 무작위로 하나를 골라 재생할 소리들(2026-10-07)
+    [Range(0f, 1f)] public float hitVolume = 1f; // 피격음 볼륨 배율
+    [Range(0f, 1f)] public float deathVolume = 1f; // 사망음 볼륨 배율
 
     private Animator zombieAnimator; // 애니메이터 컴포넌트
     private AudioSource zombieAudioPlayer; // 오디오 소스 컴포넌트
@@ -234,7 +237,10 @@ public class Zombie : LivingEntity
             hitEffect.Play();
             
             // 효과음
-            zombieAudioPlayer.PlayOneShot(hitSound);
+            AudioClip clip = hitSounds != null && hitSounds.Length > 0
+                ? hitSounds[Random.Range(0, hitSounds.Length)]
+                : hitSound;
+            zombieAudioPlayer.PlayOneShot(clip, hitVolume);
         }
         
         // LivingEntity의 OnDamage()를 실행하여 데미지 적용
@@ -266,7 +272,7 @@ public class Zombie : LivingEntity
         
         // 사망 애니메이션, 효과음 재생
         zombieAnimator.SetTrigger("Die");
-        zombieAudioPlayer.PlayOneShot(deathSound);
+        zombieAudioPlayer.PlayOneShot(deathSound, deathVolume);
         
     }
 

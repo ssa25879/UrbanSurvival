@@ -219,10 +219,18 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 512
   hitEffect: {fileID: 500136383222965311}
-  deathSound: {fileID: 8300000, guid: b86f03005ed394911b43027aeaaedeb7, type: 3}
-  hitSound: {fileID: 8300000, guid: c3d8accfc053f004ca665a1c8c4a6919, type: 3}
+  deathSound: {fileID: 8300000, guid: 71ba284164c9460449f6f5f5a2cdf366, type: 3}
+  hitSound: {fileID: 8300000, guid: 69354d36e3e4ece45bb502afa4efa3f9, type: 3}
+  hitSounds:
+  - {fileID: 8300000, guid: 69354d36e3e4ece45bb502afa4efa3f9, type: 3}
+  - {fileID: 8300000, guid: 94c3bcfc14b987345b37c28fae5b9270, type: 3}
+  - {fileID: 8300000, guid: 13dd33db67eb7814d87b48b2c2b2358d, type: 3}
+  - {fileID: 8300000, guid: d7347630588943c4888c38342e014354, type: 3}
+  hitVolume: 0.23
+  deathVolume: 0.26
   damage: 20
   timeBetAttack: 0.5
+  noPathRelocateSeconds: 5
 --- !u!1001 &310669836870689201
 PrefabInstance:
   m_ObjectHideFlags: 0
