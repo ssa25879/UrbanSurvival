@@ -2,7 +2,7 @@
 
 - 작성일: 2026-10-06 (사용자 지시: GUI PRO Kit를 저장소에서 제거)
 - **갱신(2026-10-06 저녁, 사용자 결정): 비공개 저장소 `URP_ZombieGame`(origin)에는 포함, 공개 저장소 `UrbanSurvival`에서만 제외한다.** 원본 저장소는 비공개로 전환됐고, `SideProject-Mobile`도 `e038672`에서 GUI PRO를 다시 추적한다(`.gitignore` 규칙 삭제). 공개본은 `tools/publish-clean-repo.sh`가 모든 커밋에서 GUI PRO를 지우고, `e038672` 이후 커밋의 공개본 `.gitignore`에는 제외 규칙을 되살린다(이미 공개된 커밋의 SHA는 그대로).
-- **갱신(2026-10-07): 앱 빌드에서도 GUI PRO를 뺐다(`3ddca6f`).** 화면에 쓰던 흰색 도형 3개는 자체 제작(`Assets/Game/UI/Shapes/`), 일시정지 아이콘 4개는 Kenney Game Icons(CC0, `Assets/Game/UI/Icons/`)로 바꾸고 일시정지 메뉴는 GUI PRO 프리팹 연결을 풀었다. 이제 GUI PRO 폴더가 없어도 게임 화면은 같다(폴더 삭제는 사용자 결정). 아래 "새로 받았을 때" 절차는 더 이상 필요 없다.
+- **갱신(2026-10-07): 앱 빌드에서도 GUI PRO를 뺐다(`3ddca6f`).** 화면에 쓰던 흰색 도형 3개는 자체 제작(`Assets/Game/UI/Shapes/`), 일시정지 아이콘 4개는 Kenney Game Icons(CC0, `Assets/Game/UI/Icons/`)로 바꾸고 일시정지 메뉴는 GUI PRO 프리팹 연결을 풀었다. 이어서 `48906b8`로 GUI PRO 폴더도 삭제했다(사용자 지시, 삭제 후 화면 비교 통과). 옛 커밋에는 남아 있으므로 공개본 스크립트는 계속 기록에서 지운다. 아래 "새로 받았을 때" 절차는 더 이상 필요 없다.
 - 아래 본문은 "제거" 당시 기록이다. "이 저장소"는 이제 **공개본**을 뜻한다.
 
 ## GUI PRO Kit - Simple Casual

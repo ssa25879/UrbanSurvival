@@ -67,7 +67,7 @@
 | Toon Shooter Game Kit | 캐릭터·무기·환경 36개 | Quaternius 팩 페이지 https://quaternius.com/packs/toonshootergamekit.html : "CC0", 개인·상업 무료 | **확인됨(CC0)**. 2장의 "사용자 진술, 미확인"을 대체 |
 | Zombie Apocalypse Kit | 좀비·도로·장애물 33개 | 팩 안 `License.txt` CC0 | 확인됨 |
 | Kenney UI 2종·폰트 | 스프라이트 6개, Future Narrow | 팩 안 License CC0 | 확인됨 |
-| GUI PRO Kit - Simple Casual | ~~스프라이트 13개, 일시정지 프리팹 1개, Quicksand SDF 폰트 2개~~ → **2026-10-07 `3ddca6f`로 빌드에서 제거(0개)** | Asset Store 페이지: Standard Unity Asset Store EULA(Single/Multi Entity) | **조건부.** EULA는 게임에 넣어 배포하는 것을 허용하지만, **사용자 계정으로 정식 구입(라이선스 보유)한 경우에만** 해당한다. 구입 내역 확인 필요. 원본 파일 재배포는 금지(공개 저장소에서는 제외 중) |
+| GUI PRO Kit - Simple Casual | ~~스프라이트 13개, 일시정지 프리팹 1개, Quicksand SDF 폰트 2개~~ → **2026-10-07 `3ddca6f`로 빌드에서 제거(0개), `48906b8`로 폴더 삭제** | Asset Store 페이지: Standard Unity Asset Store EULA(Single/Multi Entity) | **조건부.** EULA는 게임에 넣어 배포하는 것을 허용하지만, **사용자 계정으로 정식 구입(라이선스 보유)한 경우에만** 해당한다. 구입 내역 확인 필요. 원본 파일 재배포는 금지(공개 저장소에서는 제외 중) |
 | 초기 예제 자원(IJEMIN) | `Main.unity`와 그 의존 자원: 모델 7, `Level Art` 18(묘지 소품), 텍스처 8, 재질 21, 애니메이션 8, 효과음 6, 프리팹 | 38개는 예제 파일과 해시 동일, 재질·메시 등 나머지는 같은 경로의 파일을 이 프로젝트가 고친 것. `ShooterAnimator.controller`만 예제에 없음(프로젝트에서 만든 것으로 추정) | 저자 허락 범위(1·4장). 단 아래 "주의 1" |
 | 배경음악 | `singularity_calm.wav`, `Searching.ogg` | OpenGameArt "Singularity"(Vitalezzz) CC0, 파일 크기 53,944,406 바이트로 페이지의 53.9 MB와 일치 / "Searching"(yd) CC0, 2,113,188 바이트(2.1 MB) | **둘 다 확인됨(CC0)** |
 | 발사음·남성 음성 | `Assets/Game/Audio/Weapons/`, `Voice/Male/` | 각 `SOURCE.md` CC0 | 확인됨 |
