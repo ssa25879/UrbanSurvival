@@ -12,7 +12,7 @@
 | CC0로 확인된 에셋 | Quaternius 좀비 키트, Kenney UI 팩 2종, Kenney 폰트, 남성 피격·사망 음성, 무기 발사음 4종(The Free Firearm Sound Library) |
 | 출처 확인(2026-10-06), 저자 허락(CC0 아님) | 효과음 7개(`Assets/Audios`)와 초기 모델 7개: 이제민 『레트로의 유니티 게임 프로그래밍 에센스』 예제 저장소와 동일 파일(4장 참고). `Gun Shoot.wav`는 상위 출처 주의 |
 | 사용자 확인 필요(출처·라이선스 파일 없음) | `Assets/Animations`·`Materials` 등 위 대조에 들지 않은 초기 프로젝트 자원 |
-| 사용자 진술(원문 미확인) | Toon Shooter Game Kit: CC0 |
+| ~~사용자 진술(원문 미확인)~~ | Toon Shooter Game Kit: CC0 — 2026-10-07 Quaternius 페이지에서 확인(6장) |
 | 저장소에서 제거 | GUI PRO Kit(2026-10-06, 앱에는 6개 자원 포함, `third-party-not-in-repo.md`) |
 | 사용자 책임 | AI로 만든 앱 아이콘·피처 그래픽의 생성 도구 약관(상업 이용 가능 여부) |
 
@@ -56,3 +56,29 @@
 - Toon Shooter Game Kit와 GUI PRO Kit는 어디서(어떤 계정으로) 구했나? 라이선스 문서는?
 - ~~`Gun Shoot.wav`를 출시 전에 교체할지~~ 2026-10-07 교체 완료(모바일 브랜치)
 - ~~GitHub 저장소 `ssa25879/URP_ZombieGame`을 비공개로 바꿀 수 있나?~~ 2026-10-06 사용자가 비공개로 전환함(비로그인 API 조회 404로 확인)
+
+## 6. 빌드 포함 기준 재점검 (2026-10-07)
+
+- 방법: 에디터에서 빌드 목록 씬 5개(`Intro`, `UrbanSurvival`, `Main`, `BossTestScene`, `FinalBossTestScene`)와 `Resources` 폴더 9개 파일의 의존성을 `AssetDatabase.GetDependencies`로 모았다(343개). 스크립트가 이름으로 불러오는 에셋은 이 방법으로 잡히지 않을 수 있다. `StreamingAssets`·`Plugins` 폴더는 없다.
+- 출처 대조: 초기 프로젝트 자원은 IJEMIN 예제 저장소의 Git blob 해시·경로와 비교했다.
+
+| 구분 | 빌드에 들어가는 것 | 근거(2026-10-07 확인) | 판정 |
+|---|---|---|---|
+| Toon Shooter Game Kit | 캐릭터·무기·환경 36개 | Quaternius 팩 페이지 https://quaternius.com/packs/toonshootergamekit.html : "CC0", 개인·상업 무료 | **확인됨(CC0)**. 2장의 "사용자 진술, 미확인"을 대체 |
+| Zombie Apocalypse Kit | 좀비·도로·장애물 33개 | 팩 안 `License.txt` CC0 | 확인됨 |
+| Kenney UI 2종·폰트 | 스프라이트 6개, Future Narrow | 팩 안 License CC0 | 확인됨 |
+| GUI PRO Kit - Simple Casual | 스프라이트 13개, 일시정지 프리팹 1개, Quicksand SDF 폰트 2개 | Asset Store 페이지: Standard Unity Asset Store EULA(Single/Multi Entity) | **조건부.** EULA는 게임에 넣어 배포하는 것을 허용하지만, **사용자 계정으로 정식 구입(라이선스 보유)한 경우에만** 해당한다. 구입 내역 확인 필요. 원본 파일 재배포는 금지(공개 저장소에서는 제외 중) |
+| 초기 예제 자원(IJEMIN) | `Main.unity`와 그 의존 자원: 모델 7, `Level Art` 18(묘지 소품), 텍스처 8, 재질 21, 애니메이션 8, 효과음 6, 프리팹 | 38개는 예제 파일과 해시 동일, 재질·메시 등 나머지는 같은 경로의 파일을 이 프로젝트가 고친 것. `ShooterAnimator.controller`만 예제에 없음(프로젝트에서 만든 것으로 추정) | 저자 허락 범위(1·4장). 단 아래 "주의 1" |
+| 배경음악 | `singularity_calm.wav`, `Searching.ogg` | OpenGameArt "Singularity"(Vitalezzz) CC0, 파일 크기 53,944,406 바이트로 페이지의 53.9 MB와 일치 / "Searching"(yd) CC0, 2,113,188 바이트(2.1 MB) | **둘 다 확인됨(CC0)** |
+| 발사음·남성 음성 | `Assets/Game/Audio/Weapons/`, `Voice/Male/` | 각 `SOURCE.md` CC0 | 확인됨 |
+| TextMesh Pro 기본 리소스 | `LiberationSans`(OFL), **`EmojiOne.png`·`EmojiOne.asset`** | `Resources` 폴더라 사용 여부와 관계없이 빌드에 들어간다. EmojiOne 2.x 그림은 CC BY 4.0으로 알려져 있어 **상업 배포 시 저작자 표시가 필요**하다(TMP 동봉 `EmojiOne Attribution.txt`는 라이선스를 직접 확인하라고만 적음) | **주의 2** |
+
+### 주의할 점(우선순위순)
+
+1. **GUI PRO Kit 구입 여부(가장 중요).** 유료 Asset Store 에셋이다. 사용자 계정의 구매 내역(My Assets)에 있어야 앱에 넣을 수 있다. 무료 배포 사이트 등에서 받은 것이면 출시 전에 Kenney(CC0) 자원으로 바꿔야 한다(`third-party-not-in-repo.md` "방법 1").
+2. **TMP EmojiOne(저작자 표시 필요).** 게임은 이모지를 쓰지 않는다. 출시 전에 둘 중 하나를 한다. (a) `TMP Settings`의 기본 스프라이트 에셋을 비우고 `EmojiOne` 파일을 빌드에서 빼거나 (b) 앱 안이나 스토어 설명에 EmojiOne(CC BY 4.0) 표기를 넣는다. (a)는 Unity 작업이다.
+3. **`Main.unity`가 빌드 목록에 있음.** 어떤 코드도 이 씬을 불러오지 않는다(`IntroMenu`, `PracticeSelectMenu`, `UIManager`의 `LoadScene` 대상이 아님). 그런데 빌드에는 예제 레벨(묘지 소품, 여성 캐릭터, 파티클 등)이 그대로 실린다. 예제 저자의 허락 범위 안이지만 "무수정 예제의 상업 재배포 금지" 조항과 굳이 얽힐 이유가 없다. 용량도 커진다. 출시 빌드에서는 빌드 목록에서 빼는 것을 권한다(Unity 작업, 빼기 전에 다른 씬이 이 씬의 자원에 기대지 않는지 확인).
+4. **앱 아이콘·피처 그래픽(AI 생성).** 생성 도구의 상업 이용 약관과, 기존 게임 캐릭터·로고와 닮지 않았는지 사용자가 확인한다(기존 항목).
+5. **Unity Analytics가 아직 켜져 있음**(`m_Enabled: 1`, `com.unity.analytics` 3.8.2). 끄기로 결정했지만 아직 적용 전이다. 켠 채로 내면 Data Safety에 수집 항목을 신고해야 한다.
+6. **앱 이름 "Urban Survival".** 웹 검색으로는 같은 이름의 Play 앱을 찾지 못했다(비슷한 이름 "Urban Legends - Survival" 등은 있음). 검색이 완전하지 않으니 Play Console 등록 전에 스토어에서 직접 검색하고, 필요하면 상표 검색(KIPRIS 등)을 한다.
+7. 참고(문제 아님): 무기 파일 이름에 실제 총기 이름(AK-47, 1911 등)이 들어 있지만 화면 표기는 PISTOL/AR/SMG/SG라 노출되지 않는다. 피·좀비 폭력 표현이 있으므로 Play 콘텐츠 등급 설문(IARC)에 그대로 답하고, 아동 대상(Families) 앱으로 등록하지 않는다. Unity Personal 스플래시 화면은 켜져 있다(라이선스 조건에 맞음).
