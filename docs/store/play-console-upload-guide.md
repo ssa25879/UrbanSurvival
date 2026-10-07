@@ -68,5 +68,5 @@
 ## 6. 경고가 나올 수 있는 것
 
 - **targetSdk·minSdk:** 2026-10-07 Play Console 업로드 화면에서 targetSdk 36, 최소 API 25 확인.
-- **네이티브 디버그 기호 없음 경고:** IL2CPP 앱에 흔한 안내다. 업로드를 막지 않는다(필요하면 Unity에서 Symbols 생성 후 업로드).
-- **Deobfuscation 파일 없음 경고:** 코드 축소를 쓰지 않으면 무시해도 된다.
+- **네이티브 디버그 기호 없음 경고:** 2026-10-07 1.0.0 업로드에서 실제로 나옴. 업로드를 막지 않는다. 다음 버전부터 Unity Build Settings(Android)의 **Create symbols.zip**(Public 또는 Debugging)을 켜고 빌드해 생기는 `*.symbols.zip`을 App Bundle 탐색기에서 해당 버전에 올리면 충돌 분석이 쉬워진다.
+- **가독화(Deobfuscation) 파일 없음 경고:** 2026-10-07 실제로 나옴. R8/ProGuard 코드 축소를 쓰지 않으면 무시해도 된다.
