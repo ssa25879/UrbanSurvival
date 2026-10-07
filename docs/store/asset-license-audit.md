@@ -82,3 +82,31 @@
 5. **Unity Analytics가 아직 켜져 있음**(`m_Enabled: 1`, `com.unity.analytics` 3.8.2). 끄기로 결정했지만 아직 적용 전이다. 켠 채로 내면 Data Safety에 수집 항목을 신고해야 한다.
 6. **앱 이름 "Urban Survival".** 웹 검색으로는 같은 이름의 Play 앱을 찾지 못했다(비슷한 이름 "Urban Legends - Survival" 등은 있음). 검색이 완전하지 않으니 Play Console 등록 전에 스토어에서 직접 검색하고, 필요하면 상표 검색(KIPRIS 등)을 한다.
 7. 참고(문제 아님): 무기 파일 이름에 실제 총기 이름(AK-47, 1911 등)이 들어 있지만 화면 표기는 PISTOL/AR/SMG/SG라 노출되지 않는다. 피·좀비 폭력 표현이 있으므로 Play 콘텐츠 등급 설문(IARC)에 그대로 답하고, 아동 대상(Families) 앱으로 등록하지 않는다. Unity Personal 스플래시 화면은 켜져 있다(라이선스 조건에 맞음).
+
+## 7. 2026-10-07 정리 결과와 남은 항목
+
+### 처리 완료
+| 항목 | 커밋 | 내용 |
+|---|---|---|
+| 무기 발사음 | `4d37f3f` | The Free Firearm Sound Library(CC0)로 교체, `Gun Shoot.wav` 미사용 |
+| 효과음(좀비 피격·사망, 재장전, 습득 등) | `7b6fe99` | CC0 음원으로 교체(`Assets/Game/Audio/SFX/SOURCE.md`) |
+| 비교 기준 씬 `Main.unity` | `df2d3f4` | 빌드 목록에서 제외(파일은 유지) |
+| Unity Analytics | `df2d3f4` | 끔. `com.unity.analytics` 패키지는 남아 있어 `INTERNET` 제거 여부는 릴리스 빌드로 확인 예정 |
+| 예전 플레이어 오브젝트 | `25fcd4f` | 플레이어 프리팹화, 꺼진 예전 Player Character 삭제 |
+| GUI PRO Kit | `af4e06e`, `3ddca6f`, `48906b8` | 아이콘은 Kenney Game Icons(CC0), 도형은 자체 제작으로 교체 후 폴더 삭제. 빌드 의존성 0 |
+| Toon Shooter Game Kit | — | Quaternius 공식 페이지에서 CC0 확인(6장) |
+
+### 출처 추가 확인(세션 1 점검, `WorkNotes/20261007_빌드에셋_출처점검.md`)
+- `Models/Level Art` 16개: FBX 안 경로로 Kenney Graveyard Kit(CC0) 확인. `Uzi`·`Ammo`: Kenney Weapon Pack(CC0) 경로. `Coin`: Quaternius PowerUps 경로(CC0로 알려짐, 팩 페이지는 404로 직접 확인 못 함).
+- `ShellCasing.FBX`와 파티클 텍스처 7개: Unity "Particle Pack"(Standard Unity Asset Store EULA) 계열로 추정. 앱 빌드에 넣는 것은 EULA상 허용. **공개 저장소 `UrbanSurvival`에 두는 것은 사용자 결정으로 그대로 둔다(2026-10-07).**
+- `Kenney Future Narrow.ttf`: 동봉 `License.txt`는 CC0이지만 TTF 내부 이름 표에 FontStruct 원작 표기(CC BY-SA 3.0)가 남아 있다. Kenney는 자사 폰트를 CC0로 배포하므로 위험은 낮다고 보지만, 크레딧에 "Kenney" 표기를 넣으면 더 안전하다.
+
+### 빌드에 아직 남은 미확정·정리 대상(2026-10-07 11시 기준 의존성 조회)
+| 자원 | 상태 | 제안 |
+|---|---|---|
+| `Woman.fbx`, `WomanSkin.png`, `Woman Damage/Die.ogg` | 빌드에 아직 포함(프리팹 기본값 등에서 참조). 출처는 IJEMIN 예제(Quaternius Animated Women 추정) | 세션 1이 참조를 정리해 빌드에서 뺀다(진행 예정) |
+| `Pick Up.ogg` | 빌드에 아직 포함 | 교체 음원으로 연결이 다 옮겨졌는지 확인 |
+| 휴머노이드 애니메이션 5종, `ShooterAnimator.controller` | 출처 미확정(IJEMIN 포괄 허용만 근거) | 실제 사용처 확인 후 필요 없으면 제거 |
+| `Heart.obj`(회복 상자) | 출처 미확정(Quaternius PowerUps 추정) | 유지 또는 CC0 모델로 교체 |
+| `Sprites/frame.png`, `Health Circle.png` | 출처 미확정(단순 도형) | 자체 제작 도형으로 교체 쉬움 |
+| TMP `EmojiOne` | CC BY 4.0, 저작자 표시 필요 | 빌드에서 빼거나 크레딧 표기(사용자 결정 대기) |
