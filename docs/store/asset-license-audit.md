@@ -101,12 +101,17 @@
 - `ShellCasing.FBX`와 파티클 텍스처 7개: Unity "Particle Pack"(Standard Unity Asset Store EULA) 계열로 추정. 앱 빌드에 넣는 것은 EULA상 허용. **공개 저장소 `UrbanSurvival`에 두는 것은 사용자 결정으로 그대로 둔다(2026-10-07).**
 - `Kenney Future Narrow.ttf`: 동봉 `License.txt`는 CC0이지만 TTF 내부 이름 표에 FontStruct 원작 표기(CC BY-SA 3.0)가 남아 있다. Kenney는 자사 폰트를 CC0로 배포하므로 위험은 낮다고 보지만, 크레딧에 "Kenney" 표기를 넣으면 더 안전하다.
 
-### 빌드에 아직 남은 미확정·정리 대상(2026-10-07 11시 기준 의존성 조회)
+### 빌드에 아직 남은 미확정·정리 대상 (2026-10-07 정정: 세션 1의 릴리스 빌드 BuildReport 기준)
+
+- 처음(11시) `AssetDatabase` 의존성 조회에서는 Woman 모델·음성, `Pick Up.ogg`, 예제 애니메이션이 남은 것으로 보였으나, 게임 씬의 LightingData가 `Main.unity`를 가리켜 생긴 에디터 의존성 착시였다. 실제 빌드(BuildReport.packedAssets, 포함 2,181개)에는 Woman 모델·텍스처·음성, `Assets/Audios/*` 전부, `Assets/Animations/*`, GUI PRO, `Sprites/frame.png`가 **들어가지 않는다.**
+- 실제로 들어가는 미확정 자원:
+
 | 자원 | 상태 | 제안 |
 |---|---|---|
-| `Woman.fbx`, `WomanSkin.png`, `Woman Damage/Die.ogg` | 빌드에 아직 포함(프리팹 기본값 등에서 참조). 출처는 IJEMIN 예제(Quaternius Animated Women 추정) | 세션 1이 참조를 정리해 빌드에서 뺀다(진행 예정) |
-| `Pick Up.ogg` | 빌드에 아직 포함 | 교체 음원으로 연결이 다 옮겨졌는지 확인 |
-| 휴머노이드 애니메이션 5종, `ShooterAnimator.controller` | 출처 미확정(IJEMIN 포괄 허용만 근거) | 실제 사용처 확인 후 필요 없으면 제거 |
-| `Heart.obj`(회복 상자) | 출처 미확정(Quaternius PowerUps 추정) | 유지 또는 CC0 모델로 교체 |
-| `Sprites/frame.png`, `Health Circle.png` | 출처 미확정(단순 도형) | 자체 제작 도형으로 교체 쉬움 |
-| TMP `EmojiOne` | CC BY 4.0, 저작자 표시 필요 | 빌드에서 빼거나 크레딧 표기(사용자 결정 대기) |
+| `Models/Heart.obj`, `Heart.mat`(회복 상자) | 출처 미확정(Quaternius PowerUps 추정, IJEMIN 포괄 허용) | 유지하거나 CC0 모델로 교체(사용자 결정) |
+| `Sprites/Health Circle.png` | 출처 미확정(단순 원형) | 자체 제작 원(`Assets/Game/UI/Shapes/UI_Circle_White`)으로 교체 쉬움 |
+| TMP `EmojiOne.png` | CC BY 4.0, 저작자 표시 필요 | 빌드에서 빼거나 크레딧 표기(사용자 결정 대기) |
+
+- `Main` 라이트맵·LightingData·ReflectionProbe는 게임 씬이 재사용하는 자체 생성 데이터라 라이선스 문제 없음.
+- 새 효과음(`7b6fe99`)은 2026-10-07 10:55 사용자가 릴리스 빌드(태블릿)에서 들어 보고 정상 확인했다. 발사음(`4d37f3f`)은 에디터 재생 확인만 했다.
+- `INTERNET` 권한: Analytics를 꺼도 Unity가 자동으로 넣었다(10:4x 릴리스 빌드). `a0fd5e6`에서 커스텀 런처 매니페스트(`tools:node="remove"`)로 제거하도록 바꿨고, 다음 릴리스 빌드에서 확인한다.
