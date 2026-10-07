@@ -67,7 +67,7 @@
 | Toon Shooter Game Kit | 캐릭터·무기·환경 36개 | Quaternius 팩 페이지 https://quaternius.com/packs/toonshootergamekit.html : "CC0", 개인·상업 무료 | **확인됨(CC0)**. 2장의 "사용자 진술, 미확인"을 대체 |
 | Zombie Apocalypse Kit | 좀비·도로·장애물 33개 | 팩 안 `License.txt` CC0 | 확인됨 |
 | Kenney UI 2종·폰트 | 스프라이트 6개, Future Narrow | 팩 안 License CC0 | 확인됨 |
-| GUI PRO Kit - Simple Casual | 스프라이트 13개, 일시정지 프리팹 1개, Quicksand SDF 폰트 2개 | Asset Store 페이지: Standard Unity Asset Store EULA(Single/Multi Entity) | **조건부.** EULA는 게임에 넣어 배포하는 것을 허용하지만, **사용자 계정으로 정식 구입(라이선스 보유)한 경우에만** 해당한다. 구입 내역 확인 필요. 원본 파일 재배포는 금지(공개 저장소에서는 제외 중) |
+| GUI PRO Kit - Simple Casual | ~~스프라이트 13개, 일시정지 프리팹 1개, Quicksand SDF 폰트 2개~~ → **2026-10-07 `3ddca6f`로 빌드에서 제거(0개)** | Asset Store 페이지: Standard Unity Asset Store EULA(Single/Multi Entity) | **조건부.** EULA는 게임에 넣어 배포하는 것을 허용하지만, **사용자 계정으로 정식 구입(라이선스 보유)한 경우에만** 해당한다. 구입 내역 확인 필요. 원본 파일 재배포는 금지(공개 저장소에서는 제외 중) |
 | 초기 예제 자원(IJEMIN) | `Main.unity`와 그 의존 자원: 모델 7, `Level Art` 18(묘지 소품), 텍스처 8, 재질 21, 애니메이션 8, 효과음 6, 프리팹 | 38개는 예제 파일과 해시 동일, 재질·메시 등 나머지는 같은 경로의 파일을 이 프로젝트가 고친 것. `ShooterAnimator.controller`만 예제에 없음(프로젝트에서 만든 것으로 추정) | 저자 허락 범위(1·4장). 단 아래 "주의 1" |
 | 배경음악 | `singularity_calm.wav`, `Searching.ogg` | OpenGameArt "Singularity"(Vitalezzz) CC0, 파일 크기 53,944,406 바이트로 페이지의 53.9 MB와 일치 / "Searching"(yd) CC0, 2,113,188 바이트(2.1 MB) | **둘 다 확인됨(CC0)** |
 | 발사음·남성 음성 | `Assets/Game/Audio/Weapons/`, `Voice/Male/` | 각 `SOURCE.md` CC0 | 확인됨 |
@@ -75,7 +75,7 @@
 
 ### 주의할 점(우선순위순)
 
-1. **GUI PRO Kit 구입 여부(가장 중요).** 유료 Asset Store 에셋이다. 사용자 계정의 구매 내역(My Assets)에 있어야 앱에 넣을 수 있다. 무료 배포 사이트 등에서 받은 것이면 출시 전에 Kenney(CC0) 자원으로 바꿔야 한다(`third-party-not-in-repo.md` "방법 1").
+1. ~~**GUI PRO Kit 구입 여부**~~ → 2026-10-07 해결: 빌드에서 GUI PRO를 모두 뺐다(`3ddca6f`). 패널·선·원은 자체 제작 도형(`Assets/Game/UI/Shapes/`), 일시정지 아이콘은 Kenney Game Icons(CC0, `Assets/Game/UI/Icons/`)로 바꿨고 화면 모양은 그대로다(교체 전후 캡처 픽셀 차이 0.05% 이하). 아래는 당시 기록. 1. **GUI PRO Kit 구입 여부(가장 중요).** 유료 Asset Store 에셋이다. 사용자 계정의 구매 내역(My Assets)에 있어야 앱에 넣을 수 있다. 무료 배포 사이트 등에서 받은 것이면 출시 전에 Kenney(CC0) 자원으로 바꿔야 한다(`third-party-not-in-repo.md` "방법 1").
 2. **TMP EmojiOne(저작자 표시 필요).** 게임은 이모지를 쓰지 않는다. 출시 전에 둘 중 하나를 한다. (a) `TMP Settings`의 기본 스프라이트 에셋을 비우고 `EmojiOne` 파일을 빌드에서 빼거나 (b) 앱 안이나 스토어 설명에 EmojiOne(CC BY 4.0) 표기를 넣는다. (a)는 Unity 작업이다.
 3. **`Main.unity`가 빌드 목록에 있음.** 어떤 코드도 이 씬을 불러오지 않는다(`IntroMenu`, `PracticeSelectMenu`, `UIManager`의 `LoadScene` 대상이 아님). 그런데 빌드에는 예제 레벨(묘지 소품, 여성 캐릭터, 파티클 등)이 그대로 실린다. 예제 저자의 허락 범위 안이지만 "무수정 예제의 상업 재배포 금지" 조항과 굳이 얽힐 이유가 없다. 용량도 커진다. 출시 빌드에서는 빌드 목록에서 빼는 것을 권한다(Unity 작업, 빼기 전에 다른 씬이 이 씬의 자원에 기대지 않는지 확인).
 4. **앱 아이콘·피처 그래픽(AI 생성).** 생성 도구의 상업 이용 약관과, 기존 게임 캐릭터·로고와 닮지 않았는지 사용자가 확인한다(기존 항목).
