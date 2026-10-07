@@ -44,7 +44,7 @@
 - [ ] **주의: Unity Analytics가 켜져 있다.** `ProjectSettings/UnityConnectSettings.asset`에서 `UnityAnalyticsSettings.m_Enabled: 1`, `m_InitializeOnStartup: 1`이고, `Packages/manifest.json`에 `com.unity.analytics` 3.8.2와 `com.unity.modules.unityanalytics`가 있다. 코드에서 직접 이벤트를 보내지 않아도 플레이어가 시작할 때 Unity의 기본 분석(기기·세션 정보)이 전송될 수 있다. 이 경우 **Data Safety 양식에 수집 항목(예: 기기 또는 기타 ID, 앱 활동 등)을 신고하고 개인정보처리방침에 적어야 한다.** 분석을 쓸 계획이 없다면 끄는 것이 신고 부담이 작다. **끌지 말지는 사용자가 결정**한다(끄려면 Project Settings > Services > Analytics를 끄고 필요 없는 `com.unity.analytics` 패키지 제거를 검토).
   - **2026-10-06 사용자 결정: 끈다.** 설정 변경과 릴리스 재빌드, 매니페스트의 `INTERNET` 제거 확인은 다음 작업(세션 1)에서 한다. 확인되면 이 항목을 체크하고 Data Safety는 "수집 없음"으로 작성한다.
   - **2026-10-07 결과:** Analytics를 꺼도 INTERNET이 남아 `a0fd5e6`(커스텀 런처 매니페스트 `tools:node="remove"`)로 제거했고, 업로드용 AAB에서 권한 0개를 확인했다. Data Safety는 "수집 없음"으로 작성한다.
-- [ ] 개인정보처리방침 URL 준비(**사용자**). 수집이 없더라도 Play는 URL을 요구한다.
+- [ ] 개인정보처리방침 URL 준비(**사용자**). 수집이 없더라도 Play는 URL을 요구한다. 2026-10-07: 페이지 파일 `docs/privacy/index.html`(한/영) 준비. 문의 이메일을 받으면 채워서 공개 저장소 GitHub Pages로 게시(사용자 결정, 게시는 이메일 확정 후).
 - [ ] Data Safety 양식 작성(**사용자**), 위 Analytics 결정 반영
 - [x] 권한: Android 빌드가 요구하는 권한을 AAB 매니페스트에서 확인한다(인터넷 권한이 포함되는지 포함). 불필요한 권한이 있으면 제거 방법을 검토 — Task 14 Step 5
   - 2026-10-07 AAB 확인: 요청 권한 없음(0개).
@@ -56,7 +56,7 @@
 - [ ] 앱 생성(앱 이름 `Urban Survival`, 패키지명 `com.yws.urbansurvival`)
 - [ ] 앱 카테고리, 대상 연령, 콘텐츠 등급 설문, Data Safety, 개인정보처리방침 URL
 - [ ] 스토어 설명(짧은 설명, 자세한 설명), 연락처 이메일
-- [ ] 이미지: 앱 아이콘 512×512 PNG(준비됨: `StoreAssets/play-icon-512.png`), 피처 그래픽 1024×500(준비됨: `StoreAssets/play-feature-graphic-1024x500.png`, 알파 없는 24bit PNG, 원본은 `Assets/Images/AppIcon-2.png`), 휴대전화 스크린샷(최소 2장, 가로 화면, **미준비**). 태블릿 스크린샷은 선택 사항
+- [ ] 이미지: 앱 아이콘 512×512 PNG(준비됨: `StoreAssets/play-icon-512.png`), 피처 그래픽 1024×500(준비됨: `StoreAssets/play-feature-graphic-1024x500.png`, 알파 없는 24bit PNG, 원본은 `Assets/Images/AppIcon-2.png`), 휴대전화 스크린샷(최소 2장, 가로 화면, **2026-10-07 준비됨: `StoreAssets/screenshots/` 01~05 권장(2992×1808 RGB PNG, 에디터 모바일 UI 강제 캡처). 06 캐릭터 선택은 PC 조작 안내가 보여 제외 권장**). 태블릿 스크린샷은 선택 사항
 - [ ] 내부/비공개 테스트 트랙 설정, 테스트 릴리스 업로드
 - [ ] Production 제출
 - [ ] **신규 개인 개발자 계정은 Production 접근 전 비공개 테스트 요건이 있을 수 있다.** 모바일 기획서 기준은 최소 12명의 테스터가 14일 동안 지속적으로 참여한 뒤 Production 접근을 신청하는 방식이다. 계정 종류(개인/조직)와 현재 정책을 등록 직전에 공식 문서로 확인한다.
