@@ -67,6 +67,6 @@
 
 ## 6. 경고가 나올 수 있는 것
 
-- **targetSdk·minSdk:** 이번 AAB 확인 기록에 값이 없다(어제 APK는 targetSdk 36 / minSdk 25). Play가 targetSdk 미달 경고를 내면 Player Settings를 확인한다.
+- **targetSdk·minSdk:** 2026-10-07 Play Console 업로드 화면에서 targetSdk 36, 최소 API 25 확인.
 - **네이티브 디버그 기호 없음 경고:** IL2CPP 앱에 흔한 안내다. 업로드를 막지 않는다(필요하면 Unity에서 Symbols 생성 후 업로드).
 - **Deobfuscation 파일 없음 경고:** 코드 축소를 쓰지 않으면 무시해도 된다.

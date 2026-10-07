@@ -13,7 +13,7 @@
 - [x] 프로젝트의 URP 호환 모드 정의 `URP_COMPATIBILITY_MODE`를 Android에도 추가(없으면 Unity 6.3이 빌드를 거부)
 - [ ] 릴리스 AAB 빌드 성공(서명 포함) — Task 14 Step 4
 - [x] AAB 매니페스트 확인: 패키지명, `targetSdkVersion` ≥ 36, `minSdkVersion` 25, 네이티브 라이브러리 `arm64-v8a`만 포함 — Task 14 Step 5
-  - 2026-10-07 11:23 업로드용 AAB `Builds/Android/UrbanSurvival-1.0.0-1.aab`(80.1 MB, 기준 `ab09266`) 확인: 패키지 com.yws.urbansurvival 1.0.0/코드 1, arm64-v8a, **권한 0개**, LEANBACK·debuggable 없음. `targetSdkVersion`·`minSdkVersion` 값은 이번 확인 기록에 없어 **미확인**(어제 APK는 36/25).
+  - 2026-10-07 11:23 업로드용 AAB `Builds/Android/UrbanSurvival-1.0.0-1.aab`(80.1 MB, 기준 `ab09266`) 확인: 패키지 com.yws.urbansurvival 1.0.0/코드 1, arm64-v8a, **권한 0개**, LEANBACK·debuggable 없음. Play Console 업로드 화면에서 targetSdk 36, 최소 API 25, 화면 레이아웃 4, 필수 기능 3 확인(2026-10-07).
 - [ ] 버전 정책: `bundleVersion` `1.0.0`, `AndroidBundleVersionCode` `1`. **업로드할 때마다 `AndroidBundleVersionCode`를 1씩 올린다.**
 - [x] 앱 아이콘: 사용자가 `Assets/Images/AppIcon-1.png`(1254x1254)을 제공했고, 군인 중심 1000px 크롭(`Assets/Images/Android/AppIcon_1024.png`)을 적응형(배경 레이어에 전체 그림, 전경은 투명)·라운드·레거시 슬롯 18개에 적용했다(`Urban Survival/Mobile/Apply Android Icons`). 실제 런처에서 보이는 모양은 빌드해서 확인해야 한다
 - [ ] 스플래시: Unity 라이선스 종류에 따라 Unity 로고 표시 여부가 달라진다. 사용자 확인 필요
