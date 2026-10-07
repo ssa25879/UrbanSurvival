@@ -117,7 +117,7 @@ This game contains cartoon violence and blood.
 
 ## 6. 데이터 보안(Data safety) 양식 가이드
 
-답변은 Unity Analytics 사용 여부에 따라 달라진다. **사용자가 먼저 결정해야 한다**(`mobile-store-checklist.md` 3장).
+답변은 Unity Analytics 사용 여부에 따라 달라진다. **2026-10-06 사용자 결정으로 Analytics를 껐다(`df2d3f4`) → 시나리오 A로 작성한다.** 남은 확인: 릴리스 빌드에서 `INTERNET` 권한이 빠졌는지(세션 1). 권한이 남아도 게임 코드는 네트워크를 쓰지 않으므로 "수집 없음"은 유지되지만, 패키지(`com.unity.analytics`)가 데이터를 보내지 않는지 확인되기 전까지는 패키지 제거도 검토한다.
 
 **시나리오 A — Unity Analytics를 끈 경우(권장, 신고 부담이 작음)**
 - 데이터 수집: 아니오, 데이터 공유: 아니오.
@@ -173,8 +173,9 @@ Urban Survival은 개인정보를 수집하거나 외부로 전송하지 않습�
 
 ## 8. 출시 전 미결정 사항
 
-1. Unity Analytics 켤지 끌지 (시나리오 A/B).
+1. ~~Unity Analytics 켤지 끌지~~ → 끔(시나리오 A, 2026-10-06 결정, `df2d3f4` 적용). 릴리스 빌드 `INTERNET` 확인만 남음.
 2. 연락처 이메일, 개인정보처리방침을 올릴 위치.
 3. 무료/유료, 한국어/영어 기본 언어, 배포 국가.
 4. 스크린샷 4~8장(가로).
-5. `asset-license-audit.md`의 미확인 항목(오디오, 두 Asset Store 에셋, 저장소 공개 상태).
+5. `asset-license-audit.md` 7장의 남은 항목(Woman 모델·음성, 휴머노이드 애니메이션, Heart, 단순 스프라이트 2개, EmojiOne). 오디오·GUI PRO·저장소 공개 상태는 2026-10-07 정리됨.
+6. 출시 노트: `release-notes.md`(1.0.0 초안).

@@ -24,6 +24,12 @@
   ```bash
   "C:/Program Files/Unity/Hub/Editor/6000.3.19f1/Editor/Data/PlaybackEngines/AndroidPlayer/OpenJDK/bin/keytool.exe" -genkeypair -v -keystore Keystore/urbansurvival-upload.keystore -alias urbansurvival-upload -keyalg RSA -keysize 2048 -validity 10000
   ```
+- 또는 Unity 안에서 만들기(2026-10-07 추가, 비밀번호는 **사용자가 직접 입력**, 대화·파일·커밋에 남기지 않는다):
+  1. `Edit > Project Settings > Player` → Android 탭 → **Publishing Settings** → **Keystore Manager…**
+  2. `Keystore… > Create New > Anywhere…`로 `Keystore/urbansurvival-upload.keystore` 위치 지정, 키스토어 비밀번호 입력·확인
+  3. 새 키(별칭 예: `urbansurvival-upload`): 키 비밀번호, 유효 기간 25년 이상(Play 요구: 2033-10-22 이후까지 유효), 이름/조직(`YWS`) 입력 → **Add Key**
+  4. Publishing Settings에서 **Custom Keystore** 체크, 방금 만든 키스토어·별칭 선택, 두 비밀번호 입력(Unity는 비밀번호를 프로젝트 파일에 저장하지 않으므로 에디터를 다시 열 때마다 입력)
+  5. 키스토어 파일과 두 비밀번호를 Git 밖 두 곳 이상에 백업(분실하면 업로드 키 재설정 절차가 필요)
 - [ ] Unity `Project Settings > Player > Publishing Settings`에 키스토어 경로·별칭·비밀번호 입력(**사용자**)
 - [ ] 분실하면 안 되는 정보를 따로 백업: 키스토어 파일, 키스토어 비밀번호, 키 별칭, 키 별칭 비밀번호(**사용자**, Git 커밋 금지)
 - 개발 중 기기 테스트용 APK는 Unity의 debug 서명으로 만든다. Play에 올릴 AAB만 업로드 키로 서명한다.
