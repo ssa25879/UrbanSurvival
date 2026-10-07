@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 1873919466344125764}
   - component: {fileID: 6324147107012862371}
   - component: {fileID: 8528467642053267780}
+  - component: {fileID: 822172808418600}
   m_Layer: 0
   m_Name: AmmoPack
   m_TagString: Untagged
@@ -406,3 +407,17 @@ Transform:
   - {fileID: 4099692793369874}
   m_Father: {fileID: 4533837315676430}
   m_LocalEulerAnglesHint: {x: 45, y: 0, z: 0}
+--- !u!114 &822172808418600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1045172808418600}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcc84ee16f8d45cab419b73609a44af4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  flightDuration: 0.3
+  targetHeight: 0.8

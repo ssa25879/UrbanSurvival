@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 7821076054230619641}
   - component: {fileID: 2601908728057302029}
   - component: {fileID: 5735525537957220727}
+  - component: {fileID: 1186806719078978}
   m_Layer: 0
   m_Name: ShotgunPickup
   m_TagString: Untagged
@@ -375,3 +376,17 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 5649605595839750737}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1186806719078978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1984409806719078978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcc84ee16f8d45cab419b73609a44af4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  flightDuration: 0.3
+  targetHeight: 0.8

@@ -107,11 +107,27 @@ public class PlayerHealth : LivingEntity {
             // 상대방에게 가져오기 성공
             if (item is not null)
             {
-                // Use 실행
-                item.Use(gameObject);
-                // 사운드 재생
-                playerAudioPlayer.PlayOneShot(itemPickupClip);
+                // 자석 연출이 있는 아이템은 날아온 뒤 도착 시 CollectItem이 호출된다(2026-10-07)
+                ItemMagnet magnet = other.GetComponent<ItemMagnet>();
+                if (magnet != null)
+                {
+                    magnet.Begin(this);
+                }
+                else
+                {
+                    CollectItem(item);
+                }
             }
         }
+    }
+
+    // 아이템 효과 적용과 습득음 재생
+    public void CollectItem(IItem item) {
+        if (dead) return;
+
+        // Use 실행
+        item.Use(gameObject);
+        // 사운드 재생
+        playerAudioPlayer.PlayOneShot(itemPickupClip);
     }
 }
