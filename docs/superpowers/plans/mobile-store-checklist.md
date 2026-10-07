@@ -12,7 +12,8 @@
 - [x] 가로 화면만 허용(세로 자동 회전 끔), IL2CPP, ARM64만 빌드, 최소 API 25, 타깃 API 36, AAB 출력 설정
 - [x] 프로젝트의 URP 호환 모드 정의 `URP_COMPATIBILITY_MODE`를 Android에도 추가(없으면 Unity 6.3이 빌드를 거부)
 - [ ] 릴리스 AAB 빌드 성공(서명 포함) — Task 14 Step 4
-- [ ] AAB 매니페스트 확인: 패키지명, `targetSdkVersion` ≥ 36, `minSdkVersion` 25, 네이티브 라이브러리 `arm64-v8a`만 포함 — Task 14 Step 5
+- [x] AAB 매니페스트 확인: 패키지명, `targetSdkVersion` ≥ 36, `minSdkVersion` 25, 네이티브 라이브러리 `arm64-v8a`만 포함 — Task 14 Step 5
+  - 2026-10-07 11:23 업로드용 AAB `Builds/Android/UrbanSurvival-1.0.0-1.aab`(80.1 MB, 기준 `ab09266`) 확인: 패키지 com.yws.urbansurvival 1.0.0/코드 1, arm64-v8a, **권한 0개**, LEANBACK·debuggable 없음.
 - [ ] 버전 정책: `bundleVersion` `1.0.0`, `AndroidBundleVersionCode` `1`. **업로드할 때마다 `AndroidBundleVersionCode`를 1씩 올린다.**
 - [x] 앱 아이콘: 사용자가 `Assets/Images/AppIcon-1.png`(1254x1254)을 제공했고, 군인 중심 1000px 크롭(`Assets/Images/Android/AppIcon_1024.png`)을 적응형(배경 레이어에 전체 그림, 전경은 투명)·라운드·레거시 슬롯 18개에 적용했다(`Urban Survival/Mobile/Apply Android Icons`). 실제 런처에서 보이는 모양은 빌드해서 확인해야 한다
 - [ ] 스플래시: Unity 라이선스 종류에 따라 Unity 로고 표시 여부가 달라진다. 사용자 확인 필요
@@ -20,7 +21,8 @@
 ## 2. 서명 (사용자 보관)
 
 - Play App Signing을 쓰는 것을 기준으로 한다. 개발자는 **업로드 키**를 만들어 안전하게 보관한다.
-- [ ] 업로드 키스토어 생성. 위치는 `D:\work\Zombie\Keystore\`(`.gitignore`에 `/Keystore/`, `*.keystore`, `*.jks`, `keystore.properties` 있음). **사용자**가 직접 만든다(비밀번호를 대화·파일에 적지 않는다). 예:
+- [x] 업로드 키스토어 생성. 위치는 `D:\work\Zombie\Keystore\`(`.gitignore`에 `/Keystore/`, `*.keystore`, `*.jks`, `keystore.properties` 있음). **사용자**가 직접 만든다(비밀번호를 대화·파일에 적지 않는다). 예:
+  - 2026-10-07 사용자가 생성(`UrbanSurvival_user.keystore`, alias `urbansurvival-upload`, 2026-10-07~2076-09-24, C=KR, O=YWS). 키스토어 경로·alias는 `ProjectSettings`에 PC 절대 경로로 들어가므로 **커밋하지 않는다**. 다른 PC에서는 Publishing Settings에서 다시 지정하고 비밀번호를 입력한다.
   ```bash
   "C:/Program Files/Unity/Hub/Editor/6000.3.19f1/Editor/Data/PlaybackEngines/AndroidPlayer/OpenJDK/bin/keytool.exe" -genkeypair -v -keystore Keystore/urbansurvival-upload.keystore -alias urbansurvival-upload -keyalg RSA -keysize 2048 -validity 10000
   ```
@@ -41,9 +43,11 @@
 - [x] 게임 코드는 네트워크 통신, 계정, 광고, 인앱 결제를 쓰지 않는다(검색 결과 0건). 저장 데이터는 `PlayerPrefs`(설정, 조준 모드, 튜토리얼 확인 여부, 연습 최고 기록)뿐이고 기기 밖으로 보내지 않는다.
 - [ ] **주의: Unity Analytics가 켜져 있다.** `ProjectSettings/UnityConnectSettings.asset`에서 `UnityAnalyticsSettings.m_Enabled: 1`, `m_InitializeOnStartup: 1`이고, `Packages/manifest.json`에 `com.unity.analytics` 3.8.2와 `com.unity.modules.unityanalytics`가 있다. 코드에서 직접 이벤트를 보내지 않아도 플레이어가 시작할 때 Unity의 기본 분석(기기·세션 정보)이 전송될 수 있다. 이 경우 **Data Safety 양식에 수집 항목(예: 기기 또는 기타 ID, 앱 활동 등)을 신고하고 개인정보처리방침에 적어야 한다.** 분석을 쓸 계획이 없다면 끄는 것이 신고 부담이 작다. **끌지 말지는 사용자가 결정**한다(끄려면 Project Settings > Services > Analytics를 끄고 필요 없는 `com.unity.analytics` 패키지 제거를 검토).
   - **2026-10-06 사용자 결정: 끈다.** 설정 변경과 릴리스 재빌드, 매니페스트의 `INTERNET` 제거 확인은 다음 작업(세션 1)에서 한다. 확인되면 이 항목을 체크하고 Data Safety는 "수집 없음"으로 작성한다.
+  - **2026-10-07 결과:** Analytics를 꺼도 INTERNET이 남아 `a0fd5e6`(커스텀 런처 매니페스트 `tools:node="remove"`)로 제거했고, 업로드용 AAB에서 권한 0개를 확인했다. Data Safety는 "수집 없음"으로 작성한다.
 - [ ] 개인정보처리방침 URL 준비(**사용자**). 수집이 없더라도 Play는 URL을 요구한다.
 - [ ] Data Safety 양식 작성(**사용자**), 위 Analytics 결정 반영
-- [ ] 권한: Android 빌드가 요구하는 권한을 AAB 매니페스트에서 확인한다(인터넷 권한이 포함되는지 포함). 불필요한 권한이 있으면 제거 방법을 검토 — Task 14 Step 5
+- [x] 권한: Android 빌드가 요구하는 권한을 AAB 매니페스트에서 확인한다(인터넷 권한이 포함되는지 포함). 불필요한 권한이 있으면 제거 방법을 검토 — Task 14 Step 5
+  - 2026-10-07 AAB 확인: 요청 권한 없음(0개).
 - [ ] 대상 연령·콘텐츠 등급 설문(**사용자**): 이 게임은 좀비를 총으로 쏘는 폭력 표현이 있다. 설문에 사실대로 답한다.
 
 ## 4. Play Console에서 사용자가 직접 할 일
@@ -115,4 +119,5 @@
 - `targetSdk=36`, `minSdk=25`, `versionName=1.0.0`, `versionCode=1`, `primaryCpuAbi=arm64-v8a`(32비트 없음).
 - 요청 권한: `android.permission.INTERNET` 하나. 개발 빌드는 프로파일러 연결 때문에 INTERNET이 들어갈 수 있다. **릴리스 빌드에서 INTERNET이 남는지 다시 확인**하고, 남으면 Data Safety·개인정보처리방침 서술에 영향이 있으니 불필요하면 제거 설정을 검토한다(게임은 네트워크를 쓰지 않는다. Unity Analytics를 켜 두면 INTERNET이 필요하다).
   - 2026-10-06 릴리스 APK(`20450fd` 기준) 확인: `INTERNET`이 **남아 있음**(`forceInternetPermission=false`, Analytics 켜짐 → Analytics가 원인으로 추정, 미확인). 이 APK는 **Unity 디버그 키로 서명한 기기 테스트용이라 Play에 올릴 수 없다.** 업로드는 업로드 키스토어로 서명한 AAB만 한다. Analytics를 끈 뒤 다시 확인한다.
+  - **2026-10-07 해결:** `a0fd5e6` 적용 후 업로드용 AAB(`ab09266` 기준)에서 권한 0개 확인. 이 AAB는 사용자 업로드 키로 서명돼 Play 업로드용이다.
 - 런처 카테고리에 `LEANBACK_LAUNCHER`가 있었다(→ TV 호환을 껐으므로 다음 빌드에서 사라져야 한다).
