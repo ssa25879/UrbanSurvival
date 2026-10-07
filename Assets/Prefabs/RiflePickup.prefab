@@ -103,6 +103,7 @@ GameObject:
   - component: {fileID: 5093595686516519994}
   - component: {fileID: 8560832087093991889}
   - component: {fileID: 6165108743426224630}
+  - component: {fileID: 1200774282711126}
   m_Layer: 0
   m_Name: RiflePickup
   m_TagString: Untagged
@@ -375,3 +376,17 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1932257293486677214}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1200774282711126
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4849423774282711126}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcc84ee16f8d45cab419b73609a44af4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  flightDuration: 0.3
+  targetHeight: 0.8
