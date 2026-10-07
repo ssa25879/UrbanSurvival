@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: UrbanSurvivalSettingsTheme
   m_EditorClassIdentifier: GameSettingsKit.Runtime::GameSettingsKit.SettingsPanelTheme
   font: {fileID: 12800000, guid: 283293d8ea65c4eddb2510294604a8b9, type: 3}
-  panelSprite: {fileID: 21300000, guid: b1bd5bd01ea754146944b12131e36a24, type: 3}
-  accentLineSprite: {fileID: 21300000, guid: ba921e3a475e049fbabcd84878665ae9, type: 3}
+  panelSprite: {fileID: 21300000, guid: 49c617cafb97ac548b995ac6a332def8, type: 3}
+  accentLineSprite: {fileID: 21300000, guid: 184cb0e7707f40140a4801c51cf90d5b, type: 3}
   checkmarkSprite: {fileID: 0}
   dimColor: {r: 0.03, g: 0.035, b: 0.04, a: 0.85}
   panelColor: {r: 0.07, g: 0.08, b: 0.09, a: 1}
