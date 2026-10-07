@@ -11,7 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Game/Scenes/UrbanSurvival.unity
     guid: 78ea59fdaf193f0479004deb08923618
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Main.unity
     guid: 99989cc8447a14929ae49c903ae9cb61
   - enabled: 1
