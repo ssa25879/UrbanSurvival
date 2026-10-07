@@ -36,6 +36,12 @@ crashlytics-build.properties
 # Builds and packages
 *.apk
 *.aab
+
+# Android signing keys (never commit)
+*.keystore
+*.jks
+keystore.properties
+/Keystore/
 *.unitypackage
 *.app
 
@@ -43,3 +49,17 @@ crashlytics-build.properties
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Local project instructions
+/AGENTS.md
+
+# Local work notes
+/WorkNotes/
+
+# Editor-captured debug screenshots
+/Assets/Screenshots/
+/Assets/Screenshots.meta
+
+# Third-party asset not redistributed in this public repository (license; see docs/store/third-party-not-in-repo.md)
+/Assets/GUI PRO Kit - Simple Casual/
+/Assets/GUI PRO Kit - Simple Casual.meta

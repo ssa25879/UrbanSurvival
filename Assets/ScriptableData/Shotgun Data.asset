@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6cb3864f76dc458fbe03c34ce5b1f352, type: 3}
+  m_Name: Shotgun Data
+  m_EditorClassIdentifier: Assembly-CSharp::GunData
+  shotClip: {fileID: 8300000, guid: b30811ca237e4a14582910dac4b810de, type: 3}
+  reloadClip: {fileID: 8300000, guid: 5941f3290fe4d0048809d1875b7db8f9, type: 3}
+  damage: 10
+  startAmmoRemain: 40
+  reserveAmmoCap: 64
+  magCapacity: 8
+  timeBetFire: 0.75
+  reloadTime: 2.7
+  fireMode: 0
+  range: 12
+  spreadHalfAngle: 10
+  pelletsPerShot: 6

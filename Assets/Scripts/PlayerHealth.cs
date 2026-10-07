@@ -15,6 +15,8 @@ public class PlayerHealth : LivingEntity {
     private PlayerMovement playerMovement; // 플레이어 움직임 컴포넌트
     private PlayerShooter playerShooter; // 플레이어 슈터 컴포넌트
 
+    private readonly float healthRegenPerMinuteRatio = 0.05f; // 생존 시간에 비례한 분당 자동 회복량(최대 체력 대비, 초기 제안값)
+
     private void Awake() {
         // 사용할 컴포넌트를 가져오기
         playerAnimator = GetComponent<Animator>();
@@ -38,6 +40,14 @@ public class PlayerHealth : LivingEntity {
         // 조작받는 컴포넌트 활성화
         playerMovement.enabled = true;
         playerShooter.enabled = true;
+    }
+
+    private void Update() {
+        // 생존 시간에 비례해 분당 최대 체력의 5%만큼 자동 회복(기존 "체력 자동 회복 없음" 규칙 대체, 초기 제안값)
+        if (!dead)
+        {
+            RestoreHealth(startingHealth * healthRegenPerMinuteRatio / 60f * Time.deltaTime);
+        }
     }
 
     // 체력 회복
@@ -65,6 +75,12 @@ public class PlayerHealth : LivingEntity {
 
     // 사망 처리
     public override void Die() {
+        // 이미 사망 처리된 경우 중복 실행 방지
+        if (dead)
+        {
+            return;
+        }
+
         // LivingEntity의 Die() 실행(사망 적용)
         base.Die();
         
@@ -91,11 +107,27 @@ public class PlayerHealth : LivingEntity {
             // 상대방에게 가져오기 성공
             if (item is not null)
             {
-                // Use 실행
-                item.Use(gameObject);
-                // 사운드 재생
-                playerAudioPlayer.PlayOneShot(itemPickupClip);
+                // 자석 연출이 있는 아이템은 날아온 뒤 도착 시 CollectItem이 호출된다(2026-10-07)
+                ItemMagnet magnet = other.GetComponent<ItemMagnet>();
+                if (magnet != null)
+                {
+                    magnet.Begin(this);
+                }
+                else
+                {
+                    CollectItem(item);
+                }
             }
         }
+    }
+
+    // 아이템 효과 적용과 습득음 재생
+    public void CollectItem(IItem item) {
+        if (dead) return;
+
+        // Use 실행
+        item.Use(gameObject);
+        // 사운드 재생
+        playerAudioPlayer.PlayOneShot(itemPickupClip);
     }
 }

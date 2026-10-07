@@ -1,0 +1,45 @@
+fileFormatVersion: 2
+guid: ec2f1d159cfa47afa230538a59b13a21
+ModelImporter:
+  serializedVersion: 24300
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Atlas
+    second: {fileID: 2100000, guid: 32d2d5f7f0534ac5b542eae180301b42, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: BrakeLight
+    second: {fileID: 2100000, guid: bbfe8e37c832454e98a99ebf32c4c82c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Headlights
+    second: {fileID: 2100000, guid: 8969066cd57f4c179cc2e3c01686fabf, type: 2}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    clipAnimations: []
+  meshes:
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    importCameras: 0
+    importLights: 0
+    useFileUnits: 1
+    useFileScale: 1
+  importAnimation: 1
+  animationType: 2
+  avatarSetup: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

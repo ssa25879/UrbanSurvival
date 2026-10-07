@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6cb3864f76dc458fbe03c34ce5b1f352, type: 3}
+  m_Name: Pistol Data
+  m_EditorClassIdentifier: Assembly-CSharp::GunData
+  shotClip: {fileID: 8300000, guid: 5dc6e0d99d6178a43bdee10d1333f208, type: 3}
+  reloadClip: {fileID: 8300000, guid: e008fcbe1cde7d14191205e0a9647054, type: 3}
+  damage: 10
+  startAmmoRemain: -1
+  reserveAmmoCap: -1
+  magCapacity: 10
+  timeBetFire: 0.2
+  reloadTime: 2
+  fireMode: 0
+  range: 15
+  spreadHalfAngle: 3
+  pelletsPerShot: 1

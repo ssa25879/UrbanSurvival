@@ -12,7 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6b66dfdc1a5442fa8f08b1a4faf089e, type: 3}
   m_Name: Zombie Heavy
   m_EditorClassIdentifier: Assembly-CSharp::ZombieData
-  health: 250
+  health: 54
   damage: 50
   speed: 1
-  skinColor: {r: 0, g: 0, b: 0, a: 1}
+  skinColor: {r: 1, g: 1, b: 1, a: 1}
+  glowColor: {r: 0, g: 0, b: 0, a: 1}
+  isElite: 1
+  prefabOverride: {fileID: 2695482231185085349, guid: 5ffd650a54cef2a429cff08a435d3f4d,
+    type: 3}
+  isBoss: 0
+  displayName: 
+  modelScale: 1
+  score: 250

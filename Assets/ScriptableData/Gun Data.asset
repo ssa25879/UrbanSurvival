@@ -12,10 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6cb3864f76dc458fbe03c34ce5b1f352, type: 3}
   m_Name: Gun Data
   m_EditorClassIdentifier: Assembly-CSharp::GunData
-  shotClip: {fileID: 8300000, guid: b82a66dab749415458d1f6600c997095, type: 3}
-  reloadClip: {fileID: 8300000, guid: 9eca29ee7f8209e419470fcd586aec21, type: 3}
-  damage: 25
-  startAmmoRemain: 100
-  magCapacity: 25
-  timeBetFire: 0.12
-  reloadTime: 1.8
+  shotClip: {fileID: 8300000, guid: e8aa2834a2f931648b31f57dd824dddb, type: 3}
+  reloadClip: {fileID: 8300000, guid: 90a3136bc10612049a0d19181a607b58, type: 3}
+  damage: 20
+  startAmmoRemain: 150
+  reserveAmmoCap: 240
+  magCapacity: 30
+  timeBetFire: 0.15
+  reloadTime: 2.3
+  fireMode: 1
+  range: 30
+  spreadHalfAngle: 3
+  pelletsPerShot: 1

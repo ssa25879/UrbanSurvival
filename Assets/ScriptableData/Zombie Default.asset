@@ -12,7 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6b66dfdc1a5442fa8f08b1a4faf089e, type: 3}
   m_Name: Zombie Default
   m_EditorClassIdentifier: Assembly-CSharp::ZombieData
-  health: 100
+  health: 30
   damage: 20
   speed: 2
   skinColor: {r: 1, g: 1, b: 1, a: 1}
+  isElite: 0
+  isBoss: 0
+  displayName: 
+  modelScale: 1
+  score: 100

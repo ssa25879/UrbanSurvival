@@ -1,0 +1,35 @@
+fileFormatVersion: 2
+guid: 7b844f8637314108b77a6b077fa99a7a
+ModelImporter:
+  serializedVersion: 24300
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Atlas
+    second: {fileID: 2100000, guid: 32d2d5f7f0534ac5b542eae180301b42, type: 2}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    clipAnimations: []
+  meshes:
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    importCameras: 0
+    importLights: 0
+    useFileUnits: 1
+    useFileScale: 1
+  importAnimation: 1
+  animationType: 2
+  avatarSetup: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

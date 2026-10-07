@@ -1,12 +1,50 @@
-﻿using UnityEngine;
+using UnityEngine;
+using UnityEngine.Animations.Rigging;
 
 // 주어진 Gun 오브젝트를 쏘거나 재장전
-// 알맞은 애니메이션을 재생하고 IK를 사용해 캐릭터 양손이 총에 위치하도록 조정
+// 무기 4종(권총/소총/SMG/산탄총)을 슬롯으로 관리하며, 슬롯 전환 시 실제 손에 든 모델도 함께 바뀐다
+// 알맞은 애니메이션을 재생하고 IK를 사용해 캐릭터 왼손이 총의 손잡이에 위치하도록 조정
 public class PlayerShooter : MonoBehaviour {
-    public Gun gun; // 사용할 총
-    public Transform gunPivot; // 총 배치의 기준점
-    public Transform leftHandMount; // 총의 왼쪽 손잡이, 왼손이 위치할 지점
-    public Transform rightHandMount; // 총의 오른쪽 손잡이, 오른손이 위치할 지점
+    // 무기 슬롯 순서(키보드 1~4와 대응)
+    public enum WeaponSlot {
+        Pistol = 0,
+        Rifle = 1,
+        SMG = 2,
+        Shotgun = 3
+    }
+
+    private const int SlotCount = 4;
+
+    // 인덱스 = WeaponSlot 순서. 각 오브젝트는 이미 자신의 GunData를 들고 있으며(씬에서 배정됨),
+    // 슬롯 전환은 이 오브젝트들을 활성/비활성 전환하는 방식으로 이루어진다(실제 손 모델 교체)
+    public Gun[] guns = new Gun[SlotCount];
+
+    public Gun gun { get; private set; } // 현재 활성화된 총(읽기 전용, UI/외부 조회용)
+
+    // 명중 판정 레이의 높이(캐릭터 발밑 기준, m). 총구 높이는 애니메이션(팔 흔들림)에 따라 계속 바뀌어
+    // 같은 방향으로 조준해도 맞았다 안 맞았다 했으므로 고정값을 사용. 적 판정 캡슐(0~0.76m)의 몸통 부근
+    public float aimHeight = 0.45f;
+
+    // 명중 판정 레이의 출발점: 캐릭터 중심선 위 고정 높이
+    public Vector3 GetAimOrigin() {
+        return transform.position + Vector3.up * aimHeight;
+    }
+
+    private TwoBoneIKConstraint leftHandIK; // 왼손 IK 제약(무기 교체 시 target을 현재 무기의 LeftHandGrip으로 재설정)
+
+    public bool unlockAllWeaponsOnStart = false; // 시작할 때 무기 4종을 모두 보유(연습 씬용, 2026-10-01)
+
+    private bool[] unlocked = new bool[SlotCount]; // 슬롯 보유 여부(권총은 항상 true)
+    private int currentSlot; // 현재 장착 중인 슬롯 인덱스
+
+    public int CurrentSlotIndex => currentSlot; // 현재 장착 슬롯(모바일 슬롯 UI 표시용, 읽기 전용)
+
+    // 슬롯을 보유하고 무기 오브젝트가 있는지(모바일 슬롯 UI 활성 표시용, 읽기 전용)
+    public bool IsSlotUnlocked(int slotIndex) {
+        return slotIndex >= 0 && slotIndex < SlotCount && unlocked[slotIndex] && guns[slotIndex] != null;
+    }
+
+    private bool blockFireUntilRelease; // 재장전/스왑 직후 발사 버튼을 새로 눌러야 하는 상태
 
     private PlayerInput playerInput; // 플레이어의 입력
     private Animator playerAnimator; // 애니메이터 컴포넌트
@@ -15,35 +53,187 @@ public class PlayerShooter : MonoBehaviour {
         // 사용할 컴포넌트들을 가져오기
         playerInput = GetComponent<PlayerInput>();
         playerAnimator = GetComponent<Animator>();
+        leftHandIK = GetComponentInChildren<TwoBoneIKConstraint>(true);
+
+        // 권총은 항상 보유
+        unlocked[(int)WeaponSlot.Pistol] = true;
+        if (unlockAllWeaponsOnStart)
+        {
+            for (int i = 0; i < SlotCount; i++)
+            {
+                unlocked[i] = guns[i] != null;
+            }
+        }
+
+        // 씬에 배치된 무기 오브젝트 중 활성화되어 있는 것을 시작 슬롯으로 사용(기본값: 권총)
+        currentSlot = (int)WeaponSlot.Pistol;
+        for (int i = 0; i < SlotCount; i++)
+        {
+            if (guns[i] != null && guns[i].gameObject.activeSelf)
+            {
+                currentSlot = i;
+                break;
+            }
+        }
+
+        ActivateSlot(currentSlot);
     }
 
     private void OnEnable() {
-        // 슈터가 활성화될 때 총도 함께 활성화
-        gun.gameObject.SetActive(true);
+        // 슈터가 활성화될 때 현재 총도 함께 활성화
+        if (gun != null)
+        {
+            gun.gameObject.SetActive(true);
+        }
     }
-    
+
     private void OnDisable() {
-        // 슈터가 비활성화될 때 총도 함께 비활성화
-        gun.gameObject.SetActive(false);
+        // 슈터가 비활성화될 때 현재 총도 함께 비활성화
+        if (gun != null)
+        {
+            gun.gameObject.SetActive(false);
+        }
     }
 
     private void Update() {
-        // 입력을 감지하고 총 발사하거나 재장전
-        if (playerInput.fire)
+        HandleWeaponSwapInput();
+
+        // 재장전/스왑 직후에는 발사 버튼을 한 번 떼야 다시 발사할 수 있다
+        if (blockFireUntilRelease && !playerInput.fire)
         {
-            // 발사 입력 확인 후 총 발사
-            gun.Fire();
-        } else if (playerInput.reload)
+            blockFireUntilRelease = false;
+        }
+
+        if (gun.state == Gun.State.Empty)
         {
-            if (gun.Reload())
+            // 탄창이 빈 상태: 새 발사 입력(엣지) 또는 R 입력으로만 재장전(자동 재장전 없음)
+            if (playerInput.fireDown || playerInput.reload)
             {
-                // 재장전 입력 감지 후 재장전 성공 시 애니메이션 재생
-                playerAnimator.SetTrigger("Reload");
+                TryReload();
             }
-        } 
-        
+        }
+        else if (gun.state == Gun.State.Ready)
+        {
+            bool wantsFire = !blockFireUntilRelease && GetFireInput();
+
+            // 재장전과 발사가 동시에 들어오면 재장전이 우선(2026-09-29 확정). 재장전할 수 없는 상태
+            // (탄창이 가득 참, 예비탄 없음)이면 재장전 입력은 무시하고 발사한다
+            bool reloadStarted = playerInput.reload && TryReload();
+
+            if (wantsFire && !reloadStarted)
+            {
+                // 총구 자체 방향이 아니라 캐릭터가 조준 중인 정면 방향으로 발사(팔 IK 영향 배제)
+                // 판정 레이는 캐릭터 중심선의 고정 높이에서 출발(총구 위치·높이에 따라 조준선과 어긋나던 문제)
+                // 모바일은 조준 방향이 정해진 같은 프레임에 그 방향으로 쏜다(캐릭터 회전은 다음 물리 스텝에 적용되어 transform.forward를 쓰면
+                // 오토 에임·쌍둥이 스틱의 첫 발이 이전 방향으로 나간다). PC는 hasAimWorldDirection이 false라 기존과 같다
+                Vector3 shotDirection = playerInput.hasAimWorldDirection ? playerInput.aimWorldDirection : transform.forward;
+                gun.Fire(shotDirection, GetAimOrigin());
+            }
+        }
+
         // UI에 탄약 수 갱신
         UpdateUI();
+    }
+
+    // 현재 장착한 무기의 발사 모드(연사/단발)에 맞는 입력값 반환
+    private bool GetFireInput() {
+        if (gun.gunData == null)
+        {
+            return false;
+        }
+
+        return gun.gunData.fireMode == GunData.FireMode.Automatic ? playerInput.fire : playerInput.fireDown;
+    }
+
+    // 재장전을 시작했으면 true
+    private bool TryReload() {
+        if (gun.Reload())
+        {
+            // 재장전 입력 감지 후 재장전 성공 시 애니메이션 재생
+            playerAnimator.SetTrigger("Reload");
+            blockFireUntilRelease = true;
+            return true;
+        }
+
+        return false;
+    }
+
+    // 1~4번 키 입력에 따라 무기 슬롯 교체
+    private void HandleWeaponSwapInput() {
+        // 재장전 중에는 무기를 바꾸지 않는다
+        if (gun.state == Gun.State.Reloading)
+        {
+            return;
+        }
+
+        int requestedSlot = -1;
+        if (playerInput.swapToSlot1) requestedSlot = (int)WeaponSlot.Pistol;
+        else if (playerInput.swapToSlot2) requestedSlot = (int)WeaponSlot.Rifle;
+        else if (playerInput.swapToSlot3) requestedSlot = (int)WeaponSlot.SMG;
+        else if (playerInput.swapToSlot4) requestedSlot = (int)WeaponSlot.Shotgun;
+
+        if (requestedSlot >= 0)
+        {
+            EquipSlot(requestedSlot);
+        }
+    }
+
+    // 지정한 슬롯으로 무기 교체(미보유 슬롯 입력은 무시)
+    private void EquipSlot(int slotIndex) {
+        if (slotIndex == currentSlot || !unlocked[slotIndex] || guns[slotIndex] == null)
+        {
+            return;
+        }
+
+        currentSlot = slotIndex;
+        ActivateSlot(currentSlot);
+        blockFireUntilRelease = true;
+    }
+
+    // 슬롯에 해당하는 무기 오브젝트만 활성화하고 나머지는 비활성화, 왼손 IK 타겟도 교체
+    private void ActivateSlot(int slotIndex) {
+        for (int i = 0; i < SlotCount; i++)
+        {
+            if (guns[i] != null)
+            {
+                guns[i].gameObject.SetActive(i == slotIndex);
+            }
+        }
+
+        gun = guns[slotIndex];
+
+        if (leftHandIK != null)
+        {
+            Transform leftHandGrip = gun.transform.Find("LeftHandGrip");
+            if (leftHandGrip != null)
+            {
+                leftHandIK.data.target = leftHandGrip;
+            }
+        }
+    }
+
+    // 처치 드랍으로 무기를 획득했을 때 호출(WeaponPickup에서 사용) — 슬롯을 해금만 하고 자동 장착하지는 않는다
+    public void UnlockWeapon(WeaponSlot slot) {
+        unlocked[(int)slot] = true;
+    }
+
+    // 처치 드랍(추가 탄약) 또는 AmmoPack 아이템이 현재 장착 무기의 예비탄을 채울 때 사용
+    public void AddAmmoToCurrentWeapon(int amount) {
+        if (gun.gunData == null || gun.gunData.reserveAmmoCap < 0)
+        {
+            // 예비탄 무제한 무기는 채울 필요 없음
+            return;
+        }
+
+        gun.ammoRemain = Mathf.Min(gun.ammoRemain + amount, gun.gunData.reserveAmmoCap);
+    }
+
+    // 연습 씬: 현재 무기의 예비탄이 바닥나면 가득 채운다(탄약이 모자라 보스 처치 시간이 왜곡되지 않게)
+    public void RefillReserveIfEmpty() {
+        if (gun != null && gun.gunData != null && gun.gunData.reserveAmmoCap >= 0 && gun.ammoRemain <= 0)
+        {
+            gun.ammoRemain = gun.gunData.reserveAmmoCap;
+        }
     }
 
     // 탄약 UI 갱신
@@ -53,25 +243,5 @@ public class PlayerShooter : MonoBehaviour {
             // UI 매니저의 탄약 텍스트에 탄창의 탄약과 남은 전체 탄약을 표시
             UIManager.instance.UpdateAmmoText(gun.magAmmo, gun.ammoRemain);
         }
-    }
-
-    // 애니메이터의 IK 갱신
-    private void OnAnimatorIK(int layerIndex)
-    {
-        // 총의 기준점을 캐릭터 오른쪽 팔꿈치 위치로 이동시킴
-        gunPivot.position = playerAnimator.GetIKHintPosition(AvatarIKHint.RightElbow);
-        
-        // IK를 사용하여 왼손의 위치와 회전값을 총의 왼쪽 손잡이에 맞춤
-        playerAnimator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1.0f);
-        playerAnimator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 1.0f);
-        playerAnimator.SetIKPosition(AvatarIKGoal.LeftHand, leftHandMount.position);
-        playerAnimator.SetIKRotation(AvatarIKGoal.LeftHand, leftHandMount.rotation);
-        
-        // IK를 사용하여 오른손 위치와 회전값을 총의 오른쪽 손잡이에 맞춤
-        playerAnimator.SetIKPositionWeight(AvatarIKGoal.RightHand, 1.0f);
-        playerAnimator.SetIKRotationWeight(AvatarIKGoal.RightHand, 1.0f);
-        playerAnimator.SetIKPosition(AvatarIKGoal.RightHand, rightHandMount.position);
-        playerAnimator.SetIKRotation(AvatarIKGoal.RightHand, rightHandMount.rotation);
-
     }
 }
