@@ -112,6 +112,8 @@
 | `Sprites/Health Circle.png` | 출처 미확정(단순 원형) | **교체함 `fad63d8`(2026-10-08, 1.0.2):** 자체 제작 링 `Assets/Game/UI/Shapes/UI_Ring_White.png`. 원본 파일은 남아 있고, 1.0.2 빌드 보고서(2026-10-08)에서 빌드에 포함되지 않음을 확인(옛 LightingData 경유 의존성은 빌드에 안 들어감) |
 | TMP `EmojiOne.png` | **2026-10-08 제거 `918b160`**(사용자 결정) | 빌드 의존성 0 확인 |
 
+- 2026-10-08 추가 자원(1.0.2·1.0.3): 회복 상자 구급상자 = Toon Shooter Game Kit `Environment/FBX/Health.fbx`(Quaternius CC0, 위 6장 확인). 체력 링 `UI_Ring_White.png`, 자석 모델 `Assets/Game/Models/Magnet/Magnet.asset`(코드로 생성한 말굽 메시)·재질 `Magnet_Red/Silver.mat`, 아이콘 `Assets/Game/UI/Icons/UI_Magnet_White.png`는 **자체 제작**(각 폴더 `SOURCE.md`). 외부 다운로드 자원 추가 없음. 1.0.3 빌드 보고서에서 `Health Circle.png`·`Heart` 0건 재확인.
+
 - `Main` 라이트맵·LightingData·ReflectionProbe는 게임 씬이 재사용하는 자체 생성 데이터라 라이선스 문제 없음.
 - 새 효과음(`7b6fe99`)은 2026-10-07 10:55 사용자가 릴리스 빌드(태블릿)에서 들어 보고 정상 확인했다. 발사음(`4d37f3f`)은 에디터 재생 확인만 했다.
 - `INTERNET` 권한: Analytics를 꺼도 Unity가 자동으로 넣었다(10:4x 릴리스 빌드). `a0fd5e6`에서 커스텀 런처 매니페스트(`tools:node="remove"`)로 제거하도록 바꿨고, 다음 릴리스 빌드에서 확인한다.
