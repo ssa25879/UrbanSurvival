@@ -109,7 +109,7 @@
 | 자원 | 상태 | 제안 |
 |---|---|---|
 | `Models/Heart.obj`, `Heart.mat`(회복 상자) | 출처 미확정(Quaternius PowerUps 추정, IJEMIN 포괄 허용) | **교체함 `cdd3bca`(2026-10-08, 1.0.2):** 회복 상자는 Toon Shooter `Health.fbx`(CC0) 구급상자. 원본 파일은 남아 있음 |
-| `Sprites/Health Circle.png` | 출처 미확정(단순 원형) | **교체함 `fad63d8`(2026-10-08, 1.0.2):** 자체 제작 링 `Assets/Game/UI/Shapes/UI_Ring_White.png`. 원본 파일은 남아 있고, 옛 `Assets/Scenes/Main/LightingData.asset` 경유 의존성이 있어 실제 빌드 포함 여부는 다음 빌드 보고서로 확인 |
+| `Sprites/Health Circle.png` | 출처 미확정(단순 원형) | **교체함 `fad63d8`(2026-10-08, 1.0.2):** 자체 제작 링 `Assets/Game/UI/Shapes/UI_Ring_White.png`. 원본 파일은 남아 있고, 1.0.2 빌드 보고서(2026-10-08)에서 빌드에 포함되지 않음을 확인(옛 LightingData 경유 의존성은 빌드에 안 들어감) |
 | TMP `EmojiOne.png` | **2026-10-08 제거 `918b160`**(사용자 결정) | 빌드 의존성 0 확인 |
 
 - `Main` 라이트맵·LightingData·ReflectionProbe는 게임 씬이 재사용하는 자체 생성 데이터라 라이선스 문제 없음.

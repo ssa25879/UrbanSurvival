@@ -27,13 +27,13 @@
 
 ---
 
-## 1.0.2 (versionCode 3) — 자원 정리 (구현 완료, 빌드 전)
+## 1.0.2 (versionCode 3) — 자원 정리 (빌드 완료, 업로드 대기)
 
-- 상태: **구현 완료(2026-10-08), AAB 빌드 전.** 업로드는 1.0.1 다음 순서.
+- 상태: **AAB 빌드 완료(2026-10-08 14:18), Play Console 미업로드.** 업로드는 1.0.1 다음 순서. 파일 `Builds/Android/1.0.2/UrbanSurvival-1.0.2-3.aab`(80,082,776 B) + `…-v3-IL2CPP.symbols.zip`, 권한 0개. 상세 `Builds/Android/1.0.2/업데이트_내역_1.0.2.md`(Git 밖).
 - 들어간 것: 회복 상자 모델 하트 → 구급상자(Toon Shooter `Health.fbx`, Quaternius CC0, 원본 초록, 사용자 선택) `cdd3bca`, 플레이어 체력 원 이미지를 자체 제작 링(`UI_Ring_White`)으로 교체 `fad63d8`(화면상 차이 거의 없음), 버전 `1.0.2`/코드 `3` `17c7da0`.
 - 빠진 것: 크레딧 표기(사용자 결정 대기, 선택 사항).
 - 검증: EditMode 88/88, 에디터 플레이(PC) 구급상자 습득·디스폰 방어 재검증(체력 40→70). 미검증: 모바일 강제 플레이, 기기, 습득음 청취.
-- 빌드 때 확인: 빌드 보고서에 `Health Circle.png`·`Heart.obj`가 남는지(옛 `Assets/Scenes/Main/LightingData.asset`이 비교용 `Main.unity`를 가리켜 의존성에 잡힘. 1.0.1 보고서에는 둘 다 있었음).
+- 빌드 보고서 확인(2026-10-08): `Health Circle.png`·`Heart.obj`/`.mat` 0건(1.0.1에는 있었음), `UI_Ring_White`·`Health.fbx` 포함 → 출처 미확정 자원이 빌드에서 빠짐.
 
 ```
 <ko-KR>
@@ -45,7 +45,7 @@
 
 ## 1.0.1 (versionCode 2) — 아이템 습득 편의 (빌드 완료, 업로드 대기)
 
-- 상태: **AAB 빌드 완료(2026-10-08 10:39), Play Console 미업로드.** 업로드는 사용자가 나중에 버전 순서대로 한다. 파일 `Builds/Android/UrbanSurvival-1.0.1-2.aab`(80,078,271 B) + `UrbanSurvival-1.0.1-2-1.0.1-v2-IL2CPP.symbols.zip`(26,990,499 B), 권한 0개(문자열 검색 기준). 이력은 `Builds/Android/빌드_이력.md`(Git 밖).
+- 상태: **AAB 빌드 완료(2026-10-08 10:39), Play Console 미업로드.** 업로드는 사용자가 나중에 버전 순서대로 한다. 파일 `Builds/Android/1.0.1/UrbanSurvival-1.0.1-2.aab`(80,078,271 B) + `UrbanSurvival-1.0.1-2-1.0.1-v2-IL2CPP.symbols.zip`(26,990,499 B), 권한 0개(문자열 검색 기준). 이력은 `Builds/Android/빌드_이력.md`(Git 밖).
 - 기준 커밋: `SideProject-Mobile` `c3dbbf8`(작업 트리의 Unity 자동 재저장 변경이 남은 상태로 빌드).
 - 들어간 것: 아이템 자석 연출 `23fb6ea`, 자석 비행 중 디스폰 방어·모바일 인트로 PC 조작 안내 숨김·디버그 기호 설정 `9a0e8a4`, EmojiOne 제거 `918b160`, 버전 `c3dbbf8`. 검증: EditMode 88/88, 에디터 플레이(PC·모바일 강제). 미검증: 실제 기기, 업로드 수락.
 - 출시 노트에서 뺀 것: 디스폰 방어(같은 버전에 새로 들어간 자석 연출의 내부 보완), EmojiOne 제거(화면 변화 없음). 이전 초안의 "안정성을 개선했습니다"는 1.0.0 대비 실제 안정성 수정이 없어 뺐다.
