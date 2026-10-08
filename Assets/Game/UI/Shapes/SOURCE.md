@@ -9,5 +9,6 @@
 | `UI_RoundRect_White.png` | 74×74 | 슈퍼타원(n=2.64) 둥근 사각형 | 37,37,37,37 | `BasicFrame_Rectangle02_s_White` |
 | `UI_Line_White.png` | 60×6 | 양 끝 반원(반지름 3) 막대 | 30,0,30,0 | `LineFrame_White` |
 | `UI_Circle_White.png` | 337×336 | 슈퍼타원(n=2.16) 원 | 없음 | `BasicFrame_Circle_337_White` |
+| `UI_Ring_White.png` | 512×512 | 원형 링(바깥 반지름 256, 안쪽 195, 4×4 슈퍼샘플링, 2026-10-08 세션 1) | 없음 | `Assets/Sprites/Health Circle.png`(출처 미확정) 대체 — 플레이어 발밑 체력 원(`Player Soldier`·`Player Character` 프리팹). 기존 이미지와 알파 평균 차이 0.7/255 |
 
 - 게임에서는 `Image.color`로 색을 입힌다(어두운 패널, 앰버, 회색 등).
