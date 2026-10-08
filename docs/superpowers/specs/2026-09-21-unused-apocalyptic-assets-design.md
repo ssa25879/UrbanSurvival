@@ -4,7 +4,7 @@
 
 ## 목적
 
-`Assets/SideProjectAssets/Apocalyptic_World` 묶음에서 `Assets/Scenes/Main.unity`가 실제로 사용하는 에셋과 그 재귀 의존성만 Unity 프로젝트에 남긴다. 사용하지 않는 에셋은 Git에 올리지 않고 `D:\2026 윤우상\TopViewSurvivalAsset\미사용`으로 이동해 보관한다.
+`Assets/SideProjectAssets/Apocalyptic_World` 묶음에서 `Assets/Scenes/Main.unity`가 실제로 사용하는 에셋과 그 재귀 의존성만 Unity 프로젝트에 남긴다. 사용하지 않는 에셋은 Git에 올리지 않고 `D:\2026 (author)\TopViewSurvivalAsset\미사용`으로 이동해 보관한다.
 
 ## 확정 조건
 
@@ -15,7 +15,7 @@
 - 기존 게임 코드, UI, 오디오, 기존 캐릭터 에셋 등 범위 밖 파일은 정리하지 않는다.
 - 백업은 생성하지 않는다.
 - 미사용 에셋은 원본과 `.meta`를 함께 이동한다.
-- 보관 위치는 `D:\2026 윤우상\TopViewSurvivalAsset\미사용`이다.
+- 보관 위치는 `D:\2026 (author)\TopViewSurvivalAsset\미사용`이다.
 - 외부 보관 폴더에서는 프로젝트 내부의 상대 경로를 유지한다.
 - 외부 보관 폴더의 파일은 Git에 추가하지 않는다.
 
@@ -39,7 +39,7 @@
 
 아래 위치로 이동한다:
 
-`D:\2026 윤우상\TopViewSurvivalAsset\미사용\Assets\SideProjectAssets\Apocalyptic_World\Art\Textures\Example.bmp`
+`D:\2026 (author)\TopViewSurvivalAsset\미사용\Assets\SideProjectAssets\Apocalyptic_World\Art\Textures\Example.bmp`
 
 `Example.bmp.meta`도 같은 목적지 폴더로 이동한다. 목적지에 같은 상대 경로의 파일이 이미 존재하면 덮어쓰지 않는다. 내용이 같으면 기존 파일을 보존하고, 내용이 다르면 작업을 중단해 충돌 파일을 보고한다.
 

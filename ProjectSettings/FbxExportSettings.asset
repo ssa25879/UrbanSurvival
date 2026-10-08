@@ -9,7 +9,7 @@
         "launchAfterInstallation": true,
         "HideSendToUnityMenu": true,
         "BakeAnimation": true,
-        "IntegrationSavePath": "/Users/jeminlee/git-projects/Unity-Programming-Essence/OnProgress/Bang",
+        "IntegrationSavePath": "/",
         "selectedDCCApp": 0,
         "prefabSavePaths": [
             "."
