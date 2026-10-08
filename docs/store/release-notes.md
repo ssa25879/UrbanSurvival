@@ -27,7 +27,7 @@
 
 ## 1.0.2 (versionCode 3) — 자원 정리·안정성 (준비 중)
 
-- 상태: **미착수.** Health Circle 자체 도형 교체, EmojiOne·Heart 처리(사용자 결정 필요), 크레딧 표기(선택).
+- 상태: **일부 완료.** EmojiOne 제거 `918b160`. 남은 것: Health Circle 자체 도형 교체, Heart 처리(사용자 결정), 크레딧 표기(선택).
 
 ```
 <ko-KR>
