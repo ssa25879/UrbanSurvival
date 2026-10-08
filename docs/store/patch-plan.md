@@ -24,7 +24,7 @@
 | 항목 | 상태 | 담당 | 메모 |
 |---|---|---|---|
 | `Sprites/Health Circle.png`(출처 미확정) 교체 | 미착수 | 세션 1 | 자체 제작 원 `Assets/Game/UI/Shapes/UI_Circle_White`로 교체, 화면 전후 비교 |
-| `Heart.obj`(회복 상자, 출처 미확정) | **사용자 결정 필요** | 세션 1 | 유지(IJEMIN 예제 허용 범위) 또는 CC0 모델로 교체 |
+| `Heart.obj`(회복 상자, 출처 미확정) → 구급상자 | **교체 결정**(2026-10-08 사용자) | 세션 1 | Toon Shooter Game Kit(Quaternius, CC0, 이미 프로젝트에 있음)의 `Environment/FBX/Health.fbx`로 `HealthPack.prefab`의 메시 자식만 교체. 콜라이더·스크립트는 그대로. 색(초록 원본 / 빨강 재질 사본)은 화면 비교 뒤 사용자 결정. 원본 `Heart.obj` 파일은 지우지 않음 |
 | 크레딧 표기(선택) | 결정 필요 | 세션 1·2 | Kenney·Quaternius·사운드 출처를 설정 화면이나 스토어 설명에 표기(CC0는 의무 아님) |
 
 ### 1.0.3 (코드 4) — 새 아이템: 자석
