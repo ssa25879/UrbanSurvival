@@ -13,6 +13,9 @@ public class ItemMagnet : MonoBehaviour {
 
     private const string GlowPadName = "GlowPad"; // 무기 픽업의 바닥 글로우, 비행 시작 시 숨김
 
+    // 활성 상태의 아이템 목록(자석 버프가 범위 안 아이템을 찾을 때 사용)
+    public static readonly System.Collections.Generic.List<ItemMagnet> All = new System.Collections.Generic.List<ItemMagnet>();
+
     private IItem item;
     private PlayerHealth collector;
     private Vector3 startPosition;
@@ -21,6 +24,14 @@ public class ItemMagnet : MonoBehaviour {
 
     // 비행 중인지(드랍 소멸 타이머가 비행 중 아이템을 지우지 않도록 확인용)
     public bool IsFlying => flying;
+
+    private void OnEnable() {
+        All.Add(this);
+    }
+
+    private void OnDisable() {
+        All.Remove(this);
+    }
 
     // 비행을 시작한다. 이미 날고 있으면 무시한다(중복 습득 방지)
     public void Begin(PlayerHealth player) {

@@ -18,6 +18,7 @@ public class ZombieSpawner : MonoBehaviour {
     public GameObject shotgunPickupPrefab;
     public GameObject ammoPackPrefab;
     public GameObject healthPackPrefab;
+    public GameObject magnetPickupPrefab; // 자석 아이템(강화 적 처치 시 꽝 자리 대신 강화 웨이브당 1개, 보스는 항상 1개, 2026-10-08 1.0.3)
 
     private List<Zombie> zombies = new List<Zombie>(); // 생성된 좀비들을 담는 리스트
     private int wave; // 현재 웨이브
@@ -81,6 +82,8 @@ public class ZombieSpawner : MonoBehaviour {
     private readonly List<Zombie> spawnedZombies = new List<Zombie>(); // 살아있는 좀비와 아직 사라지지 않은 시체(동시 상한 계산용)
     private int pendingSpawns; // 상한 때문에 아직 소환하지 못하고 대기 중인 일반 좀비 수
     private int pendingEliteSpawns; // 상한 때문에 아직 소환하지 못하고 대기 중인 강화 적 수(일반 좀비보다 먼저 소환)
+    private readonly Queue<int> pendingEliteWaves = new Queue<int>(); // 대기 중인 강화 적이 속한 강화 웨이브 번호(소환 순서대로, 자석 드랍 제한용)
+    private readonly MagnetDropLimiter magnetDropLimiter = new MagnetDropLimiter(); // 강화 웨이브당 자석 최대 1개
     private ZombieData[] normalDatas; // zombieDatas 중 강화가 아닌 데이터
     private ZombieData[] eliteDatas; // zombieDatas 중 강화 데이터
 
@@ -149,6 +152,10 @@ public class ZombieSpawner : MonoBehaviour {
         // 바로 소환하지 않고 대기열에 넣어 두면 SpawnPending이 동시 상한 안에서 소환한다
         pendingSpawns += spawnCount - eliteCount;
         pendingEliteSpawns += eliteCount;
+        for (int i = 0; i < eliteCount; i++)
+        {
+            pendingEliteWaves.Enqueue(wave);
+        }
     }
 
     // 강화가 아닌(일반) 좀비 데이터 목록(강화 데이터만 있으면 전체를 사용)
@@ -258,7 +265,9 @@ public class ZombieSpawner : MonoBehaviour {
             if (pendingEliteSpawns > 0)
             {
                 ZombieData[] elites = GetEliteDatas();
-                CreateZombie(spawnPoint, spawnPosition, elites[Random.Range(0, elites.Length)]);
+                // 소환 시점의 웨이브가 아니라 이 강화 적이 속한 강화 웨이브 번호로 자석 드랍 제한을 센다
+                int eliteWave = pendingEliteWaves.Count > 0 ? pendingEliteWaves.Dequeue() : wave;
+                CreateZombie(spawnPoint, spawnPosition, elites[Random.Range(0, elites.Length)], false, eliteWave);
                 pendingEliteSpawns--;
             }
             else
@@ -508,7 +517,8 @@ public class ZombieSpawner : MonoBehaviour {
     // 좀비를 생성하고 생성한 좀비에게 추적할 대상을 할당
     // dataOverride가 있으면(보스) 그 데이터를 쓰고, 없으면 일반 좀비 데이터를 무작위로 고른다
     // isGoalBoss가 참인 보스를 처치하면 1차 목표를 달성한다
-    private void CreateZombie(Transform spawnPoint, Vector3 spawnPosition, ZombieData dataOverride = null, bool isGoalBoss = false) {
+    // eliteWave는 강화 적이 속한 강화 웨이브 번호(강화 적이 아니면 0)
+    private void CreateZombie(Transform spawnPoint, Vector3 spawnPosition, ZombieData dataOverride = null, bool isGoalBoss = false, int eliteWave = 0) {
         // 사용할 좀비 데이터를 결정
         ZombieData zombieData = dataOverride != null ? dataOverride : zombieDatas[Random.Range(0, zombieDatas.Length)];
         
@@ -544,7 +554,7 @@ public class ZombieSpawner : MonoBehaviour {
         int score = zombieData.score;
         zombie.onDeath += () => GameManager.instance.AddScore(score);
         // 보스는 일반 드랍 확률 대신 무기 1종·탄약·회복을 항상 드랍
-        zombie.onDeath += () => { if (zombieData.isBoss) DropBossLoot(zombie.transform.position); else DropLoot(zombie.transform.position); };
+        zombie.onDeath += () => { if (zombieData.isBoss) DropBossLoot(zombie.transform.position); else DropLoot(zombie.transform.position, zombieData.isElite ? eliteWave : 0); };
         zombie.onDeath += HealPlayerIfAllCleared;
 
         // 1차 목표 보스(30분 보스)를 처치하면 목표 달성 처리(무한 모드 진입)
@@ -582,7 +592,8 @@ public class ZombieSpawner : MonoBehaviour {
     }
 
     // 처치 시 드랍 테이블 판정: 소총10% / SMG15% / 산탄총15% / 탄약20% / 회복상자20% / 꽝(드랍없음)20%
-    private void DropLoot(Vector3 position) {
+    // 강화 적(eliteWave > 0)은 꽝 자리를 자석 아이템으로 바꾼다(강화 웨이브당 최대 1개, 이미 나갔으면 원래대로 꽝, 2026-10-08)
+    private void DropLoot(Vector3 position, int eliteWave = 0) {
         float roll = Random.Range(0f, 100f);
         GameObject dropPrefab = null;
 
@@ -591,7 +602,8 @@ public class ZombieSpawner : MonoBehaviour {
         else if (roll < 40f) dropPrefab = shotgunPickupPrefab;
         else if (roll < 60f) dropPrefab = ammoPackPrefab;
         else if (roll < 80f) dropPrefab = healthPackPrefab;
-        // 80 이상(20%): 꽝, 드랍 없음
+        // 80 이상(20%): 꽝, 드랍 없음(강화 적은 자석 아이템, 웨이브당 1개)
+        else if (eliteWave > 0 && magnetPickupPrefab != null && magnetDropLimiter.TryClaim(eliteWave)) dropPrefab = magnetPickupPrefab;
 
         if (dropPrefab != null)
         {
@@ -627,6 +639,8 @@ public class ZombieSpawner : MonoBehaviour {
         if (weapon != null) SpawnDrop(weapon, position, radius);
         if (ammoPackPrefab != null) SpawnDrop(ammoPackPrefab, position, radius);
         if (healthPackPrefab != null) SpawnDrop(healthPackPrefab, position, radius);
+        // 자석 아이템 1개를 항상 추가(2026-10-08)
+        if (magnetPickupPrefab != null) SpawnDrop(magnetPickupPrefab, position, radius);
     }
 
     // 드랍 아이템 하나를 사망 위치 주변에 생성하고 일정 시간 후 자동 소멸시킨다
