@@ -19,6 +19,9 @@ public class ItemMagnet : MonoBehaviour {
     private float elapsed;
     private bool flying;
 
+    // 비행 중인지(드랍 소멸 타이머가 비행 중 아이템을 지우지 않도록 확인용)
+    public bool IsFlying => flying;
+
     // 비행을 시작한다. 이미 날고 있으면 무시한다(중복 습득 방지)
     public void Begin(PlayerHealth player) {
         if (flying) return;

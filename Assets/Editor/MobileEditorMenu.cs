@@ -26,6 +26,8 @@ public static class MobileEditorMenu
         PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel25;
         PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel36;
         EditorUserBuildSettings.buildAppBundle = true;
+        // 네이티브 디버그 기호(symbols.zip)를 만든다. Play Console 업로드용이며 Library에 저장되므로 코드로 둔다
+        EditorUserBuildSettings.androidCreateSymbols = AndroidCreateSymbols.Public;
 
         // 프로젝트가 URP 호환 모드(Render Graph 끔)이므로 Android 빌드에도 같은 정의가 있어야 빌드가 거부되지 않는다
         string defines = PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Android);

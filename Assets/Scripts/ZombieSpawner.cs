@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
@@ -636,6 +637,22 @@ public class ZombieSpawner : MonoBehaviour {
 
         GameObject drop = Instantiate(dropPrefab, dropPosition, Quaternion.identity);
         // 플레이어가 회수하지 않고 방치해도 무한 모드에서 드랍이 끝없이 쌓이지 않도록 일정 시간 후 자동 소멸
-        Destroy(drop, lootDespawnTime);
+        StartCoroutine(DespawnDropAfter(drop));
+    }
+
+    // 자석 비행 중인 아이템은 도착(효과 적용)할 때까지 소멸을 미룬다
+    private IEnumerator DespawnDropAfter(GameObject drop) {
+        yield return new WaitForSeconds(lootDespawnTime);
+
+        if (drop == null) yield break;
+
+        ItemMagnet magnet = drop.GetComponent<ItemMagnet>();
+        while (magnet != null && magnet.IsFlying)
+        {
+            yield return null;
+            if (drop == null) yield break;
+        }
+
+        Destroy(drop);
     }
 }
