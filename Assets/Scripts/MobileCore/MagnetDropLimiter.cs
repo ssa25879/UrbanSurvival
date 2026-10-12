@@ -9,9 +9,4 @@ public class MagnetDropLimiter {
     public bool TryClaim(int wave) {
         return claimedWaves.Add(wave);
     }
-
-    // 이미 지급된 웨이브인지(지급권을 쓰지 않고 확인만 한다)
-    public bool HasClaimed(int wave) {
-        return claimedWaves.Contains(wave);
-    }
 }

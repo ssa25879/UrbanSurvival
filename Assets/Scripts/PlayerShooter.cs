@@ -228,6 +228,11 @@ public class PlayerShooter : MonoBehaviour {
         gun.ammoRemain = Mathf.Min(gun.ammoRemain + amount, gun.gunData.reserveAmmoCap);
     }
 
+    // 현재 무기에 탄약 상자를 쓸 여유가 있는지(예비탄 무제한이거나 가득 차면 거짓, 자석 버프가 상자를 끌어올지 판단)
+    public bool CanUseAmmoPack() {
+        return gun != null && gun.gunData != null && MagnetPullRules.ShouldPullAmmoPack(gun.ammoRemain, gun.gunData.reserveAmmoCap);
+    }
+
     // 연습 씬: 현재 무기의 예비탄이 바닥나면 가득 채운다(탄약이 모자라 보스 처치 시간이 왜곡되지 않게)
     public void RefillReserveIfEmpty() {
         if (gun != null && gun.gunData != null && gun.gunData.reserveAmmoCap >= 0 && gun.ammoRemain <= 0)

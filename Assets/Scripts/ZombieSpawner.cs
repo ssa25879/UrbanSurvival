@@ -81,8 +81,9 @@ public class ZombieSpawner : MonoBehaviour {
 
     private readonly List<Zombie> spawnedZombies = new List<Zombie>(); // 살아있는 좀비와 아직 사라지지 않은 시체(동시 상한 계산용)
     private int pendingSpawns; // 상한 때문에 아직 소환하지 못하고 대기 중인 일반 좀비 수
-    private int pendingEliteSpawns; // 상한 때문에 아직 소환하지 못하고 대기 중인 강화 적 수(일반 좀비보다 먼저 소환)
-    private readonly Queue<int> pendingEliteWaves = new Queue<int>(); // 대기 중인 강화 적이 속한 강화 웨이브 번호(소환 순서대로, 자석 드랍 제한용)
+    // 대기 중인 강화 적이 속한 강화 웨이브 번호(소환 순서대로, 자석 드랍 제한용). 개수가 곧 대기 중인 강화 적 수다
+    private readonly Queue<int> pendingEliteWaves = new Queue<int>();
+    private int pendingEliteSpawns => pendingEliteWaves.Count; // 상한 때문에 아직 소환하지 못하고 대기 중인 강화 적 수(일반 좀비보다 먼저 소환)
     private readonly MagnetDropLimiter magnetDropLimiter = new MagnetDropLimiter(); // 강화 웨이브당 자석 최대 1개
     private ZombieData[] normalDatas; // zombieDatas 중 강화가 아닌 데이터
     private ZombieData[] eliteDatas; // zombieDatas 중 강화 데이터
@@ -151,7 +152,6 @@ public class ZombieSpawner : MonoBehaviour {
 
         // 바로 소환하지 않고 대기열에 넣어 두면 SpawnPending이 동시 상한 안에서 소환한다
         pendingSpawns += spawnCount - eliteCount;
-        pendingEliteSpawns += eliteCount;
         for (int i = 0; i < eliteCount; i++)
         {
             pendingEliteWaves.Enqueue(wave);
@@ -266,9 +266,8 @@ public class ZombieSpawner : MonoBehaviour {
             {
                 ZombieData[] elites = GetEliteDatas();
                 // 소환 시점의 웨이브가 아니라 이 강화 적이 속한 강화 웨이브 번호로 자석 드랍 제한을 센다
-                int eliteWave = pendingEliteWaves.Count > 0 ? pendingEliteWaves.Dequeue() : wave;
+                int eliteWave = pendingEliteWaves.Dequeue();
                 CreateZombie(spawnPoint, spawnPosition, elites[Random.Range(0, elites.Length)], false, eliteWave);
-                pendingEliteSpawns--;
             }
             else
             {

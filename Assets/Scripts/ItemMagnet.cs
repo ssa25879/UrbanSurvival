@@ -16,6 +16,12 @@ public class ItemMagnet : MonoBehaviour {
     // 활성 상태의 아이템 목록(자석 버프가 범위 안 아이템을 찾을 때 사용)
     public static readonly System.Collections.Generic.List<ItemMagnet> All = new System.Collections.Generic.List<ItemMagnet>();
 
+    // Enter Play Mode에서 도메인 리로드를 꺼도 이전 플레이의 항목이 남지 않게 비운다
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetAll() {
+        All.Clear();
+    }
+
     private IItem item;
     private PlayerHealth collector;
     private Vector3 startPosition;

@@ -19,7 +19,9 @@ public class MagnetBuff : MonoBehaviour {
 
     private readonly MagnetBuffTimer timer = new MagnetBuffTimer();
     private PlayerHealth player;
+    private PlayerShooter shooter;
     private float nextScanTime;
+    private int lastShownTenths = -1; // HUD 텍스트를 값이 바뀔 때만 갱신하기 위한 마지막 표시값(0.1초 단위)
 
     private Sprite ringSprite;
     private Sprite iconSprite;
@@ -49,6 +51,7 @@ public class MagnetBuff : MonoBehaviour {
 
     private void Awake() {
         player = GetComponent<PlayerHealth>();
+        shooter = GetComponent<PlayerShooter>();
     }
 
     // 획득: 남은 시간을 duration으로 되돌린다(중첩해도 누적하지 않음)
@@ -58,6 +61,7 @@ public class MagnetBuff : MonoBehaviour {
 
         timer.Refresh(duration);
         nextScanTime = 0f;
+        lastShownTenths = -1;
         EnsureRing();
         EnsureHud();
         SetVisuals(true);
@@ -123,11 +127,26 @@ public class MagnetBuff : MonoBehaviour {
 
             Vector3 delta = item.transform.position - origin;
             delta.y = 0f;
-            if (delta.sqrMagnitude <= radiusSqr)
+            if (delta.sqrMagnitude <= radiusSqr && CanBenefit(item))
             {
                 item.Begin(player);
             }
         }
+    }
+
+    // 체력·탄약이 가득 찼을 때는 회복·탄약 상자를 끌어오지 않는다(남겨 두었다가 필요해지면 버프 중에 끌어온다)
+    private bool CanBenefit(ItemMagnet item) {
+        if (item.GetComponent<HealthPack>() != null)
+        {
+            return MagnetPullRules.ShouldPullHealthPack(player.health, player.startingHealth);
+        }
+
+        if (item.GetComponent<AmmoPack>() != null)
+        {
+            return shooter != null && shooter.CanUseAmmoPack();
+        }
+
+        return true;
     }
 
     private void SetVisuals(bool visible) {
@@ -155,7 +174,13 @@ public class MagnetBuff : MonoBehaviour {
 
         if (hudText != null)
         {
-            hudText.text = "MAGNET  " + timer.Remaining.ToString("0.0") + "s";
+            // 0.1초 단위가 바뀔 때만 문자열을 만들고 텍스트를 갱신한다(매 프레임 할당·재구성 방지)
+            int tenths = Mathf.CeilToInt(timer.Remaining * 10f);
+            if (tenths != lastShownTenths)
+            {
+                lastShownTenths = tenths;
+                hudText.text = "MAGNET  " + (tenths / 10f).ToString("0.0") + "s";
+            }
         }
         if (hudBar != null)
         {
