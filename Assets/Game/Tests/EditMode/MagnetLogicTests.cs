@@ -70,19 +70,5 @@ public class MagnetLogicTests {
         Assert.IsTrue(limiter.TryClaim(20));
         Assert.IsFalse(limiter.TryClaim(10));
     }
-
-    [Test]
-    public void PullRules_HealthPackOnlyWhenHurt() {
-        Assert.IsTrue(MagnetPullRules.ShouldPullHealthPack(60f, 100f));
-        Assert.IsFalse(MagnetPullRules.ShouldPullHealthPack(100f, 100f));
-        Assert.IsFalse(MagnetPullRules.ShouldPullHealthPack(110f, 110f));
-    }
-
-    [Test]
-    public void PullRules_AmmoPackOnlyWhenReserveNotFull() {
-        Assert.IsTrue(MagnetPullRules.ShouldPullAmmoPack(100, 240));
-        Assert.IsFalse(MagnetPullRules.ShouldPullAmmoPack(240, 240));
-        Assert.IsFalse(MagnetPullRules.ShouldPullAmmoPack(-1, -1)); // 권총 등 무제한 예비탄
-    }
 }
 
