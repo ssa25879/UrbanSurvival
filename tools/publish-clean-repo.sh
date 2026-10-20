@@ -5,9 +5,11 @@
 #
 # 사용:
 #   tools/publish-clean-repo.sh           # 사본 생성 + 검증만 (푸시 안 함)
-#   tools/publish-clean-repo.sh --push    # 검증 통과 후 공개 저장소에 --all 푸시(일반 푸시, 거부되면 중단)
+#   tools/publish-clean-repo.sh --push    # 검증 통과 후 PUSH_BRANCHES(기본: SideProject SideProject-Mobile)만 일반 푸시(거부되면 중단)
+#                                          main은 올리지 않는다: 공개 main이 비공개 main과 분기돼 있어 AGENTS.md 절차대로 사본에서 병합 커밋을 만들어 따로 올린다
 #
-# 환경 변수: CLEAN_DIR(사본 위치, 기본 <작업폴더>/../Zombie_clean.git), PUBLIC_REMOTE(공개 저장소 주소)
+# 환경 변수: CLEAN_DIR(사본 위치, 기본 <작업폴더>/../Zombie_clean.git), PUBLIC_REMOTE(공개 저장소 주소),
+#           PUSH_BRANCHES(--push로 올릴 브랜치, 공백 구분), ALLOW_UNSYNCED=1(로컬과 origin이 다른 브랜치가 있어도 계속)
 #
 # 커밋된 기록만 사용한다(커밋하지 않은 변경은 포함되지 않음). 기록 정리는 결정적(deterministic)이라
 # 같은 커밋에서 다시 실행하면 같은 SHA가 나오고, 새 커밋이 위에 쌓이면 공개 저장소에는 일반 푸시(fast-forward)로 올라간다.
@@ -31,7 +33,13 @@ HIDE_TO_EMAIL="contributor@noreply.invalid"
 GITIGNORE_ANCHOR="e038672"
 export GIGNORE_BLOCK=$'# Third-party asset not redistributed in this public repository (license; see docs/store/third-party-not-in-repo.md)\n/Assets/GUI PRO Kit - Simple Casual/\n/Assets/GUI PRO Kit - Simple Casual.meta\n'
 # 본문에 HIDE_EMAIL이 적힌 적이 있는 파일(git log -S로 확인한 것만). 새로 생기면 여기에 추가한다
-SCRUB_FILES=("docs/superpowers/2026-10-06-mobile-port-final-handoff.md" "tools/publish-clean-repo.sh")
+SCRUB_FILES=("docs/superpowers/2026-10-06-mobile-port-final-handoff.md" "tools/publish-clean-repo.sh" "docs/superpowers/specs/2026-09-21-unused-apocalyptic-assets-design.md" "docs/superpowers/specs/2026-10-13-code-review-remediation-design.md" "docs/superpowers/plans/2026-10-12-code-review-roadmap.md" "ProjectSettings/FbxExportSettings.asset")
+# 공개본 파일 본문에서 가릴 문자열(2026-10-20): 작성자 실명(스크립트 파일에 그대로 적지 않으려고 UTF-8 바이트로 만든다)과 타인의 로컬 경로.
+# 해당 문자열은 SCRUB_FILES의 파일 본문에서만 바뀐다. 새 문서에 실명을 쓰면 아래 검증이 실패해 알려 준다
+HIDE_NAME_KO="$(printf '\xec\x9c\xa4\xec\x9a\xb0\xec\x83\x81')"
+HIDE_TO_NAME_KO="(author)"
+HIDE_FOREIGN_PATH="/"
+HIDE_FOREIGN_USER="(user)"
 
 LOGFILE="${TMPDIR:-/tmp}/publish-clean-filter.log"
 IDX_SCRIPT="${TMPDIR:-/tmp}/publish-clean-index-filter.sh"
@@ -56,6 +64,23 @@ if [ -n "$missing" ] && [ "${ALLOW_PARTIAL:-0}" != "1" ]; then
   exit 3
 fi
 
+# 로컬 브랜치가 비공개 origin과 다르면 알린다(사본은 로컬 기준이라, 뒤처진 브랜치를 올리면 공개본이 최신이 아니다).
+# --push일 때는 PUSH_BRANCHES가 origin과 다르면 중단한다(ALLOW_UNSYNCED=1로 무시)
+unsynced=0
+for b in $(git -C "$SRC" for-each-ref --format='%(refname:short)' refs/heads); do
+  if git -C "$SRC" show-ref --verify --quiet "refs/remotes/origin/$b"; then
+    counts=$(git -C "$SRC" rev-list --left-right --count "$b...origin/$b")
+    if [ "$counts" != "0	0" ]; then
+      echo "  주의: $b 는 origin과 다릅니다 (로컬 앞섬/뒤처짐: $counts)" >&2
+      case " ${PUSH_BRANCHES:-SideProject SideProject-Mobile} " in *" $b "*) unsynced=1 ;; esac
+    fi
+  fi
+done
+if [ "$unsynced" = "1" ] && [ "${1:-}" = "--push" ] && [ "${ALLOW_UNSYNCED:-0}" != "1" ]; then
+  echo "푸시 대상 브랜치가 비공개 origin과 다릅니다. 먼저 동기화(pull/push)하거나 ALLOW_UNSYNCED=1로 다시 실행하세요." >&2
+  exit 3
+fi
+
 echo "== 1. 사본 생성: $DEST"
 rm -rf "$DEST"
 git clone --bare --no-hardlinks "$SRC" "$DEST" >/dev/null 2>&1
@@ -68,7 +93,7 @@ echo "== 2. 기록에서 제외 경로 삭제, 작성자 가림 (git filter-bran
   for p in "${EXCLUDES[@]}"; do printf ' %q' "$p"; done
   printf '\n'
   # 주소는 환경 변수로 넘긴다(perl 정규식에 직접 쓰면 @가 배열로 해석됨)
-  perl_expr='s/\Q$ENV{HIDE_EMAIL}\E/$ENV{HIDE_TO_EMAIL}/g'
+  perl_expr='s/\Q$ENV{HIDE_EMAIL}\E/$ENV{HIDE_TO_EMAIL}/g; s/\Q$ENV{HIDE_FOREIGN_PATH}\E//g; s/\Q$ENV{HIDE_FOREIGN_USER}\E/(user)/g; s/\Q$ENV{HIDE_NAME_KO}\E/$ENV{HIDE_TO_NAME_KO}/g'
   for f in "${SCRUB_FILES[@]}"; do
     # 파일이 있는 커밋에서만 본문의 주소를 바꾼다(바이트 그대로 처리, 줄바꿈 변환 없음)
     printf 'e=$(git ls-files -s -- %q)\n' "$f"
@@ -78,7 +103,7 @@ echo "== 2. 기록에서 제외 경로 삭제, 작성자 가림 (git filter-bran
   # GITIGNORE_ANCHOR의 후손이고 .gitignore에 GUI PRO 규칙이 없으면 끝에 덧붙인다
   printf 'if git merge-base --is-ancestor %q "$GIT_COMMIT" 2>/dev/null; then e=$(git ls-files -s -- .gitignore); if [ -n "$e" ]; then m=${e%%%% *}; s=$(echo "$e" | cut -d" " -f2); if ! git cat-file blob "$s" | grep -qF "/Assets/GUI PRO Kit - Simple Casual/"; then n=$({ git cat-file blob "$s"; printf %%s "$GIGNORE_BLOCK"; } | git hash-object -w --stdin); git update-index --cacheinfo "$m,$n,.gitignore"; fi; fi; fi\n' "$GITIGNORE_ANCHOR"
 } >"$IDX_SCRIPT"
-export FILTER_BRANCH_SQUELCH_WARNING=1 HIDE_EMAIL HIDE_TO_NAME HIDE_TO_EMAIL
+export FILTER_BRANCH_SQUELCH_WARNING=1 HIDE_EMAIL HIDE_TO_NAME HIDE_TO_EMAIL HIDE_NAME_KO HIDE_TO_NAME_KO HIDE_FOREIGN_PATH HIDE_FOREIGN_USER
 git filter-branch -f --prune-empty --tag-name-filter cat \
   --env-filter '
     if [ "$GIT_AUTHOR_EMAIL" = "$HIDE_EMAIL" ]; then GIT_AUTHOR_NAME="$HIDE_TO_NAME"; GIT_AUTHOR_EMAIL="$HIDE_TO_EMAIL"; fi
@@ -113,6 +138,10 @@ n=$(git log --branches --format='%an <%ae>%n%cn <%ce>' | grep -cF -- "$HIDE_EMAI
 [ "$n" -eq 0 ] || { echo "실패: 작성자·커미터에 '$HIDE_EMAIL'이 남아 있음($n)" >&2; fail=1; }
 n=$(git log --branches -S"$HIDE_EMAIL" --format='%h' | wc -l)
 [ "$n" -eq 0 ] || { echo "실패: 파일 본문 기록에 '$HIDE_EMAIL'이 남아 있음(커밋 $n개, SCRUB_FILES 확인)" >&2; fail=1; }
+for s in "$HIDE_NAME_KO" "$HIDE_FOREIGN_USER"; do
+  n=$(git log --branches -S"$s" --format='%h' | wc -l)
+  [ "$n" -eq 0 ] || { echo "실패: 파일 본문 기록에 가려야 할 문자열이 남아 있음(커밋 $n개, SCRUB_FILES에 파일을 추가하세요): $(git log --branches -S"$s" --format='%h' | head -3 | tr "\n" " ")" >&2; fail=1; }
+done
 if [ -n "$(git fsck --full 2>&1)" ]; then echo "실패: git fsck 출력이 있음" >&2; fail=1; fi
 for b in $(git for-each-ref --format='%(refname:short)' refs/heads); do
   o=$(git -C "$SRC" rev-parse "$b^{tree}" 2>/dev/null || echo none)
@@ -124,8 +153,14 @@ echo "  크기: $(du -sm . | cut -f1) MB"
 echo "검증 통과."
 
 if [ "${1:-}" = "--push" ]; then
-  echo "== 5. 공개 저장소에 푸시: $REMOTE_URL (일반 푸시, --force 없음)"
-  git push "$REMOTE_URL" --all
+  # --all은 쓰지 않는다: 공개 main이 비공개 main과 분기돼 있어 main까지 밀면 거부되거나 이력이 섞인다.
+  # main은 AGENTS.md 절차(사본에서 [공개 main, 새 Mobile 끝]을 부모로 하는 병합 커밋)로 따로 올린다
+  PUSH_BRANCHES="${PUSH_BRANCHES:-SideProject SideProject-Mobile}"
+  echo "== 5. 공개 저장소에 푸시: $REMOTE_URL  브랜치: $PUSH_BRANCHES (일반 푸시, --force 없음)"
+  for b in $PUSH_BRANCHES; do
+    git show-ref --verify --quiet "refs/heads/$b" || { echo "사본에 브랜치 '$b'가 없습니다." >&2; exit 4; }
+    git push "$REMOTE_URL" "refs/heads/$b:refs/heads/$b"
+  done
 else
   echo "푸시하지 않았습니다. 올리려면: tools/publish-clean-repo.sh --push"
 fi
