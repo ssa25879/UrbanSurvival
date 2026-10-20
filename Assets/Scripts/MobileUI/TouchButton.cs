@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-// 누름/뗌을 구분하는 터치 버튼(발사·재장전·일시정지·무기 슬롯 공용). 손가락이 버튼 밖으로 나가면 뗀 것으로 본다
+// 누름/뗌을 구분하는 터치 버튼(발사·재장전·일시정지·무기 슬롯 공용). 기본은 손가락이 버튼 밖으로 나가면 뗀 것으로 보고, releaseOnExit를 끄면 손가락을 뗄 때까지 유지한다
 public class TouchButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
 {
     public System.Action onDown;
@@ -19,7 +19,10 @@ public class TouchButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 
     public bool Pressed { get; private set; }
     private bool interactable = true;
-    private int activePointerId = int.MinValue;
+    private readonly TouchPointerTracker pointer = new TouchPointerTracker();
+
+    // false이면 손가락이 버튼 밖으로 나가도 눌림을 유지한다(연사하는 FIRE 버튼용, 2026-10-20)
+    public bool releaseOnExit = true;
 
     private void OnDisable()
     {
@@ -44,7 +47,7 @@ public class TouchButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
             return;
         }
 
-        activePointerId = eventData.pointerId;
+        pointer.TryPress(eventData.pointerId);
         Pressed = true;
         Refresh();
         onDown?.Invoke();
@@ -52,7 +55,7 @@ public class TouchButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        if (eventData.pointerId == activePointerId)
+        if (pointer.TryRelease(eventData.pointerId))
         {
             Release();
         }
@@ -60,7 +63,7 @@ public class TouchButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        if (eventData.pointerId == activePointerId)
+        if (pointer.TryExit(eventData.pointerId, releaseOnExit))
         {
             Release();
         }
@@ -74,7 +77,7 @@ public class TouchButton : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
         }
 
         Pressed = false;
-        activePointerId = int.MinValue;
+        pointer.Clear();
         Refresh();
         onUp?.Invoke();
     }

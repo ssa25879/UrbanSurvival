@@ -182,6 +182,8 @@ public class MobileTouchOverlay : MonoBehaviour
         // 오른쪽 아래 모서리(기존 총기·탄약 패널이 있던 자리. 탄약 표시는 상단 중앙으로 옮겼다)
         fireButton = CreatePanelButton("Fire Button", controlsRoot, new Vector2(-134f, 134f), 220f, "FIRE", 48, 8f);
         fireButtonObject = fireButton.gameObject;
+        // 연사 중 손가락이 버튼 밖으로 살짝 미끄러져도 뗄 때까지 발사를 유지한다
+        fireButton.releaseOnExit = false;
         fireButton.onDown = () =>
         {
             MobileInputState.FireHeld = true;
@@ -288,14 +290,7 @@ public class MobileTouchOverlay : MonoBehaviour
         pauseButton = background.gameObject.AddComponent<TouchButton>();
         pauseButton.background = background;
         pauseButtonObject = background.gameObject;
-        pauseButton.onDown = () =>
-        {
-            GameManager manager = GameManager.instance;
-            if (manager != null && !manager.isGameover && !manager.isPaused && !manager.awaitingGoalChoice)
-            {
-                manager.TogglePause();
-            }
-        };
+        pauseButton.onDown = PauseGameIfRunning;
     }
 
     // 알림창·전화·앱 전환으로 앱이 멈추거나 포커스를 잃으면 포인터 해제 이벤트가 오지 않을 수 있다.
@@ -308,6 +303,22 @@ public class MobileTouchOverlay : MonoBehaviour
     private void OnApplicationPause(bool paused)
     {
         ReleaseAllControls();
+
+        // 홈 버튼·전화·알림으로 앱이 백그라운드로 가면 전투가 계속 진행되지 않도록 일시정지한다. 복귀해도 자동 재개하지 않는다(2026-10-20)
+        if (paused)
+        {
+            PauseGameIfRunning();
+        }
+    }
+
+    // 진행 중일 때만 일시정지(게임오버·결과 선택 대기·이미 일시정지 상태에서는 아무것도 하지 않는다)
+    private static void PauseGameIfRunning()
+    {
+        GameManager manager = GameManager.instance;
+        if (manager != null && !manager.isGameover && !manager.isPaused && !manager.awaitingGoalChoice)
+        {
+            manager.TogglePause();
+        }
     }
 
     private void ReleaseAllControls()
