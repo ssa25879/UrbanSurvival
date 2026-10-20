@@ -47,7 +47,7 @@ PUSH_BRANCHES="${PUSH_BRANCHES:-SideProject-Mobile}"
 # 해당 문자열은 SCRUB_FILES의 파일 본문에서만 바뀐다. 새 문서에 실명을 쓰면 아래 검증이 실패해 알려 준다
 HIDE_NAME_KO="$(printf '\xec\x9c\xa4\xec\x9a\xb0\xec\x83\x81')"
 HIDE_TO_NAME_KO="(author)"
-HIDE_FOREIGN_PATH="/"
+HIDE_FOREIGN_PATH=""
 HIDE_FOREIGN_USER="(user)"
 
 LOGFILE="${TMPDIR:-/tmp}/publish-clean-filter.log"
@@ -163,8 +163,9 @@ for t in $PUBLISHED_TIPS; do
   if git cat-file -e "$t^{commit}" 2>/dev/null; then excl="$excl $t"; else echo "  주의: 이미 공개된 커밋 $t 를 사본에서 재현하지 못했습니다(공개 당시와 다르게 이력을 바꿨을 수 있음)" >&2; fi
 done
 for s in "$HIDE_NAME_KO" "$HIDE_FOREIGN_PATH"; do
-  n=$(git log $verify_refs --not $excl -S"$s" --format='%h' | wc -l)
-  [ "$n" -eq 0 ] || { echo "실패: 새 커밋 본문에 가려야 할 문자열이 남아 있음(커밋 $n개, SCRUB_FILES/NEWSCRUB_FILES에 파일을 추가하세요): $(git log $verify_refs --not $excl -S"$s" --format='%h' | head -3 | tr "\n" " ")" >&2; fail=1; }
+  # 새 커밋이 "추가한 줄"에 있는지만 본다(-S는 공개된 부모에서 지워진 경우도 잡아 오탐이 난다)
+  n=$(git log -p --format= $verify_refs --not $excl 2>/dev/null | grep '^+' | grep -cF -- "$s" || true)
+  [ "$n" -eq 0 ] || { echo "실패: 새 커밋이 추가한 줄에 가려야 할 문자열이 ${n}번 남아 있음(SCRUB_FILES/NEWSCRUB_FILES에 파일을 추가하세요)" >&2; fail=1; }
 done
 if [ -n "$(git fsck --full 2>&1)" ]; then echo "실패: git fsck 출력이 있음" >&2; fail=1; fi
 for b in $(git for-each-ref --format='%(refname:short)' refs/heads); do
