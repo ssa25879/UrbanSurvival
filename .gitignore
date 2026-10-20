@@ -60,6 +60,14 @@ Desktop.ini
 /Assets/Screenshots/
 /Assets/Screenshots.meta
 
+
+# Local backups, archives and editor leftovers (2026-10-20)
+*.zip
+/Update-Build/
+/AGENTS_*_백업.md
+/.aiassistant/
+/Assets/_Recovery/
+/Assets/_Recovery.meta
 # Third-party asset not redistributed in this public repository (license; see docs/store/third-party-not-in-repo.md)
 /Assets/GUI PRO Kit - Simple Casual/
 /Assets/GUI PRO Kit - Simple Casual.meta
