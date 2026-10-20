@@ -63,7 +63,8 @@ public class ThreatMinimap : MonoBehaviour {
     }
 
     private void RefreshMarkers() {
-        Zombie[] zombies = FindObjectsByType<Zombie>(FindObjectsSortMode.None);
+        // 씬 전체를 훑는 FindObjectsByType 대신 Zombie가 직접 관리하는 생존 목록을 쓴다(2026-10-20)
+        var zombies = Zombie.alive;
 
         // 카메라의 오른쪽/앞쪽을 수평면에 투영해 미니맵 X/Y축으로 사용(카메라가 없으면 월드 축)
         Vector3 viewRight = Vector3.right;
@@ -76,7 +77,7 @@ public class ThreatMinimap : MonoBehaviour {
         }
 
         int usedMarkers = 0;
-        for (int i = 0; i < zombies.Length; i++)
+        for (int i = 0; i < zombies.Count; i++)
         {
             if (zombies[i].dead)
             {
