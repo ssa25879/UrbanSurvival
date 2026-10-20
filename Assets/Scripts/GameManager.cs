@@ -183,6 +183,9 @@ public class GameManager : MonoBehaviour {
 
     // 게임 오버 처리
     public void EndGame() {
+        // 같은 프레임에 목표 달성(또는 연습 결과)과 사망이 겹치면 패배가 우선: 열려 있는 결과 화면과 선택 대기를 정리한다
+        awaitingGoalChoice = false;
+        UIManager.instance.HideGoalResult();
         // 게임 오버 상태를 참으로 변경
         isGameover = true;
         // 혹시 일시정지 중이었다면 시간 배율과 일시정지 UI를 원복(정상적으로는 일시정지 중 사망이 불가능하지만 안전장치로 둠)
