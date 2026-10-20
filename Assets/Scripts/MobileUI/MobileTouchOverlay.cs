@@ -9,6 +9,13 @@ public class MobileTouchOverlay : MonoBehaviour
     private const string ObjectName = "Mobile Touch Overlay";
     private const float MoveDeadZone = 0.2f;
     private const float AimDeadZone = 0.25f;
+    // 무기 슬롯 세로 열 배치(HUD 캔버스 단위, 기준 1920x1080): 오른쪽 가장자리, FIRE 버튼(윗변 y 244) 위
+    private const float SlotWidth = 160f;
+    private const float SlotHeight = 84f;
+    private const float SlotGap = 10f;
+    private const float SlotColumnMargin = 24f;  // 오른쪽 가장자리에서 띄우는 거리
+    private const float SlotColumnBottom = 270f; // 열의 아랫변(FIRE 버튼 위로 26 띄움)
+    private const float SlotColumnGap = 16f;     // 조준 영역과 슬롯 열 사이 여백
     private const float SlotLineOwned = 3f;
     private const float SlotLineSelected = 7f;
 
@@ -138,6 +145,8 @@ public class MobileTouchOverlay : MonoBehaviour
     private void BuildAimZone()
     {
         RectTransform zone = NewZone("Aim Zone", new Vector2(0.55f, 0f), new Vector2(1f, 0.8f));
+        // 무기 슬롯 열(오른쪽 가장자리)과 겹치지 않도록 오른쪽 끝을 슬롯 열 폭 + 여백만큼 줄인다
+        zone.offsetMax = new Vector2(-(SlotColumnMargin + SlotWidth + SlotColumnGap), 0f);
         aimZoneObject = zone.gameObject;
         aimStick = CreateStick(zone, AimDeadZone);
         aimStick.onValue = value => MobileInputState.AimStick = value;
@@ -226,7 +235,7 @@ public class MobileTouchOverlay : MonoBehaviour
         rect.sizeDelta = new Vector2(size, size);
     }
 
-    // 발사·재장전 버튼 위쪽 가로 한 줄 무기 슬롯 4개(PISTOL / AR / SMG / SG, 왼쪽부터 슬롯 1~4)
+    // 발사 버튼 위쪽 오른쪽 가장자리 세로 열 무기 슬롯 4개(PISTOL / AR / SMG / SG, 위에서부터 슬롯 1~4)
     private void BuildWeaponSlots()
     {
         for (int i = 0; i < 4; i++)
@@ -237,8 +246,9 @@ public class MobileTouchOverlay : MonoBehaviour
             RectTransform rect = background.rectTransform;
             rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
             rect.pivot = new Vector2(1f, 0.5f);
-            rect.anchoredPosition = new Vector2(-24f - (3 - i) * 170f, 302f);
-            rect.sizeDelta = new Vector2(160f, 84f);
+            // 오른쪽 가장자리의 세로 열(FIRE 버튼 위, 위에서 아래로 슬롯 1~4). 조준 영역은 이 열을 피해 좁혀 둔다(2026-10-20, T4.5 A안)
+            rect.anchoredPosition = new Vector2(-SlotColumnMargin, SlotColumnBottom + SlotHeight * 0.5f + (3 - i) * (SlotHeight + SlotGap));
+            rect.sizeDelta = new Vector2(SlotWidth, SlotHeight);
             slotLines[i] = MobileUIFactory.NewTopLine(rect, SlotLineOwned, MobileUIFactory.Amber);
 
             // 축약 이름만 표시(번호 배지 없음)
