@@ -28,12 +28,9 @@ public class SafeAreaFitter : MonoBehaviour {
             return;
         }
 
-        Vector2 min = safe.position;
-        Vector2 max = safe.position + safe.size;
-        min.x /= Screen.width;
-        min.y /= Screen.height;
-        max.x /= Screen.width;
-        max.y /= Screen.height;
+        Vector2 min;
+        Vector2 max;
+        SafeAreaMath.ToAnchors(safe, Screen.width, Screen.height, out min, out max);
         rect.anchorMin = min;
         rect.anchorMax = max;
         rect.offsetMin = Vector2.zero;

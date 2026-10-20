@@ -215,7 +215,21 @@ public class MagnetBuff : MonoBehaviour {
 
         hudRoot = new GameObject("Panel", typeof(RectTransform), typeof(Image));
         RectTransform rect = (RectTransform)hudRoot.transform;
-        rect.SetParent(hudCanvas.transform, false);
+        // 모바일에서는 노치·펀치홀을 피하도록 안전 영역 컨테이너 안에 둔다(2026-10-20)
+        Transform panelParent = hudCanvas.transform;
+        if (MobilePlatform.IsMobile)
+        {
+            RectTransform safe = new GameObject("Safe Area", typeof(RectTransform)).GetComponent<RectTransform>();
+            safe.SetParent(hudCanvas.transform, false);
+            safe.anchorMin = Vector2.zero;
+            safe.anchorMax = Vector2.one;
+            safe.offsetMin = Vector2.zero;
+            safe.offsetMax = Vector2.zero;
+            safe.gameObject.AddComponent<SafeAreaFitter>();
+            panelParent = safe;
+        }
+
+        rect.SetParent(panelParent, false);
         rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0f, 1f);
         rect.anchoredPosition = new Vector2(20f, -192f); // 웨이브 패널(WavePanel, y -120~-184) 바로 아래
         rect.sizeDelta = new Vector2(300f, 56f);
