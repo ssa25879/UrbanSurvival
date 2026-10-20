@@ -10,6 +10,7 @@ public class MobileAimSettingsTests {
         hadKey = PlayerPrefs.HasKey(MobileAimSettings.PrefsKey);
         originalValue = PlayerPrefs.GetInt(MobileAimSettings.PrefsKey, 0);
         PlayerPrefs.DeleteKey(MobileAimSettings.PrefsKey);
+        MobileAimSettings.Reload(); // 캐시를 버려 저장소 상태를 다시 읽게 한다
     }
 
     [TearDown]
@@ -22,6 +23,7 @@ public class MobileAimSettingsTests {
         {
             PlayerPrefs.DeleteKey(MobileAimSettings.PrefsKey);
         }
+        MobileAimSettings.Reload();
     }
 
     [Test]
@@ -39,6 +41,7 @@ public class MobileAimSettingsTests {
     [Test]
     public void InvalidStoredValue_FallsBackToAutoAim() {
         PlayerPrefs.SetInt(MobileAimSettings.PrefsKey, 99);
+        MobileAimSettings.Reload();
         Assert.AreEqual(MobileAimMode.AutoAim, MobileAimSettings.Mode);
     }
 
