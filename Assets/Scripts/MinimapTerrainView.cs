@@ -16,6 +16,7 @@ public class MinimapTerrainView : MonoBehaviour {
     private RawImage image;
     private RenderTexture renderTexture;
     private Camera terrainCamera;
+    public int renderEveryFrames = 3; // 지형 카메라를 이 프레임 수마다 한 번 렌더(1이면 매 프레임)
     private Transform playerTransform;
 
     private void Awake() {
@@ -88,5 +89,9 @@ public class MinimapTerrainView : MonoBehaviour {
         Vector3 position = playerTransform.position;
         terrainCamera.transform.position = new Vector3(position.x, position.y + cameraHeight, position.z);
         terrainCamera.transform.rotation = Quaternion.LookRotation(Vector3.down, viewForward);
+
+        // 매 프레임 렌더하지 않고 몇 프레임마다 한 번만 카메라를 켠다(일시정지 중에는 끔, 2026-10-20). 이동 속도 대비 지형 갱신 지연은 미니맵에서 눈에 띄지 않는다
+        bool paused = GameManager.instance != null && GameManager.instance.isPaused;
+        terrainCamera.enabled = !paused && Time.frameCount % renderEveryFrames == 0;
     }
 }

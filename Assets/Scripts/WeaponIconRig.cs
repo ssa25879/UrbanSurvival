@@ -24,6 +24,8 @@ public class WeaponIconRig : MonoBehaviour {
 
         int iconLayer = LayerMask.NameToLayer(IconLayerName);
         iconCamera.cullingMask = 1 << iconLayer;
+        // 무기 아이콘은 거의 변하지 않으므로 평소에는 카메라를 끄고, 무기가 바뀐 뒤 몇 프레임만 켜서 다시 그린다(2026-10-20)
+        renderFramesLeft = 3;
 
         Gun[] guns = playerShooter.guns;
         iconInstances = new GameObject[guns.Length];
@@ -111,6 +113,21 @@ public class WeaponIconRig : MonoBehaviour {
         }
     }
 
+    private int renderFramesLeft; // 아이콘 카메라를 켜 둘 남은 프레임 수
+
+    private void LateUpdate() {
+        if (iconCamera == null)
+        {
+            return;
+        }
+
+        iconCamera.enabled = renderFramesLeft > 0;
+        if (renderFramesLeft > 0)
+        {
+            renderFramesLeft--;
+        }
+    }
+
     private void Update() {
         if (iconInstances == null || playerShooter.gun == null)
         {
@@ -134,6 +151,7 @@ public class WeaponIconRig : MonoBehaviour {
         }
 
         activeIndex = currentIndex;
+        renderFramesLeft = 3;
     }
 
     private static void SetLayerRecursively(GameObject obj, int layer) {
