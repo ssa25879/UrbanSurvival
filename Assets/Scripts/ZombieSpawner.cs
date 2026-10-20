@@ -26,7 +26,7 @@ public class ZombieSpawner : MonoBehaviour {
     private readonly float despawnTime = 10.0f;
     private readonly float lootDespawnTime = 30.0f; // 드랍 아이템 미수거 시 자동 소멸 시간(초). 무한 모드에서 미수거 드랍이 끝없이 누적되는 것을 방지
     private readonly float lootScatterRadius = 0.5f; // 같은 위치에서 연속으로 드랍될 때 겹치지 않도록 흩뿌리는 반경
-    private readonly float difficultyRampMinutes = 30f; // 0분 100% -> 30분 200%, 이후도 동일한 분당 증가율로 상한 없이 계속 상승
+    public const float DifficultyRampMinutes = 30f; // 0분 100% -> 30분 200%, 이후도 동일한 분당 증가율로 상한 없이 계속 상승
 
     [Header("웨이브 설정 (2026-09-29 확정: 3~8초 무작위 간격, 웨이브마다 2마리씩 증가 - Inspector에서 조정 가능)")]
     public float waveIntervalMin = 3f; // 다음 웨이브까지 최소 간격(초)
@@ -528,7 +528,7 @@ public class ZombieSpawner : MonoBehaviour {
         
         // 생성 시점의 생존 경과 시간 기준으로 시간비례 난이도 배율 계산(신규 생성분에만 적용, 이미 생성된 적에는 소급 적용하지 않음)
         float elapsedMinutes = GameManager.instance != null ? GameManager.instance.elapsedMinutes : 0f;
-        float statMultiplier = 1f + (elapsedMinutes / difficultyRampMinutes);
+        float statMultiplier = 1f + (elapsedMinutes / DifficultyRampMinutes);
 
         // 생성한 좀비에 zombieData와 난이도 배율을 할당하고 리스트에 추가
         zombie.Setup(zombieData, statMultiplier);

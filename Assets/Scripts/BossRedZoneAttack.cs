@@ -90,7 +90,7 @@ public class BossRedZoneAttack : MonoBehaviour {
         if (slam)
         {
             // 내려찍기: 보스 자신을 중심으로 더 넓게
-            RedZone.Spawn(data.rangedZonePrefab, zombie.transform.position, radius * 1.4f, data.rangedWarnSeconds, damage, 0f, data.rangedPercentMaxHealth);
+            RedZone.Spawn(data.rangedZonePrefab, zombie.transform.position, radius * 1.4f, data.rangedWarnSeconds, damage, 0f, data.rangedPercentMaxHealth, zombie);
             ScheduleAttackMotion();
             return;
         }
@@ -108,7 +108,7 @@ public class BossRedZoneAttack : MonoBehaviour {
             }
 
             // 여러 곳도 한꺼번에 폭발한다(경고 시간이 같아야 한 번의 공격 모션과 맞는다)
-            RedZone.Spawn(data.rangedZonePrefab, center, radius, data.rangedWarnSeconds, damage, 0f, data.rangedPercentMaxHealth);
+            RedZone.Spawn(data.rangedZonePrefab, center, radius, data.rangedWarnSeconds, damage, 0f, data.rangedPercentMaxHealth, zombie);
         }
 
         ScheduleAttackMotion();

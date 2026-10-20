@@ -75,7 +75,7 @@ public class PlayerMovement : MonoBehaviour {
 
     // 마우스 스크린 좌표를 총구 높이의 수평 평면에 투영해 조준 방향을 계산한다.
     // 평면과 만나지 않는 무효 방향에서는 마지막 유효 방향을 유지한다.
-    private Vector3 GetAimDirection()
+    public Vector3 GetAimDirection()
     {
         // 모바일: 터치 입력이 정한 월드 조준 방향이 있으면 마우스 Ray 투영 대신 사용(PlayerInput.aimWorldDirection)
         if (playerInput.hasAimWorldDirection)

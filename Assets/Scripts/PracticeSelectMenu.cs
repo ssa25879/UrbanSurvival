@@ -15,7 +15,6 @@ public class PracticeSelectMenu : MonoBehaviour {
     public ZombieData[] bossDatas; // 탭별 보스 데이터(0 = Boss, 1 = Final Boss)
     public float[] startMinutes = { 10f, 30f }; // 탭별 게임 진행 시간(분) = 연습 씬의 GameManager.startElapsedMinutes와 같게
     public string[] sceneNames = { "BossTestScene", "FinalBossTestScene" };
-    public float difficultyRampMinutes = 30f; // ZombieSpawner.difficultyRampMinutes와 같은 값(체력·공격력 배율 계산용)
 
     public Color selectedTabColor = new Color(0.93f, 0.74f, 0.36f, 1f);
     public Color normalTabColor = new Color(0.2f, 0.22f, 0.25f, 1f);
@@ -73,7 +72,7 @@ public class PracticeSelectMenu : MonoBehaviour {
     private void RefreshInfo() {
         ZombieData data = tab < bossDatas.Length ? bossDatas[tab] : null;
         float minutes = tab < startMinutes.Length ? startMinutes[tab] : 0f;
-        float multiplier = 1f + minutes / difficultyRampMinutes;
+        float multiplier = 1f + minutes / ZombieSpawner.DifficultyRampMinutes;
 
         if (data == null)
         {

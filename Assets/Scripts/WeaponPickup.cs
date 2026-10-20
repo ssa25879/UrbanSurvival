@@ -35,8 +35,17 @@ public class WeaponPickup : MonoBehaviour, IItem {
 
         if (playerShooter != null)
         {
-            // 해당 슬롯을 해금(이미 보유 중이면 상태 유지, 처음 획득이면 기본 탄약으로 초기화)
-            playerShooter.UnlockWeapon(slot);
+            if (playerShooter.IsSlotUnlocked((int)slot))
+            {
+                // 이미 보유한 무기: 초기 예비탄만큼 회복(상한 초과 불가, 상한이어도 습득·소모, 2026-10-20 D2)
+                Gun owned = playerShooter.guns[(int)slot];
+                playerShooter.AddAmmoToSlot(slot, owned.gunData != null ? owned.gunData.startAmmoRemain : 0);
+            }
+            else
+            {
+                // 처음 획득: 슬롯 해금(기본 탄약은 총이 이미 갖고 있다)
+                playerShooter.UnlockWeapon(slot);
+            }
         }
 
         // 사용되었으므로, 자신을 파괴

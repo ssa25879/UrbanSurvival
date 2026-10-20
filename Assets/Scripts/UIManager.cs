@@ -91,7 +91,7 @@ public class UIManager : MonoBehaviour {
     public void SetActiveGameoverUI(bool active) {
         if (active && resultStatsText != null)
         {
-            int totalSeconds = Mathf.FloorToInt(Time.timeSinceLevelLoad);
+            int totalSeconds = GameManager.instance != null ? GameManager.instance.ElapsedSeconds : Mathf.FloorToInt(Time.timeSinceLevelLoad);
             int minutes = totalSeconds / 60;
             int seconds = totalSeconds % 60;
             resultStatsText.text = "SCORE : " + lastScore
@@ -116,7 +116,7 @@ public class UIManager : MonoBehaviour {
             return;
         }
 
-        int totalSeconds = Mathf.FloorToInt(Time.timeSinceLevelLoad);
+        int totalSeconds = GameManager.instance != null ? GameManager.instance.ElapsedSeconds : Mathf.FloorToInt(Time.timeSinceLevelLoad);
         string time = totalSeconds / 60 + ":" + (totalSeconds % 60).ToString("00");
         primaryGoalSnapshot = "GOAL CLEARED " + time + "  /  SCORE " + score + "  /  WAVE " + lastWave;
 
@@ -151,7 +151,7 @@ public class UIManager : MonoBehaviour {
             goalReachedUI.SetActive(false);
         }
 
-        int totalSeconds = Mathf.FloorToInt(Time.timeSinceLevelLoad);
+        int totalSeconds = GameManager.instance != null ? GameManager.instance.ElapsedSeconds : Mathf.FloorToInt(Time.timeSinceLevelLoad);
         goalResultTitle.text = "GOAL CLEARED";
         goalResultStats.text = "SCORE : " + score
             + "\nSURVIVED : " + totalSeconds / 60 + ":" + (totalSeconds % 60).ToString("00")

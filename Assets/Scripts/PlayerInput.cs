@@ -148,6 +148,8 @@ public class PlayerInput : MonoBehaviour {
         {
             fire = false;
             fireDown = false;
+            // UI에서 시작한 클릭이 누른 채 필드로 끌려 나와도 버튼을 뗄 때까지 발사하지 않는다
+            fireLatch.RequireRelease();
         }
     }
 

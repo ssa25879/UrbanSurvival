@@ -23,10 +23,14 @@ public class RedZone : MonoBehaviour {
     private float explodeTime;
     private PlayerHealth player;
     private MaterialPropertyBlock block;
+    private Zombie owner; // 이 레드존을 만든 보스(폭발 전에 죽으면 취소, 2026-10-20 D4)
+    private bool hasOwner;
 
     // delaySeconds만큼 뒤에 경고가 시작되고(그 전에는 보이지 않음), warnSeconds 뒤에 폭발한다
-    public static RedZone Spawn(RedZone prefab, Vector3 center, float radius, float warnSeconds, float damage, float delaySeconds, float percentOfMaxHealth = 0f) {
+    public static RedZone Spawn(RedZone prefab, Vector3 center, float radius, float warnSeconds, float damage, float delaySeconds, float percentOfMaxHealth = 0f, Zombie owner = null) {
         RedZone zone = Instantiate(prefab, new Vector3(center.x, prefab.height, center.z), Quaternion.identity);
+        zone.owner = owner;
+        zone.hasOwner = owner != null;
         zone.radius = radius;
         zone.warnSeconds = Mathf.Max(0.1f, warnSeconds);
         zone.damage = damage;
@@ -43,6 +47,13 @@ public class RedZone : MonoBehaviour {
     }
 
     private void Update() {
+        // 폭발 전에 소유 보스가 죽었거나 사라졌으면 피해 없이 취소
+        if (!exploded && hasOwner && (owner == null || owner.dead))
+        {
+            Destroy(gameObject);
+            return;
+        }
+
         if (Time.time < startTime)
         {
             return;

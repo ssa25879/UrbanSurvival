@@ -30,6 +30,7 @@ public class GameManager : MonoBehaviour {
     // 연습 씬(BossTestScene 등)은 startElapsedMinutes를 10·30으로 두어 "게임이 그 시간까지 진행된 상황"에서 시작한다(2026-10-01)
     public float startElapsedMinutes = 0f;
     public float elapsedMinutes => startElapsedMinutes + Time.timeSinceLevelLoad / 60f;
+    public int ElapsedSeconds => Mathf.FloorToInt(elapsedMinutes * 60f); // HUD 시계와 같은 경과 초(연습 씬은 시작 시각 포함)
 
     // 누적 점수 1,000점당 기본 피해량 +1% 영구 가산, 상한 없음(초기 제안값)
     public float damageMultiplier => 1f + Mathf.Floor(score / 1000f) * 0.01f;

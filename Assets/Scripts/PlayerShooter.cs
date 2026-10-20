@@ -47,11 +47,13 @@ public class PlayerShooter : MonoBehaviour {
     private bool blockFireUntilRelease; // 재장전/스왑 직후 발사 버튼을 새로 눌러야 하는 상태
 
     private PlayerInput playerInput; // 플레이어의 입력
+    private PlayerMovement playerMovement; // PC 발사 방향(같은 프레임 조준값) 조회용
     private Animator playerAnimator; // 애니메이터 컴포넌트
 
     private void Start() {
         // 사용할 컴포넌트들을 가져오기
         playerInput = GetComponent<PlayerInput>();
+        playerMovement = GetComponent<PlayerMovement>();
         playerAnimator = GetComponent<Animator>();
         leftHandIK = GetComponentInChildren<TwoBoneIKConstraint>(true);
 
@@ -99,7 +101,8 @@ public class PlayerShooter : MonoBehaviour {
         HandleWeaponSwapInput();
 
         // 재장전/스왑 직후에는 발사 버튼을 한 번 떼야 다시 발사할 수 있다
-        if (blockFireUntilRelease && !playerInput.fire)
+        // PC는 재장전이 끝난 뒤에 버튼을 놓았다 다시 눌러야 한다(재장전 중에 놓았다 눌러도 풀리지 않음, 모바일은 자동 재개)
+        if (blockFireUntilRelease && !playerInput.fire && (MobilePlatform.IsMobile || gun.state != Gun.State.Reloading))
         {
             blockFireUntilRelease = false;
         }
@@ -126,7 +129,16 @@ public class PlayerShooter : MonoBehaviour {
                 // 판정 레이는 캐릭터 중심선의 고정 높이에서 출발(총구 위치·높이에 따라 조준선과 어긋나던 문제)
                 // 모바일은 조준 방향이 정해진 같은 프레임에 그 방향으로 쏜다(캐릭터 회전은 다음 물리 스텝에 적용되어 transform.forward를 쓰면
                 // 오토 에임·쌍둥이 스틱의 첫 발이 이전 방향으로 나간다). PC는 hasAimWorldDirection이 false라 기존과 같다
-                Vector3 shotDirection = playerInput.hasAimWorldDirection ? playerInput.aimWorldDirection : transform.forward;
+                // PC도 같은 프레임의 마우스 조준 방향을 PlayerMovement에서 바로 얻는다(transform.forward는 다음 물리 스텝 뒤에야 따라온다)
+                Vector3 shotDirection = transform.forward;
+                if (playerInput.hasAimWorldDirection)
+                {
+                    shotDirection = playerInput.aimWorldDirection;
+                }
+                else if (playerMovement != null)
+                {
+                    shotDirection = playerMovement.GetAimDirection();
+                }
                 gun.Fire(shotDirection, GetAimOrigin());
             }
         }
@@ -219,13 +231,24 @@ public class PlayerShooter : MonoBehaviour {
 
     // 처치 드랍(추가 탄약) 또는 AmmoPack 아이템이 현재 장착 무기의 예비탄을 채울 때 사용
     public void AddAmmoToCurrentWeapon(int amount) {
-        if (gun.gunData == null || gun.gunData.reserveAmmoCap < 0)
+        if (gun.gunData == null)
         {
-            // 예비탄 무제한 무기는 채울 필요 없음
             return;
         }
 
-        gun.ammoRemain = Mathf.Min(gun.ammoRemain + amount, gun.gunData.reserveAmmoCap);
+        // 예비탄 무제한 무기는 채울 필요 없음(ReserveAmmo.Add가 값을 그대로 둔다)
+        gun.ammoRemain = ReserveAmmo.Add(gun.ammoRemain, amount, gun.gunData.reserveAmmoCap);
+    }
+
+    // 이미 보유한 무기를 다시 주웠을 때 그 슬롯의 예비탄을 상한까지 채운다(2026-10-20 D2)
+    public void AddAmmoToSlot(WeaponSlot slot, int amount) {
+        Gun target = guns[(int)slot];
+        if (target == null || target.gunData == null)
+        {
+            return;
+        }
+
+        target.ammoRemain = ReserveAmmo.Add(target.ammoRemain, amount, target.gunData.reserveAmmoCap);
     }
 
     // 연습 씬: 현재 무기의 예비탄이 바닥나면 가득 채운다(탄약이 모자라 보스 처치 시간이 왜곡되지 않게)
