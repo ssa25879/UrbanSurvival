@@ -44,6 +44,7 @@ namespace GameSettingsKit
         [Header("이벤트")]
         public UnityEvent onOpened;
         public UnityEvent onClosed;
+        public UnityEvent onReset; // RESET 버튼으로 기본값을 되돌린 뒤 호출(게임 쪽 추가 설정을 함께 초기화하는 연결용, 모듈은 내용을 모른다)
 
         private static readonly List<SettingsPanel> openPanels = new List<SettingsPanel>();
         private static int escapeHandledFrame = -1;
@@ -149,6 +150,7 @@ namespace GameSettingsKit
         {
             SettingsStore.ResetToDefaults();
             RefreshControls();
+            onReset?.Invoke();
         }
 
         // 현재 값의 복사본을 바꿔 즉시 적용(저장은 창을 닫을 때)

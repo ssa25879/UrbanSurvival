@@ -68,6 +68,16 @@ public static class MobileAimModeSettingsBinder {
         toggle.SetIsOnWithoutNotify(MobileAimSettings.Mode == MobileAimMode.TwinStick);
         toggle.onValueChanged.AddListener(isOn => MobileAimSettings.Mode = isOn ? MobileAimMode.TwinStick : MobileAimMode.AutoAim);
         panel.onOpened.AddListener(() => toggle.SetIsOnWithoutNotify(MobileAimSettings.Mode == MobileAimMode.TwinStick));
+        // RESET은 조준 모드도 기본값(오토 에임)으로 되돌린다
+        if (panel.onReset == null)
+        {
+            panel.onReset = new UnityEngine.Events.UnityEvent();
+        }
+        panel.onReset.AddListener(() =>
+        {
+            MobileAimSettings.Mode = MobileAimMode.AutoAim;
+            toggle.SetIsOnWithoutNotify(false);
+        });
     }
 
     // 컨트롤 → 행(이름이 "... Row"로 끝나는 조상)
