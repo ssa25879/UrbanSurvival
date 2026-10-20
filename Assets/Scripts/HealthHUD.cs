@@ -11,6 +11,11 @@ public class HealthHUD : MonoBehaviour {
     private readonly float lowHealthRatio = 0.25f; // 최대 체력의 25% 이하일 때 경고색(HUD 준비 문서 9장 초기 제안값)
 
     private PlayerHealth playerHealth;
+    private int shownCurrent = int.MinValue; // 마지막으로 표시한 현재/최대 체력(올림 정수, 같으면 갱신 생략, 2026-10-20)
+    private int shownMax = int.MinValue;
+    private float shownRatio = -1f;
+    private bool shownLow;
+    private bool hasShownSprite;
 
     private void Start() {
         playerHealth = FindFirstObjectByType<PlayerHealth>();
@@ -30,8 +35,27 @@ public class HealthHUD : MonoBehaviour {
         float max = playerHealth.startingHealth;
         float ratio = max > 0f ? current / max : 0f;
 
-        healthFillImage.fillAmount = ratio;
-        healthFillImage.sprite = ratio <= lowHealthRatio ? lowHealthFillSprite : normalFillSprite;
-        healthText.text = Mathf.CeilToInt(current) + " / " + Mathf.CeilToInt(max);
+        if (!Mathf.Approximately(ratio, shownRatio))
+        {
+            shownRatio = ratio;
+            healthFillImage.fillAmount = ratio;
+        }
+
+        bool low = ratio <= lowHealthRatio;
+        if (!hasShownSprite || low != shownLow)
+        {
+            hasShownSprite = true;
+            shownLow = low;
+            healthFillImage.sprite = low ? lowHealthFillSprite : normalFillSprite;
+        }
+
+        int currentInt = Mathf.CeilToInt(current);
+        int maxInt = Mathf.CeilToInt(max);
+        if (currentInt != shownCurrent || maxInt != shownMax)
+        {
+            shownCurrent = currentInt;
+            shownMax = maxInt;
+            healthText.text = currentInt + " / " + maxInt;
+        }
     }
 }

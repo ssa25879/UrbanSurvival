@@ -14,6 +14,7 @@ public class WeaponHUD : MonoBehaviour {
     public Color emptyAmmoColor = new Color(0.90f, 0.28f, 0.30f, 1f);
 
     private PlayerShooter playerShooter;
+    private Gun shownGun; // 이름을 마지막으로 표시한 총(무기가 바뀔 때만 이름 문자열을 다시 만든다, 2026-10-20)
 
     private void Start() {
         playerShooter = FindFirstObjectByType<PlayerShooter>();
@@ -35,7 +36,11 @@ public class WeaponHUD : MonoBehaviour {
             return;
         }
 
-        weaponNameText.text = WeaponDisplayName.Get(gun.gameObject.name); // AK는 AR로 표기
+        if (gun != shownGun)
+        {
+            shownGun = gun;
+            weaponNameText.text = WeaponDisplayName.Get(gun.gameObject.name); // AK는 AR로 표기
+        }
 
         if (reloadIndicator != null)
         {

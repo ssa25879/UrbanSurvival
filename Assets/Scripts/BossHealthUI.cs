@@ -9,6 +9,10 @@ public class BossHealthUI : MonoBehaviour {
     public Image fillImage; // Filled(Horizontal) 체력바
     public Text healthText; // "현재 / 최대" 수치
 
+    private Zombie shownBoss; // 마지막으로 표시한 보스와 수치(같으면 문자열을 다시 만들지 않는다, 2026-10-20)
+    private int shownHealth = int.MinValue;
+    private int shownMax = int.MinValue;
+
     private void Update() {
         Zombie boss = FindDisplayedBoss();
 
@@ -28,8 +32,21 @@ public class BossHealthUI : MonoBehaviour {
 
         float ratio = boss.startingHealth > 0f ? Mathf.Clamp01(boss.health / boss.startingHealth) : 0f;
         fillImage.fillAmount = ratio;
-        nameText.text = boss.zombieData.displayName;
-        healthText.text = Mathf.CeilToInt(boss.health) + " / " + Mathf.RoundToInt(boss.startingHealth);
+        if (boss != shownBoss)
+        {
+            shownBoss = boss;
+            shownHealth = int.MinValue;
+            nameText.text = boss.zombieData.displayName;
+        }
+
+        int healthInt = Mathf.CeilToInt(boss.health);
+        int maxInt = Mathf.RoundToInt(boss.startingHealth);
+        if (healthInt != shownHealth || maxInt != shownMax)
+        {
+            shownHealth = healthInt;
+            shownMax = maxInt;
+            healthText.text = healthInt + " / " + maxInt;
+        }
     }
 
     // 살아있는 보스 중 가장 먼저 등장한 보스(목록에서 파괴·사망한 보스는 정리)

@@ -24,6 +24,13 @@ public class UIManager : MonoBehaviour {
     public Text scoreText; // 점수 표시용 텍스트
     public Text timeText; // 진행 시간 표시용 텍스트(m:ss, 일시정지 중에는 흐르지 않는 게임 시간)
     private int lastShownSeconds = -1; // 마지막으로 표시한 초(같은 초에는 문자열을 다시 만들지 않기 위함)
+    private int shownAmmoMag = int.MinValue; // 마지막으로 표시한 탄약 수치(같은 값이면 문자열을 다시 만들지 않는다, 2026-10-20)
+    private int shownAmmoRemain = int.MinValue;
+    private int shownScore = -1;
+    private int shownWaveNumber = -1; // 웨이브 패널의 마지막 표시값(준비 문구로 바뀌면 -1로 되돌린다)
+    private int shownAliveCount = -1;
+    private int shownPendingCount = -1;
+    private int shownPrepareSeconds = -1;
     public Text waveText; // 적 웨이브 표시용 텍스트
     public GameObject gameoverUI; // 게임 오버시 활성화할 UI
     public Text resultStatsText; // 게임 오버 화면에 표시할 결과 요약(점수/생존시간/도달 웨이브)
@@ -50,6 +57,13 @@ public class UIManager : MonoBehaviour {
 
     // 탄약 텍스트 갱신 (remainAmmo가 음수면 무제한 무기, ∞로 표시)
     public void UpdateAmmoText(int magAmmo, int remainAmmo) {
+        if (magAmmo == shownAmmoMag && remainAmmo == shownAmmoRemain)
+        {
+            return;
+        }
+
+        shownAmmoMag = magAmmo;
+        shownAmmoRemain = remainAmmo;
         ammoText.text = magAmmo + " / " + (remainAmmo < 0 ? "∞" : remainAmmo.ToString());
     }
 
@@ -67,6 +81,12 @@ public class UIManager : MonoBehaviour {
     // 점수 텍스트 갱신
     public void UpdateScoreText(int newScore) {
         lastScore = newScore;
+        if (newScore == shownScore)
+        {
+            return;
+        }
+
+        shownScore = newScore;
         scoreText.text = "Score : " + newScore;
     }
 
@@ -74,11 +94,27 @@ public class UIManager : MonoBehaviour {
     // 남은 적 = 살아있는 적 + 동시 상한 때문에 소환 대기 중인 적("Enemy Left : 살아있는 수 + 대기 수")
     public void UpdateWaveText(int waves, int aliveCount, int pendingCount) {
         lastWave = waves;
+        if (waves == shownWaveNumber && aliveCount == shownAliveCount && pendingCount == shownPendingCount)
+        {
+            return;
+        }
+
+        shownWaveNumber = waves;
+        shownAliveCount = aliveCount;
+        shownPendingCount = pendingCount;
+        shownPrepareSeconds = -1;
         waveText.text = "Wave : " + waves + "\nEnemy Left : " + aliveCount + " + " + FormatCount(pendingCount);
     }
 
     // 준비 시간 안내 텍스트(첫 웨이브가 시작하기 전까지 웨이브 패널에 남은 초를 표시)
     public void UpdatePrepareText(int secondsLeft) {
+        if (secondsLeft == shownPrepareSeconds)
+        {
+            return;
+        }
+
+        shownPrepareSeconds = secondsLeft;
+        shownWaveNumber = -1;
         waveText.text = "Get Ready : " + secondsLeft + "\nEnemy Left : 0 + 0";
     }
 
