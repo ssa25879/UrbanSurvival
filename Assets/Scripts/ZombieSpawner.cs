@@ -44,6 +44,8 @@ public class ZombieSpawner : MonoBehaviour {
     public int spawnCandidateTries = 10; // 한 번의 소환에서 스폰 지점 후보를 뽑아 보는 횟수
     public float spawnRetryDelay = 0.5f; // 후보가 모두 실패했을 때 다시 시도하기까지의 대기 시간(초)
     public float spawnFailureLimit = 10f; // 이 시간 동안 계속 실패하면 오류로 기록(초)
+    public float spawnFailureGap = 6f; // 마지막 실패로부터 이 시간 넘게 지나 다시 실패하면 연속 실패가 아니라 새 실패 구간으로 센다(초, 2026-10-20)
+    public int maxSpawnsPerFrame = 12; // 한 프레임에 소환하는 좀비 최대 수(대기열이 길어도 프레임 스파이크 방지, 2026-10-20)
 
     [Header("플레이어 주변 스폰 (2026-09-29): 시작 직후 적이 늦게 도착하던 문제")]
     public float spawnRingMin = 12f; // 플레이어에서 이 거리 이상, spawnRingMax 이하의 NavMesh 위 지점에서 소환(화면 밖에 가깝게)
@@ -60,6 +62,7 @@ public class ZombieSpawner : MonoBehaviour {
     private Vector3[] spawnPointNavPosition; // 스폰 지점별 NavMesh 위 위치
     private float spawnRetryTime; // 다음 소환 시도 가능 시각
     private float spawnFailureStartTime = -1f; // 연속 실패가 시작된 시각(-1이면 실패 중이 아님)
+    private float lastSpawnFailureTime = -1f; // 가장 최근 소환 실패 시각
     private bool spawnFailureLogged; // 연속 실패 오류를 이미 기록했는지
     private float lastRelocateFailureLogTime = -100f; // 재배치 실패 로그 도배 방지
 
@@ -243,7 +246,8 @@ public class ZombieSpawner : MonoBehaviour {
 
     // 동시 상한(maxConcurrentZombies)에 여유가 있는 만큼 대기 중인 좀비를 소환
     private void SpawnPending() {
-        while ((pendingSpawns > 0 || pendingEliteSpawns > 0) && spawnedZombies.Count < maxConcurrentZombies)
+        int budget = SpawnBudget.Take(pendingSpawns + pendingEliteSpawns, spawnedZombies.Count, maxConcurrentZombies, maxSpawnsPerFrame);
+        for (int spawnedThisFrame = 0; spawnedThisFrame < budget; spawnedThisFrame++)
         {
             // 후보가 모두 실패한 직후에는 spawnRetryDelay 동안 기다렸다가 다시 시도
             if (Time.time < spawnRetryTime)
@@ -321,7 +325,7 @@ public class ZombieSpawner : MonoBehaviour {
             return false;
         }
 
-        if (spawnRingPool.Count == 0 || Time.time >= spawnRingRefreshedAt + spawnRingRefreshInterval)
+        if (Time.time >= spawnRingRefreshedAt + spawnRingRefreshInterval)
         {
             RefreshSpawnRingPool();
         }
@@ -466,6 +470,14 @@ public class ZombieSpawner : MonoBehaviour {
     // 사용 가능한 스폰 지점이 없을 때: 잠시 후 재시도하고, 오래 이어지면 오류로 기록
     private void OnSpawnFailed() {
         spawnRetryTime = Time.time + spawnRetryDelay;
+
+        // 마지막 실패가 오래전이면 이번이 새 실패 구간의 시작이다(오래된 시작 시각 때문에 곧바로 오류가 나지 않게)
+        if (!SpawnFailureRule.IsContinuation(Time.time, lastSpawnFailureTime, spawnFailureGap))
+        {
+            spawnFailureStartTime = -1f;
+            spawnFailureLogged = false;
+        }
+        lastSpawnFailureTime = Time.time;
 
         if (spawnFailureStartTime < 0f)
         {
