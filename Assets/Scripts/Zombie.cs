@@ -29,6 +29,12 @@ public class Zombie : LivingEntity
 
     public static readonly System.Collections.Generic.List<Zombie> bosses = new System.Collections.Generic.List<Zombie>(); // 살아있는 보스 목록(보스 체력 UI가 참조)
     private static MaterialPropertyBlock bodyBlock; // 몸 색 입히기용 공유 블록(렌더러에 설정할 때 값이 복사된다)
+    private static readonly int HasTargetHash = Animator.StringToHash("HasTarget");
+    private static readonly int DieHash = Animator.StringToHash("Die");
+    private static readonly int MeleeAttackHash = Animator.StringToHash("MeleeAttack");
+    private static readonly WaitForSeconds PathInterval = new WaitForSeconds(0.25f); // 경로 갱신 주기(모든 좀비가 공유, 매번 새로 할당하지 않음)
+    private static readonly Collider[] targetBuffer = new Collider[16]; // 추적 대상 탐색 결과 버퍼(OverlapSphereNonAlloc)
+    private int shownHasTarget = -1; // 애니메이터에 마지막으로 넣은 HasTarget 값(-1은 아직 없음, 값이 바뀔 때만 SetBool)
     public static readonly System.Collections.Generic.List<Zombie> alive = new System.Collections.Generic.List<Zombie>(); // 살아있는 좀비 전체 목록(모바일 오토 에임 대상 탐색용)
     public bool isBoss { get { return zombieData != null && zombieData.isBoss; } }
 
@@ -153,11 +159,20 @@ public class Zombie : LivingEntity
 
     private void Update() {
         // 추적 대상의 존재 여부에 따라 다른 애니메이션 재생
-        zombieAnimator.SetBool("HasTarget", hasTarget);
+        bool target = hasTarget;
+        int targetFlag = target ? 1 : 0;
+        if (targetFlag != shownHasTarget)
+        {
+            shownHasTarget = targetFlag;
+            zombieAnimator.SetBool(HasTargetHash, target);
+        }
     }
 
     // 주기적으로 추적할 대상의 위치를 찾아 경로 갱신
     private IEnumerator UpdatePath() {
+        // 같은 프레임에 한꺼번에 소환된 좀비의 경로 계산이 몰리지 않도록 시작 시점을 0~0.25초 분산한다
+        yield return new WaitForSeconds(Random.Range(0f, 0.25f));
+
         // 살아 있는 동안 무한 루프
         while (!dead)
         {
@@ -178,13 +193,17 @@ public class Zombie : LivingEntity
             else
             {
                 // 추적 대상이 없기에 정지
-                navMeshAgent.isStopped = true;
+                if (navMeshAgent.isOnNavMesh)
+                {
+                    navMeshAgent.isStopped = true;
+                }
                 
                 // 가상의 구를 그려 범위 내에 겹치는 whatIsTarget 레이어를 가진 콜라이더만 가져오도록 필터링
-                Collider[] colliders = Physics.OverlapSphere(transform.position, 500f, whatIsTarget);
+                int colliderCount = Physics.OverlapSphereNonAlloc(transform.position, 500f, targetBuffer, whatIsTarget);
+                Collider[] colliders = targetBuffer;
                 
                 // 콜라이더 순회하며 dead상태가 아닌 LivingEntity를 검색
-                for (int i = 0; i < colliders.Length; i++)
+                for (int i = 0; i < colliderCount; i++)
                 {
                     // LivingEntity 가져오기
                     LivingEntity livingEntity = colliders[i].GetComponent<LivingEntity>();
@@ -201,7 +220,7 @@ public class Zombie : LivingEntity
             }
             
             // 0.25초 주기로 처리 반복
-            yield return new WaitForSeconds(0.25f);
+            yield return PathInterval;
         }
     }
 
@@ -292,7 +311,7 @@ public class Zombie : LivingEntity
         navMeshAgent.enabled = false;
         
         // 사망 애니메이션, 효과음 재생
-        zombieAnimator.SetTrigger("Die");
+        zombieAnimator.SetTrigger(DieHash);
         zombieAudioPlayer.PlayOneShot(deathSound, deathVolume);
         
     }
@@ -318,7 +337,7 @@ public class Zombie : LivingEntity
                 // 근접 공격 모션(컨트롤러에 MeleeAttack 트리거가 있을 때만, 2026-10-02 추가)
                 if (hasMeleeTrigger)
                 {
-                    zombieAnimator.SetTrigger("MeleeAttack");
+                    zombieAnimator.SetTrigger(MeleeAttackHash);
                 }
             }
         }
