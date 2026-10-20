@@ -35,7 +35,12 @@ HIDE_TO_EMAIL="contributor@noreply.invalid"
 GITIGNORE_ANCHOR="e038672"
 export GIGNORE_BLOCK=$'# Third-party asset not redistributed in this public repository (license; see docs/store/third-party-not-in-repo.md)\n/Assets/GUI PRO Kit - Simple Casual/\n/Assets/GUI PRO Kit - Simple Casual.meta\n'
 # 본문에 HIDE_EMAIL이 적힌 적이 있는 파일(git log -S로 확인한 것만). 새로 생기면 여기에 추가한다
-SCRUB_FILES=("docs/superpowers/2026-10-06-mobile-port-final-handoff.md" "tools/publish-clean-repo.sh" "docs/superpowers/specs/2026-09-21-unused-apocalyptic-assets-design.md" "docs/superpowers/specs/2026-10-13-code-review-remediation-design.md" "docs/superpowers/plans/2026-10-12-code-review-roadmap.md" "ProjectSettings/FbxExportSettings.asset")
+SCRUB_FILES=("docs/superpowers/2026-10-06-mobile-port-final-handoff.md" "tools/publish-clean-repo.sh")
+# 2026-10-20에 추가한 가림(실명·타인 경로)은 이미 공개된 이력을 다시 쓰지 않도록 NEWSCRUB_ANCHOR의 "후손" 커밋에서만 적용한다.
+# (앵커 이전 커밋의 내용이 바뀌면 SHA가 달라져 공개 저장소에 일반 푸시를 할 수 없다. 이미 공개된 부분은 그대로 남는다)
+NEWSCRUB_FILES=("docs/superpowers/specs/2026-09-21-unused-apocalyptic-assets-design.md" "docs/superpowers/specs/2026-10-13-code-review-remediation-design.md" "docs/superpowers/plans/2026-10-12-code-review-roadmap.md" "ProjectSettings/FbxExportSettings.asset")
+NEWSCRUB_ANCHOR="66607b6856b484895e5409f08c41df567ddf9042" # 공개 SideProject-Mobile 끝(8d71f87)에 해당하는 비공개 커밋
+PUBLISHED_TIPS="8d71f874680b7c1a8579bdd663e6b7ffd96100ea f79596ebf8f0df986479ff3bab159a5827a03247" # 이미 공개된 SideProject-Mobile·SideProject 끝(사본에서 재현돼야 한다)
 # 공개본 파일 본문에서 가릴 문자열(2026-10-20): 작성자 실명(스크립트 파일에 그대로 적지 않으려고 UTF-8 바이트로 만든다)과 타인의 로컬 경로.
 # 해당 문자열은 SCRUB_FILES의 파일 본문에서만 바뀐다. 새 문서에 실명을 쓰면 아래 검증이 실패해 알려 준다
 HIDE_NAME_KO="$(printf '\xec\x9c\xa4\xec\x9a\xb0\xec\x83\x81')"
@@ -95,12 +100,20 @@ echo "== 2. 기록에서 제외 경로 삭제, 작성자 가림 (git filter-bran
   for p in "${EXCLUDES[@]}"; do printf ' %q' "$p"; done
   printf '\n'
   # 주소는 환경 변수로 넘긴다(perl 정규식에 직접 쓰면 @가 배열로 해석됨)
-  perl_expr='s/\Q$ENV{HIDE_EMAIL}\E/$ENV{HIDE_TO_EMAIL}/g; s/\Q$ENV{HIDE_FOREIGN_PATH}\E//g; s/\Q$ENV{HIDE_FOREIGN_USER}\E/(user)/g; s/\Q$ENV{HIDE_NAME_KO}\E/$ENV{HIDE_TO_NAME_KO}/g'
+  perl_old='s/\Q$ENV{HIDE_EMAIL}\E/$ENV{HIDE_TO_EMAIL}/g'
+  perl_new='s/\Q$ENV{HIDE_EMAIL}\E/$ENV{HIDE_TO_EMAIL}/g; s/\Q$ENV{HIDE_FOREIGN_PATH}\E//g; s/\Q$ENV{HIDE_FOREIGN_USER}\E/(user)/g; s/\Q$ENV{HIDE_NAME_KO}\E/$ENV{HIDE_TO_NAME_KO}/g'
+  # 앵커의 후손(앵커 자신은 제외)이면 NEWSCRUB=1
+  printf 'NEWSCRUB=0; if [ "$GIT_COMMIT" != %q ] && git merge-base --is-ancestor %q "$GIT_COMMIT" 2>/dev/null; then NEWSCRUB=1; fi\n' "$NEWSCRUB_ANCHOR" "$NEWSCRUB_ANCHOR"
   for f in "${SCRUB_FILES[@]}"; do
-    # 파일이 있는 커밋에서만 본문의 주소를 바꾼다(바이트 그대로 처리, 줄바꿈 변환 없음)
+    # 파일이 있는 커밋에서만 본문을 바꾼다(바이트 그대로 처리, 줄바꿈 변환 없음). 앵커 이전은 예전과 같은 식(주소만)을 써서 SHA를 유지한다
     printf 'e=$(git ls-files -s -- %q)\n' "$f"
-    printf 'if [ -n "$e" ]; then m=${e%%%% *}; s=$(echo "$e" | cut -d" " -f2); n=$(git cat-file blob "$s" | perl -pe %q | git hash-object -w --stdin); git update-index --cacheinfo "$m,$n,"%q; fi\n' \
-      "$perl_expr" "$f"
+    printf 'if [ -n "$e" ]; then m=${e%%%% *}; s=$(echo "$e" | cut -d" " -f2); x=%q; if [ "$NEWSCRUB" = 1 ]; then x=%q; fi; n=$(git cat-file blob "$s" | perl -pe "$x" | git hash-object -w --stdin); git update-index --cacheinfo "$m,$n,"%q; fi\n' \
+      "$perl_old" "$perl_new" "$f"
+  done
+  for f in "${NEWSCRUB_FILES[@]}"; do
+    printf 'e=$(git ls-files -s -- %q)\n' "$f"
+    printf 'if [ "$NEWSCRUB" = 1 ] && [ -n "$e" ]; then m=${e%%%% *}; s=$(echo "$e" | cut -d" " -f2); n=$(git cat-file blob "$s" | perl -pe %q | git hash-object -w --stdin); git update-index --cacheinfo "$m,$n,"%q; fi\n' \
+      "$perl_new" "$f"
   done
   # GITIGNORE_ANCHOR의 후손이고 .gitignore에 GUI PRO 규칙이 없으면 끝에 덧붙인다
   printf 'if git merge-base --is-ancestor %q "$GIT_COMMIT" 2>/dev/null; then e=$(git ls-files -s -- .gitignore); if [ -n "$e" ]; then m=${e%%%% *}; s=$(echo "$e" | cut -d" " -f2); if ! git cat-file blob "$s" | grep -qF "/Assets/GUI PRO Kit - Simple Casual/"; then n=$({ git cat-file blob "$s"; printf %%s "$GIGNORE_BLOCK"; } | git hash-object -w --stdin); git update-index --cacheinfo "$m,$n,.gitignore"; fi; fi; fi\n' "$GITIGNORE_ANCHOR"
@@ -140,9 +153,14 @@ n=$(git log --branches --format='%an <%ae>%n%cn <%ce>' | grep -cF -- "$HIDE_EMAI
 [ "$n" -eq 0 ] || { echo "실패: 작성자·커미터에 '$HIDE_EMAIL'이 남아 있음($n)" >&2; fail=1; }
 n=$(git log --branches -S"$HIDE_EMAIL" --format='%h' | wc -l)
 [ "$n" -eq 0 ] || { echo "실패: 파일 본문 기록에 '$HIDE_EMAIL'이 남아 있음(커밋 $n개, SCRUB_FILES 확인)" >&2; fail=1; }
+# 실명·타인 경로는 이미 공개된 커밋(PUBLISHED_TIPS 이전)을 뺀 새 커밋에서만 0건이어야 한다(공개된 이력은 다시 쓰지 않는다)
+excl=""
+for t in $PUBLISHED_TIPS; do
+  if git cat-file -e "$t^{commit}" 2>/dev/null; then excl="$excl $t"; else echo "  주의: 이미 공개된 커밋 $t 를 사본에서 재현하지 못했습니다(공개 당시와 다르게 이력을 바꿨을 수 있음)" >&2; fi
+done
 for s in "$HIDE_NAME_KO" "$HIDE_FOREIGN_PATH"; do
-  n=$(git log --branches -S"$s" --format='%h' | wc -l)
-  [ "$n" -eq 0 ] || { echo "실패: 파일 본문 기록에 가려야 할 문자열이 남아 있음(커밋 $n개, SCRUB_FILES에 파일을 추가하세요): $(git log --branches -S"$s" --format='%h' | head -3 | tr "\n" " ")" >&2; fail=1; }
+  n=$(git log --branches --not $excl -S"$s" --format='%h' | wc -l)
+  [ "$n" -eq 0 ] || { echo "실패: 새 커밋 본문에 가려야 할 문자열이 남아 있음(커밋 $n개, SCRUB_FILES/NEWSCRUB_FILES에 파일을 추가하세요): $(git log --branches --not $excl -S"$s" --format='%h' | head -3 | tr "\n" " ")" >&2; fail=1; }
 done
 if [ -n "$(git fsck --full 2>&1)" ]; then echo "실패: git fsck 출력이 있음" >&2; fail=1; fi
 for b in $(git for-each-ref --format='%(refname:short)' refs/heads); do
@@ -161,6 +179,12 @@ if [ "${1:-}" = "--push" ]; then
   echo "== 5. 공개 저장소에 푸시: $REMOTE_URL  브랜치: $PUSH_BRANCHES (일반 푸시, --force 없음)"
   for b in $PUSH_BRANCHES; do
     git show-ref --verify --quiet "refs/heads/$b" || { echo "사본에 브랜치 '$b'가 없습니다." >&2; exit 4; }
+    # 공개 저장소의 같은 브랜치 끝이 사본의 조상이어야 일반 푸시(fast-forward)가 된다. 아니면 푸시 전에 알리고 중단한다
+    remote_tip=$(git ls-remote "$REMOTE_URL" "refs/heads/$b" | cut -f1)
+    if [ -n "$remote_tip" ]; then
+      git fetch -q "$REMOTE_URL" "refs/heads/$b:refs/pub/$b" 
+      git merge-base --is-ancestor "$remote_tip" "refs/heads/$b" || { echo "공개 저장소의 $b ($remote_tip)가 사본의 조상이 아닙니다 - 이력이 갈라져 일반 푸시를 할 수 없습니다. 푸시하지 않습니다." >&2; exit 5; }
+    fi
     git push "$REMOTE_URL" "refs/heads/$b:refs/heads/$b"
   done
 else
