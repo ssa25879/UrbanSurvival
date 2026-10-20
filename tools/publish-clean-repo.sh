@@ -14,6 +14,8 @@
 # 커밋된 기록만 사용한다(커밋하지 않은 변경은 포함되지 않음). 기록 정리는 결정적(deterministic)이라
 # 같은 커밋에서 다시 실행하면 같은 SHA가 나오고, 새 커밋이 위에 쌓이면 공개 저장소에는 일반 푸시(fast-forward)로 올라간다.
 set -euo pipefail
+# Git Bash(MSYS)가 'feature/x:.gitignore' 같은 인자를 경로 목록으로 바꿔 버리지 않게 한다(슬래시가 든 브랜치 이름)
+export MSYS2_ARG_CONV_EXCL='*'
 
 SRC="$(git rev-parse --show-toplevel)"
 DEST="${CLEAN_DIR:-$SRC/../Zombie_clean.git}"
@@ -138,7 +140,7 @@ n=$(git log --branches --format='%an <%ae>%n%cn <%ce>' | grep -cF -- "$HIDE_EMAI
 [ "$n" -eq 0 ] || { echo "실패: 작성자·커미터에 '$HIDE_EMAIL'이 남아 있음($n)" >&2; fail=1; }
 n=$(git log --branches -S"$HIDE_EMAIL" --format='%h' | wc -l)
 [ "$n" -eq 0 ] || { echo "실패: 파일 본문 기록에 '$HIDE_EMAIL'이 남아 있음(커밋 $n개, SCRUB_FILES 확인)" >&2; fail=1; }
-for s in "$HIDE_NAME_KO" "$HIDE_FOREIGN_USER"; do
+for s in "$HIDE_NAME_KO" "$HIDE_FOREIGN_PATH"; do
   n=$(git log --branches -S"$s" --format='%h' | wc -l)
   [ "$n" -eq 0 ] || { echo "실패: 파일 본문 기록에 가려야 할 문자열이 남아 있음(커밋 $n개, SCRUB_FILES에 파일을 추가하세요): $(git log --branches -S"$s" --format='%h' | head -3 | tr "\n" " ")" >&2; fail=1; }
 done
