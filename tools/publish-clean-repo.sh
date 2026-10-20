@@ -5,7 +5,7 @@
 #
 # 사용:
 #   tools/publish-clean-repo.sh           # 사본 생성 + 검증만 (푸시 안 함)
-#   tools/publish-clean-repo.sh --push    # 검증 통과 후 PUSH_BRANCHES(기본: SideProject SideProject-Mobile)만 일반 푸시(거부되면 중단)
+#   tools/publish-clean-repo.sh --push    # 검증 통과 후 PUSH_BRANCHES(기본: SideProject-Mobile)만 일반 푸시(거부되면 중단)
 #                                          main은 올리지 않는다: 공개 main이 비공개 main과 분기돼 있어 AGENTS.md 절차대로 사본에서 병합 커밋을 만들어 따로 올린다
 #
 # 환경 변수: CLEAN_DIR(사본 위치, 기본 <작업폴더>/../Zombie_clean.git), PUBLIC_REMOTE(공개 저장소 주소),
@@ -41,6 +41,8 @@ SCRUB_FILES=("docs/superpowers/2026-10-06-mobile-port-final-handoff.md" "tools/p
 NEWSCRUB_FILES=("docs/superpowers/specs/2026-09-21-unused-apocalyptic-assets-design.md" "docs/superpowers/specs/2026-10-13-code-review-remediation-design.md" "docs/superpowers/plans/2026-10-12-code-review-roadmap.md" "ProjectSettings/FbxExportSettings.asset")
 NEWSCRUB_ANCHOR="66607b6856b484895e5409f08c41df567ddf9042" # 공개 SideProject-Mobile 끝(8d71f87)에 해당하는 비공개 커밋
 PUBLISHED_TIPS="8d71f874680b7c1a8579bdd663e6b7ffd96100ea f79596ebf8f0df986479ff3bab159a5827a03247" # 이미 공개된 SideProject-Mobile·SideProject 끝(사본에서 재현돼야 한다)
+# 올릴 브랜치(기본은 SideProject-Mobile만). SideProject 계열은 새 가림의 앵커 후손이 아니라 실명·타인 경로가 미공개 커밋에 남아 있으므로, 올리려면 그 계열의 앵커를 먼저 정해야 한다
+PUSH_BRANCHES="${PUSH_BRANCHES:-SideProject-Mobile}"
 # 공개본 파일 본문에서 가릴 문자열(2026-10-20): 작성자 실명(스크립트 파일에 그대로 적지 않으려고 UTF-8 바이트로 만든다)과 타인의 로컬 경로.
 # 해당 문자열은 SCRUB_FILES의 파일 본문에서만 바뀐다. 새 문서에 실명을 쓰면 아래 검증이 실패해 알려 준다
 HIDE_NAME_KO="$(printf '\xec\x9c\xa4\xec\x9a\xb0\xec\x83\x81')"
@@ -79,7 +81,7 @@ for b in $(git -C "$SRC" for-each-ref --format='%(refname:short)' refs/heads); d
     counts=$(git -C "$SRC" rev-list --left-right --count "$b...origin/$b")
     if [ "$counts" != "0	0" ]; then
       echo "  주의: $b 는 origin과 다릅니다 (로컬 앞섬/뒤처짐: $counts)" >&2
-      case " ${PUSH_BRANCHES:-SideProject SideProject-Mobile} " in *" $b "*) unsynced=1 ;; esac
+      case " ${PUSH_BRANCHES:-SideProject-Mobile} " in *" $b "*) unsynced=1 ;; esac
     fi
   fi
 done
@@ -155,12 +157,14 @@ n=$(git log --branches -S"$HIDE_EMAIL" --format='%h' | wc -l)
 [ "$n" -eq 0 ] || { echo "실패: 파일 본문 기록에 '$HIDE_EMAIL'이 남아 있음(커밋 $n개, SCRUB_FILES 확인)" >&2; fail=1; }
 # 실명·타인 경로는 이미 공개된 커밋(PUBLISHED_TIPS 이전)을 뺀 새 커밋에서만 0건이어야 한다(공개된 이력은 다시 쓰지 않는다)
 excl=""
+verify_refs=""
+for b in $PUSH_BRANCHES; do verify_refs="$verify_refs refs/heads/$b"; done
 for t in $PUBLISHED_TIPS; do
   if git cat-file -e "$t^{commit}" 2>/dev/null; then excl="$excl $t"; else echo "  주의: 이미 공개된 커밋 $t 를 사본에서 재현하지 못했습니다(공개 당시와 다르게 이력을 바꿨을 수 있음)" >&2; fi
 done
 for s in "$HIDE_NAME_KO" "$HIDE_FOREIGN_PATH"; do
-  n=$(git log --branches --not $excl -S"$s" --format='%h' | wc -l)
-  [ "$n" -eq 0 ] || { echo "실패: 새 커밋 본문에 가려야 할 문자열이 남아 있음(커밋 $n개, SCRUB_FILES/NEWSCRUB_FILES에 파일을 추가하세요): $(git log --branches --not $excl -S"$s" --format='%h' | head -3 | tr "\n" " ")" >&2; fail=1; }
+  n=$(git log $verify_refs --not $excl -S"$s" --format='%h' | wc -l)
+  [ "$n" -eq 0 ] || { echo "실패: 새 커밋 본문에 가려야 할 문자열이 남아 있음(커밋 $n개, SCRUB_FILES/NEWSCRUB_FILES에 파일을 추가하세요): $(git log $verify_refs --not $excl -S"$s" --format='%h' | head -3 | tr "\n" " ")" >&2; fail=1; }
 done
 if [ -n "$(git fsck --full 2>&1)" ]; then echo "실패: git fsck 출력이 있음" >&2; fail=1; fi
 for b in $(git for-each-ref --format='%(refname:short)' refs/heads); do
@@ -175,7 +179,6 @@ echo "검증 통과."
 if [ "${1:-}" = "--push" ]; then
   # --all은 쓰지 않는다: 공개 main이 비공개 main과 분기돼 있어 main까지 밀면 거부되거나 이력이 섞인다.
   # main은 AGENTS.md 절차(사본에서 [공개 main, 새 Mobile 끝]을 부모로 하는 병합 커밋)로 따로 올린다
-  PUSH_BRANCHES="${PUSH_BRANCHES:-SideProject SideProject-Mobile}"
   echo "== 5. 공개 저장소에 푸시: $REMOTE_URL  브랜치: $PUSH_BRANCHES (일반 푸시, --force 없음)"
   for b in $PUSH_BRANCHES; do
     git show-ref --verify --quiet "refs/heads/$b" || { echo "사본에 브랜치 '$b'가 없습니다." >&2; exit 4; }
