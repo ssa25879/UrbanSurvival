@@ -38,6 +38,11 @@ public class Gun : MonoBehaviour {
 
     private float lastFireTime; // 총을 마지막으로 발사한 시점
 
+    private Vector3[] hitBuffer = new Vector3[8]; // 발사마다 펠릿 명중 위치를 담는 재사용 버퍼
+    private const float TrailSeconds = 0.03f; // 탄알 궤적이 보이는 시간
+    private int activeTrailCount; // 지금 켜져 있는 궤적 렌더러 수
+    private float trailOffTime; // 궤적을 끌 시각
+
     private float reloadStartTime; // 현재 재장전을 시작한 시점
     private float reloadDuration; // 현재 재장전에 걸리는 시간
 
@@ -86,6 +91,7 @@ public class Gun : MonoBehaviour {
         {
             bulletLineRenderers[i].enabled = false;
         }
+        activeTrailCount = 0;
 
         gunData = data;
         magAmmo = magAmmoValue;
@@ -146,7 +152,12 @@ public class Gun : MonoBehaviour {
     // 벽에 막힌 총구의 발사 거부(IsMuzzleObstructed)는 계속 총구 기준으로 검사하고, 궤적 연출은 총구에서 그린다
     private void Shot(Vector3 characterForward, Vector3 aimOrigin) {
         int pelletCount = Mathf.Max(1, gunData.pelletsPerShot);
-        Vector3[] hitPositions = new Vector3[pelletCount]; // 펠릿마다 궤적을 따로 그리기 위해 전부 기록(산탄총 여러 발 발사 연출)
+        // 펠릿마다 궤적을 따로 그리기 위해 전부 기록(산탄총 여러 발 발사 연출). 매 발사마다 배열을 새로 만들지 않도록 버퍼를 재사용한다(2026-10-20)
+        if (hitBuffer.Length < pelletCount)
+        {
+            System.Array.Resize(ref hitBuffer, pelletCount);
+        }
+        Vector3[] hitPositions = hitBuffer;
         Vector3 rayOrigin = aimOrigin;
         // 조준 방향도 수평으로 고정(레이 높이가 사거리 내내 일정하게 유지되도록)
         characterForward = Vector3.ProjectOnPlane(characterForward, Vector3.up).normalized;
@@ -184,7 +195,7 @@ public class Gun : MonoBehaviour {
         }
 
         // 발사 이펙트 코루틴으로 재생(펠릿마다 궤적을 하나씩 그려 여러 발이 나가는 느낌을 줌)
-        StartCoroutine(ShotEffect(hitPositions, characterForward));
+        PlayShotEffects(hitPositions, pelletCount, characterForward);
 
         // 남은 탄약 -1(펠릿 수와 무관하게 1회 발사당 탄창 1발 소모)
         magAmmo--;
@@ -210,7 +221,7 @@ public class Gun : MonoBehaviour {
 
     // 발사 이펙트와 소리를 재생하고 펠릿마다 탄알 궤적을 그림
     // characterForward: 총구화염/탄피배출 이펙트도 총 모델 자체 방향이 아니라 캐릭터 정면을 바라보도록 재생 전 정렬
-    private IEnumerator ShotEffect(Vector3[] hitPositions, Vector3 characterForward) {
+    private void PlayShotEffects(Vector3[] hitPositions, int pelletCount, Vector3 characterForward) {
         // 이펙트를 캐릭터 조준 정면 방향으로 정렬 후 재생
         Quaternion aimRotation = Quaternion.LookRotation(characterForward);
         muzzleFlashEffect.transform.rotation = aimRotation;
@@ -225,7 +236,7 @@ public class Gun : MonoBehaviour {
         gunAudioPlayer.PlayOneShot(gunData.shotClip);
 
         // 펠릿 수만큼 궤적 렌더러를 켬(산탄총은 여러 개가 동시에 켜져 부채꼴로 퍼지는 게 보임)
-        for (int i = 0; i < hitPositions.Length; i++)
+        for (int i = 0; i < pelletCount; i++)
         {
             LineRenderer lineRenderer = GetLineRenderer(i);
             lineRenderer.SetPosition(0, fireTransform.position);
@@ -233,14 +244,34 @@ public class Gun : MonoBehaviour {
             lineRenderer.enabled = true;
         }
 
-        // 0.03초 동안 잠시 처리를 대기
-        yield return new WaitForSeconds(0.03f);
+        // 0.03초 뒤 Update에서 끈다(코루틴을 쓰지 않아 발사마다 할당이 없다)
+        trailOffTime = Time.time + TrailSeconds;
+        activeTrailCount = Mathf.Max(activeTrailCount, pelletCount);
+    }
 
-        // 이번에 사용한 궤적 렌더러만 비활성화(다른 무기의 궤적과 겹치지 않게)
-        for (int i = 0; i < hitPositions.Length; i++)
+    private void Update() {
+        if (activeTrailCount > 0 && Time.time >= trailOffTime)
+        {
+            DisableTrails();
+        }
+    }
+
+    private void OnDisable() {
+        // 총이 꺼질 때(무기 교체·플레이어 비활성화) 궤적이 켜진 채 남지 않게 하고, 코루틴이 멈춘 재장전 상태를 되돌린다
+        DisableTrails();
+        if (state == State.Reloading)
+        {
+            state = magAmmo > 0 ? State.Ready : State.Empty;
+        }
+    }
+
+    private void DisableTrails() {
+        for (int i = 0; i < activeTrailCount && i < bulletLineRenderers.Count; i++)
         {
             bulletLineRenderers[i].enabled = false;
         }
+
+        activeTrailCount = 0;
     }
 
     // 인덱스에 해당하는 궤적 렌더러를 반환, 없으면 새로 만들어 풀에 추가
