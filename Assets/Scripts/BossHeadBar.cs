@@ -68,7 +68,8 @@ public class BossHeadBar : MonoBehaviour {
 
         if (target.dead)
         {
-            gameObject.SetActive(false);
+            // 숨기기만 하면 보스가 사라질 때까지 오브젝트가 남으므로 바로 제거한다(2026-10-20)
+            Destroy(gameObject);
             return;
         }
 

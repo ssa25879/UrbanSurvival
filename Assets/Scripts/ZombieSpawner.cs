@@ -103,7 +103,7 @@ public class ZombieSpawner : MonoBehaviour {
         }
 
         // 시체가 사라져 파괴된 좀비를 제외해 현재 씬에 남은 수를 갱신
-        spawnedZombies.RemoveAll(IsDestroyed);
+        spawnedZombies.RemoveAll(IsDestroyedPredicate);
 
         // 준비 시간: 첫 웨이브 전에는 소환하지 않고 남은 초를 표시(경과 시간은 일시정지 중 흐르지 않는 씬 시작 기준 시간)
         if (Time.timeSinceLevelLoad < prepareSeconds)
@@ -130,6 +130,8 @@ public class ZombieSpawner : MonoBehaviour {
         // UI 갱신
         UpdateUI();
     }
+
+    private static readonly System.Predicate<Zombie> IsDestroyedPredicate = IsDestroyed; // 매 프레임 델리게이트가 새로 만들어지지 않도록 한 번만 만든다(2026-10-20)
 
     // 파괴된 Unity 오브젝트인지 확인(RemoveAll용, 매 프레임 델리게이트가 새로 만들어지지 않도록 메서드로 분리)
     private static bool IsDestroyed(Zombie zombie) {

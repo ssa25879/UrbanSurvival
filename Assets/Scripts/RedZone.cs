@@ -22,6 +22,7 @@ public class RedZone : MonoBehaviour {
     private bool exploded;
     private float explodeTime;
     private PlayerHealth player;
+    private static PlayerHealth cachedPlayer; // 레드존마다 씬 전체를 검색하지 않도록 공유(플레이어가 파괴되면 null이 되어 다시 찾는다)
     private MaterialPropertyBlock block;
     private Zombie owner; // 이 레드존을 만든 보스(폭발 전에 죽으면 취소, 2026-10-20 D4)
     private bool hasOwner;
@@ -42,7 +43,11 @@ public class RedZone : MonoBehaviour {
 
     private void Awake() {
         block = new MaterialPropertyBlock();
-        player = FindFirstObjectByType<PlayerHealth>();
+        if (cachedPlayer == null)
+        {
+            cachedPlayer = FindFirstObjectByType<PlayerHealth>();
+        }
+        player = cachedPlayer;
         SetVisible(false);
     }
 
