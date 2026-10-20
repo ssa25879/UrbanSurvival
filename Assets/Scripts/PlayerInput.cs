@@ -35,6 +35,8 @@ public class PlayerInput : MonoBehaviour {
     // 발사 버튼을 한 번 뗄 때까지 발사 입력을 막는다(UI 버튼 클릭이나 창 클릭으로 돌아온 클릭이 오발이 되는 것을 방지)
     private readonly FireLatch fireLatch = new FireLatch();
     private readonly List<RaycastResult> uiRaycastResults = new List<RaycastResult>();
+    private PointerEventData pointerData;
+    private EventSystem pointerSystem;
 
     private readonly TwinStickFireTracker twinStickFire = new TwinStickFireTracker();
     private readonly List<AimCandidate> aimCandidates = new List<AimCandidate>(512);
@@ -86,7 +88,13 @@ public class PlayerInput : MonoBehaviour {
         }
 
         // 클릭할 수 없는 HUD 패널 위에서는 사격이 막히지 않도록, 버튼 같은 Selectable UI만 검사한다
-        PointerEventData pointerData = new PointerEventData(EventSystem.current) { position = pointer };
+        // 연사 중 매 프레임 호출되므로 PointerEventData를 재사용한다(EventSystem이 바뀌면 다시 만든다, 2026-10-20)
+        if (pointerData == null || pointerSystem != EventSystem.current)
+        {
+            pointerSystem = EventSystem.current;
+            pointerData = new PointerEventData(pointerSystem);
+        }
+        pointerData.position = pointer;
         uiRaycastResults.Clear();
         EventSystem.current.RaycastAll(pointerData, uiRaycastResults);
         for (int i = 0; i < uiRaycastResults.Count; i++)
