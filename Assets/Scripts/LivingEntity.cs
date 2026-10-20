@@ -57,9 +57,20 @@ public class LivingEntity : MonoBehaviour, IDamageable {
         dead = true;
 
         // onDeath 이벤트에 등록된 메서드가 있다면 실행
+        // 핸들러 하나가 예외를 던져도 나머지 핸들러와 파생 클래스의 사망 정리(콜라이더·NavMeshAgent 끄기)가 이어지도록 개별 호출한다
         if (onDeath != null)
         {
-            onDeath();
+            foreach (System.Delegate handler in onDeath.GetInvocationList())
+            {
+                try
+                {
+                    ((System.Action)handler)();
+                }
+                catch (System.Exception exception)
+                {
+                    Debug.LogException(exception);
+                }
+            }
         }
     }
 }
