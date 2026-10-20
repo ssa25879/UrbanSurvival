@@ -117,3 +117,18 @@
 - `Main` 라이트맵·LightingData·ReflectionProbe는 게임 씬이 재사용하는 자체 생성 데이터라 라이선스 문제 없음.
 - 새 효과음(`7b6fe99`)은 2026-10-07 10:55 사용자가 릴리스 빌드(태블릿)에서 들어 보고 정상 확인했다. 발사음(`4d37f3f`)은 에디터 재생 확인만 했다.
 - `INTERNET` 권한: Analytics를 꺼도 Unity가 자동으로 넣었다(10:4x 릴리스 빌드). `a0fd5e6`에서 커스텀 런처 매니페스트(`tools:node="remove"`)로 제거하도록 바꿨고, 다음 릴리스 빌드에서 확인한다.
+
+## 7. 2026-10-20 현행화 (코드리뷰 후속 T5.5)
+
+위 표와 본문은 작성 당시 기록이라 일부가 지금 상태와 다르다. 현재 상태는 아래를 기준으로 한다. 원문 라이선스는 이번에도 다시 확인하지 않았고, 저장소 안 기록과 git 상태만 읽었다.
+
+| 항목 | 현재 상태 (2026-10-20) |
+|---|---|
+| 저장소 공개 설정 | 비공개 `URP_ZombieGame`(origin, 2026-10-06 전환). 3장 2번의 "공개 상태" 서술은 그 이전 기록이다. 공개본은 별도 저장소 `UrbanSurvival` |
+| GUI PRO Kit | `SideProject-Mobile`·`main`: 추적 파일 0개. **PC `SideProject`: 비공개 origin에 4,961개가 추적됨**(2026-10-12 `git ls-tree`). 공개본은 `tools/publish-clean-repo.sh`가 모든 커밋에서 지운다. **경고:** `URP_ZombieGame`(특히 `SideProject` 브랜치)을 공개로 전환하거나 협업자를 추가하면 Asset Store 에셋 원본이 노출될 수 있다. 전환 전에 PC 브랜치에서 GUI PRO를 제거하거나 기록을 정리해야 한다 |
+| Toon Shooter Game Kit | 폴더 안에 라이선스 파일이 없다(`Preview.jpg`만 있음). 근거는 6장(2026-10-07 Quaternius 팩 페이지 "CC0")에 문서로만 남아 있다. 폴더에 `License.txt`로 남기는 일은 아직 하지 않았다 |
+| `singularity_calm.wav` | 2장 표의 "부분 확인"은 오래된 기록이다. 6장(2026-10-07)에서 OpenGameArt "Singularity"(Vitalezzz) CC0, 파일 크기 일치를 확인했다. 작성자 이름을 `Assets/Game/Audio/Music/SOURCE.md`에 남기는 일이 남아 있다(원문 재확인 필요). 파일이 51.4 MB라 GitHub 대용량 경고 대상이다(ogg 변환은 인코더가 없어 보류) |
+| IJEMIN 예제 저장소 출처 자원 | 해시 일치와 저장소 README 문구가 근거이며 **별도의 서면 허락 증빙은 없다**. 공개 저장소로 올릴 때는 "무수정 예제의 상업 재배포 금지" 조항과 부딪히지 않는지 다시 판단해야 한다 |
+| `Gun Shoot.wav` | `SideProject-Mobile`은 2026-10-07 무기별 CC0 발사음으로 교체(`4d37f3f`). **PC `SideProject`도 `1865201`로 반영**했다(AGENTS.md 기록). PC에서 에디터 플레이 청취는 미확인 |
+| 크레딧 화면 | 여전히 없음(결정 대기) |
+| 회복 상자·체력 링 | `Heart.obj`·`Health Circle.png`는 1.0.2에서 교체(`cdd3bca`, `fad63d8`), 원본 파일은 남아 있고 빌드에는 들어가지 않는다 |
