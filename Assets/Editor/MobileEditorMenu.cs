@@ -6,6 +6,10 @@ using UnityEngine;
 // 모바일 포팅의 Android Player Settings 적용 메뉴도 여기에 둔다
 public static class MobileEditorMenu
 {
+    // 릴리스마다 여기 값을 올리고 Apply Android Settings를 실행한다(Library가 아니라 코드로 남겨 다른 PC에서도 같은 값이 나오게 한다, 2026-10-20)
+    private const string AppVersion = "1.0.3";
+    private const int AppVersionCode = 4;
+
     // 모바일 포팅의 Android Player Settings를 한 번에 적용한다(재현 가능하도록 코드로 둔다)
     [MenuItem("Urban Survival/Mobile/Apply Android Settings")]
     public static void ApplyAndroidSettings()
@@ -13,6 +17,8 @@ public static class MobileEditorMenu
         PlayerSettings.companyName = "YWS";
         PlayerSettings.productName = "Urban Survival";
         PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.yws.urbansurvival");
+        PlayerSettings.bundleVersion = AppVersion;
+        PlayerSettings.Android.bundleVersionCode = AppVersionCode;
 
         // 가로 화면만 허용
         PlayerSettings.defaultInterfaceOrientation = UIOrientation.AutoRotation;
@@ -26,6 +32,9 @@ public static class MobileEditorMenu
         PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel25;
         PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel36;
         EditorUserBuildSettings.buildAppBundle = true;
+        // TV 호환은 끈다(터치 전용 게임). Unity Analytics도 끈다 - 릴리스 빌드에서 INTERNET 권한을 쓰지 않기 위함
+        PlayerSettings.Android.androidTVCompatibility = false;
+        UnityEditor.Analytics.AnalyticsSettings.enabled = false;
         // 네이티브 디버그 기호(symbols.zip)를 만든다. Play Console 업로드용이며 Library에 저장되므로 코드로 둔다
         EditorUserBuildSettings.androidCreateSymbols = AndroidCreateSymbols.Public;
 
