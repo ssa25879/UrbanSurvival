@@ -17,8 +17,20 @@ MonoBehaviour:
   speed: 4
   skinColor: {r: 1, g: 0.38, b: 0.38, a: 1}
   glowColor: {r: 0.16, g: 0, b: 0, a: 1}
+  glowMaterial: {fileID: 2100000, guid: 910320f0511e9274db55510ad2ed8f70, type: 2}
   isElite: 0
+  prefabOverride: {fileID: 0}
   isBoss: 0
   displayName: 
   modelScale: 1
   score: 100
+  rangedPattern: 0
+  rangedZonePrefab: {fileID: 0}
+  rangedFirstDelay: 4
+  rangedInterval: 7
+  rangedWarnSeconds: 1.6
+  rangedZoneRadius: 3
+  rangedDamageMultiplier: 0.75
+  rangedZoneCount: 1
+  rangedSlamEvery: 3
+  rangedPercentMaxHealth: 0

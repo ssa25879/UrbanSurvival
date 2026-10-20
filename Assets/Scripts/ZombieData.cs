@@ -8,6 +8,7 @@ public class ZombieData : ScriptableObject {
     public float speed = 2f; // 이동 속도
     public Color skinColor = Color.white; // 피부색(몸 재질의 원래 색에 곱함, 흰색이면 원래 외형 유지, 어둡게 만들 때 사용)
     public Color glowColor = Color.black; // 몸에 더하는 발광색(붉은 기운 등, 검정이면 없음)
+    public Material glowMaterial; // glowColor를 쓸 때 몸에 입힐 공유 재질(발광 키워드가 켜진 변형, 인스턴스 복제 없이 발광을 쓰기 위함)
     public bool isElite = false; // 강화 개체 여부(미니맵 등 UI에서 일반 개체와 구분 표시)
     public Zombie prefabOverride; // 이 데이터 전용 좀비 프리팹(외형·판정 크기가 다른 개체용, 비우면 ZombieSpawner.zombiePrefab 사용, 2026-10-01 추가)
 

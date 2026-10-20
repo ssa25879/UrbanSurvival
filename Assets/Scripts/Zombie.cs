@@ -28,6 +28,7 @@ public class Zombie : LivingEntity
     public ZombieData zombieData { get; private set; } // 이 개체의 셋업 데이터(미니맵 등 UI에서 강화 개체 판별용)
 
     public static readonly System.Collections.Generic.List<Zombie> bosses = new System.Collections.Generic.List<Zombie>(); // 살아있는 보스 목록(보스 체력 UI가 참조)
+    private static MaterialPropertyBlock bodyBlock; // 몸 색 입히기용 공유 블록(렌더러에 설정할 때 값이 복사된다)
     public static readonly System.Collections.Generic.List<Zombie> alive = new System.Collections.Generic.List<Zombie>(); // 살아있는 좀비 전체 목록(모바일 오토 에임 대상 탐색용)
     public bool isBoss { get { return zombieData != null && zombieData.isBoss; } }
 
@@ -94,16 +95,36 @@ public class Zombie : LivingEntity
         // 몸(SkinnedMeshRenderer)의 마테리얼 색을 바꿔 외형을 구분한다.
         // 예전에는 자식 순서상 처음 찾은 렌더러(핏방울 파티클)에 색을 적용해 몸 색이 바뀌지 않았다(2026-09-29 수정)
         // 재질 원래 색(약간 어두운 회색)에 곱해서, 흰색인 일반 좀비는 지금 외형을 그대로 유지한다
-        foreach (SkinnedMeshRenderer bodyRenderer in GetComponentsInChildren<SkinnedMeshRenderer>())
+        // 재질을 복제(.material)하면 좀비마다 재질 인스턴스가 쌓이므로 MaterialPropertyBlock으로 색을 넣는다(2026-10-20)
+        // 흰색 피부·발광 없음이면 아무것도 건드리지 않아 SRP 배처 묶음을 유지한다
+        bool tinted = zombieData.skinColor != Color.white;
+        bool glows = zombieData.glowColor.maxColorComponent > 0.001f;
+        if (tinted || glows)
         {
-            Material bodyMaterial = bodyRenderer.material;
-            bodyMaterial.color = bodyMaterial.color * zombieData.skinColor;
-
-            // 곱하기만으로는 초록 몸에 붉은 기운을 더할 수 없어, 발광색을 더해 색을 입힌다
-            if (zombieData.glowColor.maxColorComponent > 0.001f)
+            if (bodyBlock == null)
             {
-                bodyMaterial.EnableKeyword("_EMISSION");
-                bodyMaterial.SetColor("_EmissionColor", zombieData.glowColor);
+                bodyBlock = new MaterialPropertyBlock();
+            }
+
+            foreach (SkinnedMeshRenderer bodyRenderer in GetComponentsInChildren<SkinnedMeshRenderer>())
+            {
+                // 곱하기만으로는 초록 몸에 붉은 기운을 더할 수 없어, 발광 키워드가 켜진 공유 재질로 바꾸고 발광색을 더한다
+                if (glows && zombieData.glowMaterial != null)
+                {
+                    bodyRenderer.sharedMaterial = zombieData.glowMaterial;
+                }
+
+                Material shared = bodyRenderer.sharedMaterial;
+                bodyRenderer.GetPropertyBlock(bodyBlock);
+                if (shared != null)
+                {
+                    bodyBlock.SetColor("_BaseColor", shared.color * zombieData.skinColor);
+                }
+                if (glows)
+                {
+                    bodyBlock.SetColor("_EmissionColor", zombieData.glowColor);
+                }
+                bodyRenderer.SetPropertyBlock(bodyBlock);
             }
         }
 
