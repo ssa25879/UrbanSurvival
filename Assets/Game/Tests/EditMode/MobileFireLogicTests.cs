@@ -97,6 +97,36 @@ public class MobileFireLogicTests {
         Assert.IsFalse(r.fireDown, "리셋 뒤에는 재개용 fireDown을 만들지 않는다");
     }
 
+    [Test]
+    public void ReloadEndsEmpty_DoesNotResume() {
+        var logic = new MobileFireLogic();
+        logic.Evaluate(Frame(true, false, MobileGunState.Reloading, true));
+
+        MobileFireResult r = logic.Evaluate(Frame(true, false, MobileGunState.Empty, true));
+        Assert.IsFalse(r.fireDown, "재장전이 끝났어도 Ready가 아니면(예: 취소돼 Empty) 재개용 fireDown을 내지 않는다");
+        Assert.IsTrue(r.reload, "누른 채 빈 탄창이면 자동 재장전 요청은 그대로");
+
+        MobileFireResult later = logic.Evaluate(Frame(true, false, MobileGunState.Ready, true));
+        Assert.IsFalse(later.fireDown, "한 번 지나간 재개 요청은 남지 않는다");
+    }
+
+    [Test]
+    public void GunBecomesNone_DoesNotResume() {
+        var logic = new MobileFireLogic();
+        logic.Evaluate(Frame(true, false, MobileGunState.Reloading, true));
+
+        MobileFireResult r = logic.Evaluate(Frame(true, false, MobileGunState.None, true));
+        Assert.IsFalse(r.fireDown);
+        Assert.IsFalse(logic.Evaluate(Frame(true, false, MobileGunState.Ready, true)).fireDown);
+    }
+
+    [Test]
+    public void NeverReloading_NeverResumes() {
+        var logic = new MobileFireLogic();
+        MobileFireResult r = logic.Evaluate(Frame(true, false, MobileGunState.Ready, true));
+        Assert.IsFalse(r.fireDown, "연사 무기는 재장전을 거치지 않으면 합성 fireDown이 없다");
+    }
+
     // ---------- 단발(Manual) 무기 자동 반복 ----------
 
     [Test]

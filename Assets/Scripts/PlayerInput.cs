@@ -42,6 +42,7 @@ public class PlayerInput : MonoBehaviour {
     private readonly List<AimCandidate> aimCandidates = new List<AimCandidate>(512);
     private PlayerShooter playerShooter;
     private Vector3 lastMobileAim;
+    private int lastMobileSlot = -1;
     private float nextAutoAimTime;
     private readonly MobileFireLogic fireLogic = new MobileFireLogic(); // 모바일 발사·재장전 결정(순수 로직, 테스트 있음)
 
@@ -239,6 +240,14 @@ public class PlayerInput : MonoBehaviour {
         }
 
         // 발사·재장전 결정(누른 채 빈 탄창 자동 재장전·재개, 단발 무기 자동 반복)은 순수 로직(MobileFireLogic)이 맡는다
+        // 무기를 바꾸면 이전 무기의 재장전 재개 상태를 버린다(다른 무기가 Ready라고 해서 곧바로 발사하지 않게)
+        int slotIndex = playerShooter != null ? playerShooter.CurrentSlotIndex : -1;
+        if (slotIndex != lastMobileSlot)
+        {
+            lastMobileSlot = slotIndex;
+            fireLogic.Reset();
+        }
+
         Gun currentGun = playerShooter != null ? playerShooter.gun : null;
         MobileFireResult decision = fireLogic.Evaluate(new MobileFireFrame
         {

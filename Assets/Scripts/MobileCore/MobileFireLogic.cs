@@ -52,7 +52,7 @@ public sealed class MobileFireLogic {
         else if (resumeAfterReload)
         {
             resumeAfterReload = false;
-            if (frame.held)
+            if (frame.held && frame.gunState == MobileGunState.Ready)
             {
                 result.fire = true;
                 result.fireDown = true;
